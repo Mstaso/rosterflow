@@ -15,7 +15,12 @@ interface SelectedAsset {
   type: "player" | "pick";
   fromTeam: string;
   toTeam: string;
-  data: any;
+  data: {
+    name?: string;
+    salary?: number;
+    year?: number;
+    round?: string;
+  };
 }
 
 interface TradeResultsTabProps {
@@ -48,7 +53,7 @@ export default function TradeResultsTab({
         </div>
       ) : generatedTrades.length > 0 ? (
         <div className="mt-4 space-y-4 md:space-y-6">
-          {generatedTrades.map((trade, index) => (
+          {generatedTrades?.map((trade, index) => (
             <Card
               key={index}
               className="overflow-hidden border-gray-700 bg-gray-800 p-0"
@@ -219,7 +224,7 @@ export default function TradeResultsTab({
                         )
                         .reduce(
                           (sum: number, asset: SelectedAsset) =>
-                            sum + asset.data.salary,
+                            sum + (asset?.data.salary ?? 0),
                           0,
                         );
                       const incomingSalary = teamTrade.incoming
@@ -228,7 +233,7 @@ export default function TradeResultsTab({
                         )
                         .reduce(
                           (sum: number, asset: SelectedAsset) =>
-                            sum + asset.data.salary,
+                            sum + (asset?.data.salary ?? 0),
                           0,
                         );
 
@@ -263,7 +268,9 @@ export default function TradeResultsTab({
                                       )}
                                       {asset.type === "player" && (
                                         <span className="ml-2 text-gray-400">
-                                          ({formatSalary(asset.data.salary)})
+                                          (
+                                          {formatSalary(asset.data.salary ?? 0)}
+                                          )
                                         </span>
                                       )}
                                     </div>
@@ -293,7 +300,9 @@ export default function TradeResultsTab({
                                       </span>
                                       {asset.type === "player" && (
                                         <span className="ml-2 text-gray-400">
-                                          ({formatSalary(asset.data.salary)})
+                                          (
+                                          {formatSalary(asset.data.salary ?? 0)}
+                                          )
                                         </span>
                                       )}
                                     </div>
@@ -339,8 +348,8 @@ export default function TradeResultsTab({
               No Trade Results Yet
             </h3>
             <p className="text-gray-400">
-              Select players and click "Generate AI Trades" to see trade
-              scenarios.
+              Select players and click &quot;Generate AI Trades&quot; to see
+              trade scenarios.
             </p>
           </div>
         </div>

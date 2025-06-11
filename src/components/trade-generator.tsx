@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import {
   Card,
@@ -20,7 +20,7 @@ interface SelectedAsset {
   type: "player" | "pick";
   fromTeam: string;
   toTeam: string;
-  data: any;
+  data: unknown;
 }
 
 interface TeamRosterData {
@@ -40,7 +40,7 @@ export default function TradeGenerator({ nbaTeams = [] }: TradeGeneratorProps) {
   const [teamRosterData, setTeamRosterData] = useState<
     Record<string, TeamRosterData>
   >({});
-  const [generatedTrades, setGeneratedTrades] = useState<any[]>([]);
+  const [generatedTrades, setGeneratedTrades] = useState<unknown[]>([]);
   const [isGeneratingTrades, setIsGeneratingTrades] = useState(false);
 
   const MAX_TEAMS = 5;
@@ -76,7 +76,9 @@ export default function TradeGenerator({ nbaTeams = [] }: TradeGeneratorProps) {
           },
         }));
       } else {
-        throw new Error(data.error || "Failed to load roster data");
+        throw new Error(
+          (data as { error?: string }).error ?? "Failed to load roster data",
+        );
       }
     } catch (error) {
       console.error("Error fetching roster:", error);
@@ -136,7 +138,7 @@ export default function TradeGenerator({ nbaTeams = [] }: TradeGeneratorProps) {
     assetId: string,
     type: "player" | "pick",
     fromTeam: string,
-    data: any,
+    data: unknown,
   ) => {
     setSelectedAssets((prev) => {
       const existingIndex = prev.findIndex((asset) => asset.id === assetId);
@@ -245,7 +247,9 @@ export default function TradeGenerator({ nbaTeams = [] }: TradeGeneratorProps) {
       if (result.success && result.trades) {
         setGeneratedTrades(result.trades);
       } else {
-        throw new Error(result.error || "Failed to generate trades");
+        throw new Error(
+          (result as { error?: string }).error ?? "Failed to generate trades",
+        );
       }
     } catch (error) {
       console.error("Error generating trades:", error);
@@ -273,7 +277,15 @@ export default function TradeGenerator({ nbaTeams = [] }: TradeGeneratorProps) {
     return team?.name || "Unknown Team";
   };
 
-  const getTeamPlayers = (teamId: string): Array<any> => {
+  const getTeamPlayers = (
+    teamId: string,
+  ): Array<{
+    id: string;
+    name: string;
+    position: string;
+    salary: number;
+    nbaData: NBAPlayer;
+  }> => {
     const rosterData = teamRosterData[teamId];
     if (!rosterData?.players) return [];
 

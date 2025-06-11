@@ -20,7 +20,7 @@ interface SelectedAsset {
   type: "player" | "pick";
   fromTeam: string;
   toTeam: string;
-  data: any;
+  data: unknown;
 }
 
 interface TeamRosterData {
@@ -33,7 +33,9 @@ interface SelectPlayersTabProps {
   selectedTeams: string[];
   selectedAssets: SelectedAsset[];
   teamRosterData: Record<string, TeamRosterData>;
-  sportData: any;
+  sportData: {
+    teams: Array<{ id: string; name: string }>;
+  };
   MAX_TEAMS: number;
   addTeam: () => void;
   removeTeam: (index: number) => void;
@@ -42,15 +44,26 @@ interface SelectPlayersTabProps {
     assetId: string,
     type: "player" | "pick",
     fromTeam: string,
-    data: any,
+    data: unknown,
   ) => void;
   updateAssetDestination: (assetId: string, toTeam: string) => void;
   getAvailableDestinations: (fromTeam: string) => string[];
   isAssetSelected: (assetId: string) => boolean;
   getAssetDestination: (assetId: string) => string;
   getTeamName: (teamId: string) => string;
-  getTeamPlayers: (teamId: string) => Array<any>;
-  getTeamDraftPicks: (teamId: string) => any[];
+  getTeamPlayers: (teamId: string) => Array<{
+    id: string;
+    name: string;
+    position: string;
+    salary: number;
+    nbaData: NBAPlayer;
+  }>;
+  getTeamDraftPicks: (teamId: string) => Array<{
+    id: string;
+    year: number;
+    round: string;
+    team: string;
+  }>;
   isTeamRosterLoading: (teamId: string) => boolean;
   getTeamRosterError: (teamId: string) => string | undefined;
   formatSalary: (salary: number) => string;
@@ -60,7 +73,6 @@ interface SelectPlayersTabProps {
 export default function SelectPlayersTab({
   selectedTeams,
   selectedAssets,
-  teamRosterData,
   sportData,
   MAX_TEAMS,
   addTeam,
@@ -258,11 +270,21 @@ export default function SelectPlayersTab({
                                     <span>•</span>
                                     <span>{formatSalary(player.salary)}</span>
                                     {selectedSport === "NBA" &&
-                                      nbaPlayer?.contract?.yearsRemaining && (
+                                      (
+                                        nbaPlayer?.contract as {
+                                          yearsRemaining?: number;
+                                        }
+                                      )?.yearsRemaining && (
                                         <>
                                           <span>•</span>
                                           <span>
-                                            {nbaPlayer.contract.yearsRemaining}
+                                            {
+                                              (
+                                                nbaPlayer.contract as {
+                                                  yearsRemaining?: number;
+                                                }
+                                              ).yearsRemaining
+                                            }
                                             yr remaining
                                           </span>
                                         </>
