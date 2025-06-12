@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { getApiUrl } from "~/lib/api-utils";
 import { env } from "~/env";
 
 // Initialize OpenAI client
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { selectedAssets, teams, sport = "NBA" } = body;
+    const { selectedAssets, teams } = body;
 
     if (
       !selectedAssets ||
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
     let rosterContext = "";
     try {
       // Get all NBA teams first
-      const teamsResponse = await fetch(`/api/espn/nba/teams`);
+      const teamsResponse = await fetch(getApiUrl(`/api/espn/nba/teams`));
       if (teamsResponse.ok) {
         const teamsData = await teamsResponse.json();
         if (teamsData.success && teamsData.data) {
@@ -68,7 +69,7 @@ export async function POST(request: NextRequest) {
           const rosterPromises = teamsToFetch.map(async (teamId: string) => {
             try {
               const rosterResponse = await fetch(
-                `/api/espn/nba/team/${teamId}/roster`,
+                getApiUrl(`/api/espn/nba/team/${teamId}/roster`),
               );
               if (rosterResponse.ok) {
                 const rosterData = await rosterResponse.json();

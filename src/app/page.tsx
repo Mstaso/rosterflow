@@ -1,23 +1,21 @@
 import TradeGenerator from "~/components/trade-generator";
 import { Handshake } from "lucide-react";
 import type { NBATeam } from "~/lib/nba-types";
+import { getApiUrl } from "~/lib/api-utils";
 
 async function getNBATeams(): Promise<NBATeam[]> {
   try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/espn/nba/teams`,
-      {
-        cache: "force-cache", // Cache for 1 hour since team data doesn't change often
-        next: { revalidate: 3600 },
-      },
-    );
+    const response = await fetch(getApiUrl("/api/espn/nba/teams"), {
+      cache: "force-cache", // Cache for 1 hour since team data doesn't change often
+      next: { revalidate: 3600 },
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch NBA teams: ${response.status}`);
     }
 
     const data = await response.json();
-
+    console.log("been hit", data);
     if (data.success && data.data) {
       return data.data;
     } else {

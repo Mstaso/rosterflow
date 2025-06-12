@@ -216,24 +216,27 @@ export default function TradeResultsTab({
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {trade.teams.map((teamId: string) => {
-                      const teamTrade = trade.trades[teamId];
-                      const outgoingSalary = teamTrade.outgoing
+                    {trade.teams?.map((teamId: string) => {
+                      const teamTrade = trade.trades?.[teamId];
+
+                      // If no teamTrade data, skip this team
+                      if (!teamTrade) return null;
+                      const outgoingSalary = (teamTrade.outgoing || [])
                         .filter(
-                          (asset: SelectedAsset) => asset.type === "player",
+                          (asset: SelectedAsset) => asset?.type === "player",
                         )
                         .reduce(
                           (sum: number, asset: SelectedAsset) =>
-                            sum + (asset?.data.salary ?? 0),
+                            sum + (asset?.data?.salary ?? 0),
                           0,
                         );
-                      const incomingSalary = teamTrade.incoming
+                      const incomingSalary = (teamTrade.incoming || [])
                         .filter(
-                          (asset: SelectedAsset) => asset.type === "player",
+                          (asset: SelectedAsset) => asset?.type === "player",
                         )
                         .reduce(
                           (sum: number, asset: SelectedAsset) =>
-                            sum + (asset?.data.salary ?? 0),
+                            sum + (asset?.data?.salary ?? 0),
                           0,
                         );
 
@@ -247,70 +250,90 @@ export default function TradeResultsTab({
                           </h4>
 
                           {/* Outgoing Assets */}
-                          {teamTrade.outgoing.length > 0 && (
-                            <div className="mb-3">
-                              <h5 className="mb-1 text-sm font-medium text-red-300">
-                                Sends:
-                              </h5>
-                              <div className="space-y-1">
-                                {teamTrade.outgoing.map(
-                                  (asset: SelectedAsset) => (
-                                    <div key={asset.id} className="text-sm">
-                                      <span className="text-white">
-                                        {asset.type === "player"
-                                          ? asset.data.name
-                                          : `${asset.data.year} ${asset.data.round} Pick`}
-                                      </span>
-                                      {asset.toTeam && (
-                                        <span className="ml-2 text-gray-400">
-                                          → {getTeamName(asset.toTeam)}
+                          {teamTrade.outgoing &&
+                            teamTrade.outgoing.length > 0 && (
+                              <div className="mb-3">
+                                <h5 className="mb-1 text-sm font-medium text-red-300">
+                                  Sends:
+                                </h5>
+                                <div className="space-y-1">
+                                  {teamTrade.outgoing.map(
+                                    (
+                                      asset: SelectedAsset,
+                                      assetIdx: number,
+                                    ) => (
+                                      <div
+                                        key={asset?.id || assetIdx}
+                                        className="text-sm"
+                                      >
+                                        <span className="text-white">
+                                          {asset?.type === "player"
+                                            ? asset?.data?.name ||
+                                              "Unknown Player"
+                                            : `${asset?.data?.year || "Unknown"} ${asset?.data?.round || "Round"} Pick`}
                                         </span>
-                                      )}
-                                      {asset.type === "player" && (
-                                        <span className="ml-2 text-gray-400">
-                                          (
-                                          {formatSalary(asset.data.salary ?? 0)}
-                                          )
-                                        </span>
-                                      )}
-                                    </div>
-                                  ),
-                                )}
+                                        {asset?.toTeam && (
+                                          <span className="ml-2 text-gray-400">
+                                            → {getTeamName(asset.toTeam)}
+                                          </span>
+                                        )}
+                                        {asset?.type === "player" && (
+                                          <span className="ml-2 text-gray-400">
+                                            (
+                                            {formatSalary(
+                                              asset?.data?.salary ?? 0,
+                                            )}
+                                            )
+                                          </span>
+                                        )}
+                                      </div>
+                                    ),
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
 
                           {/* Incoming Assets */}
-                          {teamTrade.incoming.length > 0 && (
-                            <div className="mb-3">
-                              <h5 className="mb-1 text-sm font-medium text-green-300">
-                                Receives:
-                              </h5>
-                              <div className="space-y-1">
-                                {teamTrade.incoming.map(
-                                  (asset: SelectedAsset) => (
-                                    <div key={asset.id} className="text-sm">
-                                      <span className="text-white">
-                                        {asset.type === "player"
-                                          ? asset.data.name
-                                          : `${asset.data.year} ${asset.data.round} Pick`}
-                                      </span>
-                                      <span className="ml-2 text-gray-400">
-                                        ← {getTeamName(asset.fromTeam)}
-                                      </span>
-                                      {asset.type === "player" && (
-                                        <span className="ml-2 text-gray-400">
-                                          (
-                                          {formatSalary(asset.data.salary ?? 0)}
-                                          )
+                          {teamTrade.incoming &&
+                            teamTrade.incoming.length > 0 && (
+                              <div className="mb-3">
+                                <h5 className="mb-1 text-sm font-medium text-green-300">
+                                  Receives:
+                                </h5>
+                                <div className="space-y-1">
+                                  {teamTrade.incoming.map(
+                                    (
+                                      asset: SelectedAsset,
+                                      assetIdx: number,
+                                    ) => (
+                                      <div
+                                        key={asset?.id || assetIdx}
+                                        className="text-sm"
+                                      >
+                                        <span className="text-white">
+                                          {asset?.type === "player"
+                                            ? asset?.data?.name ||
+                                              "Unknown Player"
+                                            : `${asset?.data?.year || "Unknown"} ${asset?.data?.round || "Round"} Pick`}
                                         </span>
-                                      )}
-                                    </div>
-                                  ),
-                                )}
+                                        <span className="ml-2 text-gray-400">
+                                          ← {getTeamName(asset?.fromTeam || "")}
+                                        </span>
+                                        {asset?.type === "player" && (
+                                          <span className="ml-2 text-gray-400">
+                                            (
+                                            {formatSalary(
+                                              asset?.data?.salary ?? 0,
+                                            )}
+                                            )
+                                          </span>
+                                        )}
+                                      </div>
+                                    ),
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
 
                           {/* Salary Summary */}
                           {(outgoingSalary > 0 || incomingSalary > 0) && (

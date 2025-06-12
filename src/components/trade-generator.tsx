@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "~/components/ui/button";
 import {
   Card,
@@ -14,6 +14,7 @@ import { RefreshCw } from "lucide-react";
 import type { NBATeam, NBAPlayer } from "~/lib/nba-types";
 import SelectPlayersTab from "~/components/select-players-tab";
 import TradeResultsTab from "~/components/trade-results-tab";
+import { useApi, useGenerateTrades } from "~/hooks/useApi";
 
 interface SelectedAsset {
   id: string;
@@ -40,8 +41,15 @@ export default function TradeGenerator({ nbaTeams = [] }: TradeGeneratorProps) {
   const [teamRosterData, setTeamRosterData] = useState<
     Record<string, TeamRosterData>
   >({});
-  const [generatedTrades, setGeneratedTrades] = useState<unknown[]>([]);
-  const [isGeneratingTrades, setIsGeneratingTrades] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("select");
+
+  // Use the trade generation hook
+  const {
+    data: trades,
+    loading: isGeneratingTrades,
+    error: tradesError,
+    generateTrades,
+  } = useGenerateTrades();
 
   const MAX_TEAMS = 5;
 
@@ -52,46 +60,60 @@ export default function TradeGenerator({ nbaTeams = [] }: TradeGeneratorProps) {
     })),
   };
 
-  const fetchTeamRoster = async (teamId: string): Promise<void> => {
-    if (teamRosterData[teamId]) return;
+  // Create a reusable api instance for fetching team rosters
+  const { fetchData: fetchRosterData } = useApi<{
+    team: any;
+    roster: Array<{
+      id: string;
+      displayName: string;
+      position?: { abbreviation: string };
+      contract?: { salary: number };
+      [key: string]: any;
+    }>;
+    rosterCount: number;
+    season: string;
+  }>(null, { immediate: false });
 
-    setTeamRosterData((prev) => ({
-      ...prev,
-      [teamId]: { players: [], isLoading: true },
-    }));
+  const fetchTeamRoster = useCallback(
+    async (teamId: string): Promise<void> => {
+      if (teamRosterData[teamId]) return;
 
-    try {
-      const response = await fetch(`/api/teams/${teamId}/roster`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch roster: ${response.statusText}`);
-      }
-      const data = await response.json();
+      setTeamRosterData((prev) => ({
+        ...prev,
+        [teamId]: { players: [], isLoading: true },
+      }));
 
-      if (data.success && data.players) {
+      try {
+        // Use the hook's fetchData method with the specific team URL
+        const data = await fetchRosterData(
+          `/api/espn/nba/team/${teamId}/roster`,
+        );
+
+        if (data?.roster) {
+          setTeamRosterData((prev) => ({
+            ...prev,
+            [teamId]: {
+              players: data.roster,
+              isLoading: false,
+            },
+          }));
+        } else {
+          throw new Error("Failed to load roster data");
+        }
+      } catch (error) {
+        console.error("Error fetching roster:", error);
         setTeamRosterData((prev) => ({
           ...prev,
           [teamId]: {
-            players: data.players,
+            players: [],
             isLoading: false,
+            error: error instanceof Error ? error.message : "Unknown error",
           },
         }));
-      } else {
-        throw new Error(
-          (data as { error?: string }).error ?? "Failed to load roster data",
-        );
       }
-    } catch (error) {
-      console.error("Error fetching roster:", error);
-      setTeamRosterData((prev) => ({
-        ...prev,
-        [teamId]: {
-          players: [],
-          isLoading: false,
-          error: error instanceof Error ? error.message : "Unknown error",
-        },
-      }));
-    }
-  };
+    },
+    [teamRosterData, fetchRosterData],
+  );
 
   const addTeam = () => {
     if (selectedTeams.length < MAX_TEAMS) {
@@ -201,9 +223,6 @@ export default function TradeGenerator({ nbaTeams = [] }: TradeGeneratorProps) {
   const generateAutoTrades = async () => {
     if (!canTryTrade()) return;
 
-    setIsGeneratingTrades(true);
-    setGeneratedTrades([]);
-
     try {
       const allTeams = Array.from(
         new Set([
@@ -225,32 +244,16 @@ export default function TradeGenerator({ nbaTeams = [] }: TradeGeneratorProps) {
         }
       });
 
-      const response = await fetch("/api/trades/generate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          assets: selectedAssets,
-          teams: allTeams,
-          destinationPreferences,
-          sport: selectedSport,
-        }),
+      // Use the hook to generate trades
+      await generateTrades({
+        assets: selectedAssets,
+        teams: allTeams,
+        destinationPreferences,
+        sport: selectedSport,
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to generate trades");
-      }
-
-      const result = await response.json();
-
-      if (result.success && result.trades) {
-        setGeneratedTrades(result.trades);
-      } else {
-        throw new Error(
-          (result as { error?: string }).error ?? "Failed to generate trades",
-        );
-      }
+      // Switch to results tab after successful generation
+      setActiveTab("results");
     } catch (error) {
       console.error("Error generating trades:", error);
       alert(
@@ -258,8 +261,6 @@ export default function TradeGenerator({ nbaTeams = [] }: TradeGeneratorProps) {
           ? error.message
           : "Failed to generate trades. Please try again.",
       );
-    } finally {
-      setIsGeneratingTrades(false);
     }
   };
 
@@ -315,12 +316,12 @@ export default function TradeGenerator({ nbaTeams = [] }: TradeGeneratorProps) {
   };
 
   return (
-    <Card className="border-gray-700 bg-gray-900 text-white">
-      <CardHeader className="border-b border-gray-700 bg-gray-800">
+    <Card className="overflow-hidden border-gray-700 bg-gray-900 p-0 text-white">
+      <CardHeader className="border-b border-gray-700 bg-gray-800 pt-4">
         <CardTitle className="text-xl text-white">Trade Generator</CardTitle>
       </CardHeader>
       <CardContent className="p-4">
-        <Tabs defaultValue="select" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-gray-800">
             <TabsTrigger
               value="select"
@@ -364,10 +365,15 @@ export default function TradeGenerator({ nbaTeams = [] }: TradeGeneratorProps) {
           <TabsContent value="results">
             <TradeResultsTab
               isGeneratingTrades={isGeneratingTrades}
-              generatedTrades={generatedTrades}
+              generatedTrades={trades || []}
               getTeamName={getTeamName}
               formatSalary={formatSalary}
             />
+            {tradesError && (
+              <div className="mt-4 rounded-md border border-red-600 bg-red-900/20 p-3">
+                <p className="text-sm text-red-300">Error: {tradesError}</p>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </CardContent>
