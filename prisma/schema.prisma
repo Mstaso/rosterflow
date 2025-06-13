@@ -13,8 +13,7 @@ datasource db {
 // NBA Teams with salary cap information
 model Team {
     id                Int       @id @default(autoincrement())
-    uid               String    @unique
-    slug              String
+    slug              String    @unique
     abbreviation      String
     displayName       String
     shortDisplayName  String
@@ -26,6 +25,8 @@ model Team {
     logos             Json
     record            Json?
     venue             Json?
+    conference        String
+    division          String
     
     // Salary Cap Information
     totalCapAllocation    Float? @db.Real
@@ -50,8 +51,6 @@ model Team {
 // Players on team rosters
 model Player {
     id                Int       @id @default(autoincrement())
-    uid               String    @unique
-    guid              String
     firstName         String
     lastName          String
     fullName          String
@@ -153,4 +152,4 @@ model TradeAsset {
     
     @@index([tradeId])
     @@index([assetType])
-}
+} 

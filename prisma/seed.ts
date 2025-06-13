@@ -77,7 +77,6 @@ async function fetchTeams() {
     const teams =
       data.sports[0]?.leagues[0]?.teams?.map((teamData: any) => ({
         id: teamData.team.id,
-        uid: teamData.team.uid,
         slug: teamData.team.slug,
         abbreviation: teamData.team.abbreviation,
         displayName: teamData.team.displayName,
@@ -96,6 +95,28 @@ async function fetchTeams() {
   } catch (error) {
     console.error("Error fetching teams:", error);
     throw error;
+  }
+}
+
+async function fetchTeamRecord(teamId: string) {
+  try {
+    const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/${teamId}`;
+    console.log(`Fetching record for team ${teamId}...`);
+
+    const response = await fetch(url, {
+      headers: {
+        Accept: "application/json",
+        "User-Agent": "Mozilla/5.0 (compatible; RosterFlow/1.0)",
+      },
+    });
+
+    const data = await response.json();
+    return data.team?.record?.summary?.items[0]?.summary
+      ? data.team?.record?.summary?.items[0]?.summary
+      : "42-42";
+  } catch (error) {
+    console.error(`Error fetching record for team ${teamId}:`, error);
+    return []; // Return empty array instead of throwing
   }
 }
 
@@ -138,10 +159,13 @@ async function seedTeams() {
     const conference =
       NBA_DIVISIONS[division as keyof typeof NBA_DIVISIONS] || "Unknown";
     const getSalaryCapData = salaryCapData.find(
-      (t) => t.teamName === espnTeam.name,
+      (t) => t.teamName === espnTeam.displayName,
     );
+
+    // Ensure logos and record are properly formatted as JSON
+    const venue = espnTeam.venue || null;
+
     const teamData = {
-      uid: espnTeam.uid,
       slug: espnTeam.slug,
       abbreviation: espnTeam.abbreviation,
       displayName: espnTeam.displayName,
@@ -152,8 +176,8 @@ async function seedTeams() {
       alternateColor: espnTeam.alternateColor,
       isActive: espnTeam.isActive,
       logos: espnTeam.logos,
-      record: espnTeam.record,
-      venue: espnTeam.venue,
+      record: await fetchTeamRecord(espnTeam.id),
+      venue: venue,
       conference,
       division,
       totalCapAllocation: getSalaryCapData?.totalCapAllocation || 0,
@@ -165,9 +189,7 @@ async function seedTeams() {
     console.log("Creating team:", teamData);
 
     const team = await prisma.team.create({
-      data: {
-        ...teamData,
-      },
+      data: teamData,
     });
 
     teams.push(team);
@@ -181,43 +203,90 @@ async function seedTeams() {
 async function seedPlayers(teams: any[]) {
   console.log("👥 Seeding NBA players...");
 
+  // Map of team slugs to ESPN team IDs
+  const teamIdMap: Record<string, string> = {
+    "atlanta-hawks": "1",
+    "boston-celtics": "2",
+    "brooklyn-nets": "3",
+    "charlotte-hornets": "4",
+    "chicago-bulls": "5",
+    "cleveland-cavaliers": "6",
+    "dallas-mavericks": "7",
+    "denver-nuggets": "8",
+    "detroit-pistons": "9",
+    "golden-state-warriors": "10",
+    "houston-rockets": "11",
+    "indiana-pacers": "12",
+    "los-angeles-clippers": "13",
+    "los-angeles-lakers": "14",
+    "memphis-grizzlies": "15",
+    "miami-heat": "16",
+    "milwaukee-bucks": "17",
+    "minnesota-timberwolves": "18",
+    "new-orleans-pelicans": "19",
+    "new-york-knicks": "20",
+    "oklahoma-city-thunder": "21",
+    "orlando-magic": "22",
+    "philadelphia-76ers": "23",
+    "phoenix-suns": "24",
+    "portland-trail-blazers": "25",
+    "sacramento-kings": "26",
+    "san-antonio-spurs": "27",
+    "toronto-raptors": "28",
+    "utah-jazz": "29",
+    "washington-wizards": "30",
+  };
+
   for (const team of teams) {
-    const roster = await fetchTeamRoster(team.id);
+    const espnTeamId = teamIdMap[team.slug];
+    if (!espnTeamId) {
+      console.warn(
+        `No ESPN team ID found for ${team.name} (slug: ${team.slug})`,
+      );
+      continue;
+    }
+
+    const roster = await fetchTeamRoster(espnTeamId);
     console.log(`Found ${roster.length} players for ${team.name}`);
 
     for (const player of roster) {
       const playerData = {
-        uid: player.uid,
-        guid: player.guid,
-        firstName: player.firstName,
-        lastName: player.lastName,
-        fullName: player.fullName,
-        displayName: player.displayName,
-        shortName: player.shortName,
-        weight: player.weight,
-        displayWeight: player.displayWeight,
-        height: player.height,
-        displayHeight: player.displayHeight,
-        age: player.age,
-        dateOfBirth: player.dateOfBirth,
-        birthPlace: player.birthPlace,
-        jersey: player.jersey,
-        position: player.position,
-        experience: player.experience,
-        college: player.college,
-        headshot: player.headshot,
-        status: player.status,
-        injuries: player.injuries,
-        contract: player.contract,
-        statistics: player.statistics,
+        firstName: player.firstName || "",
+        lastName: player.lastName || "",
+        fullName:
+          player.fullName ||
+          `${player.firstName || ""} ${player.lastName || ""}`.trim(),
+        displayName: player.displayName || player.fullName || "",
+        shortName: player.shortName || player.displayName || "",
+        weight: player.weight || 0,
+        displayWeight: player.displayWeight || "",
+        height: player.height || 0,
+        displayHeight: player.displayHeight || "",
+        age: player.age || 0,
+        dateOfBirth: player.dateOfBirth || null,
+        birthPlace: player.birthPlace || null,
+        jersey: player.jersey || "",
+        position: player.position || "",
+        experience: player.experience || 0,
+        college: player.college || null,
+        headshot: player.headshot || null,
+        status: player.status || "Active",
+        injuries: player.injuries ? JSON.stringify(player.injuries) : null,
+        contract: player.contract ? JSON.stringify(player.contract) : null,
+        statistics: player.statistics
+          ? JSON.stringify(player.statistics)
+          : null,
         teamId: team.id,
       };
 
-      await prisma.player.create({
-        data: {
-          ...playerData,
-        },
-      });
+      try {
+        await prisma.player.create({
+          data: playerData,
+        });
+        console.log(`✅ Added player: ${playerData.fullName}`);
+      } catch (error) {
+        console.error(`❌ Failed to add player ${playerData.fullName}:`, error);
+      }
     }
   }
 
@@ -323,7 +392,6 @@ main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
-
 const salaryCapData = [
   {
     teamName: "Atlanta Hawks",
@@ -534,95 +602,5 @@ const salaryCapData = [
     capSpace: -96469498,
     firstApronSpace: 31598088,
     secondApronSpace: 43477088,
-  },
-];
-
-const draftPicks = [
-  {
-    year: 2025,
-    round: 1,
-    originalTeamId: prisma.team.findFirst({
-      where: {
-        name: "Sacramento Kings",
-      },
-    }),
-    currentTeamId: prisma.team.findFirst({
-      where: {
-        name: "Atlanta Hawks",
-      },
-    }),
-    isProtected: false,
-    pickNumber: 13,
-  },
-  {
-    year: 2025,
-    round: 1,
-    originalTeamId: prisma.team.findFirst({
-      where: {
-        name: "Los Angeles Lakers",
-      },
-    }),
-    currentTeamId: prisma.team.findFirst({
-      where: {
-        name: "Atlanta Hawks",
-      },
-    }),
-  },
-  {
-    year: 2027,
-    round: 2,
-    originalTeamId: prisma.team.findFirst({
-      where: {
-        name: "Cleveland Cavaliers",
-      },
-    }),
-    currentTeamId: prisma.team.findFirst({
-      where: {
-        name: "Atlanta Hawks",
-      },
-    }),
-  },
-];
-
-const pickSwaps = [
-  {
-    year: 2026,
-    round: 1,
-    teamId: prisma.team.findFirst({
-      where: {
-        name: "Atlanta Hawks",
-      },
-    }),
-    title:
-      "2026 first round draft pick from San Antonio, Cleveland, Minnesota or Utah",
-    description:
-      "More favorable of (i) less favorable of ATL and SAN and (ii) less favorable of (a) CLE and (b) more favorable of UTH 1-8 and MIN [or (ii) CLE if UTH not conveyable] then other to CLE; more favorable of ATL and SAN to SAN (via UTH swap for MIN; via UTH swap of UTH or MIN for CLE; via SAN swap for ATL; via ATL swap of ATL or SAN for CLE, UTH or MIN)",
-    isActive: true,
-  },
-  {
-    year: 2027,
-    round: 1,
-    teamId: prisma.team.findFirst({
-      where: {
-        name: "Atlanta Hawks",
-      },
-    }),
-    title: "first round draft pick from New Orleans or Milwaukee",
-    description:
-      "New Orleans will receive the more favorable of its 2027 1st round pick and Milwaukee's 2027 1st round pick and Atlanta will receive the less favorable of the two protected for selections 1-4; if this pick falls within its protected range and is therefore not conveyable, then New Orleans' obligation to Atlanta will be extinguished and New Orleans will instead receive both picks (via New Orleans) [Denver-Milwaukee-New Orleans-Oklahoma City, 11/23/2020; Atlanta-New Orleans, 7/6/2024]",
-    isActive: true,
-  },
-  {
-    year: 2027,
-    round: 1,
-    teamId: prisma.team.findFirst({
-      where: {
-        name: "Atlanta Hawks",
-      },
-    }),
-    title: "first round draft pick from New Orleans or Milwaukee",
-    description:
-      "New Orleans will receive the more favorable of its 2027 1st round pick and Milwaukee's 2027 1st round pick and Atlanta will receive the less favorable of the two protected for selections 1-4; if this pick falls within its protected range and is therefore not conveyable, then New Orleans' obligation to Atlanta will be extinguished and New Orleans will instead receive both picks (via New Orleans) [Denver-Milwaukee-New Orleans-Oklahoma City, 11/23/2020; Atlanta-New Orleans, 7/6/2024]",
-    isActive: true,
   },
 ];

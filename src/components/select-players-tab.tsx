@@ -91,7 +91,6 @@ export default function SelectPlayersTab({
   formatSalary,
   selectedSport,
 }: SelectPlayersTabProps) {
-  console.log("been hit check", sportData.teams);
   return (
     <div className="space-y-6 pt-4">
       {/* Team Selection */}
