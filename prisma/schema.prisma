@@ -10,11 +10,147 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+// NBA Teams with salary cap information
+model Team {
+    id                Int       @id @default(autoincrement())
+    uid               String    @unique
+    slug              String
+    abbreviation      String
+    displayName       String
+    shortDisplayName  String
+    name              String
+    city              String
+    color             String
+    alternateColor    String
+    isActive          Boolean
+    logos             Json
+    record            Json?
+    venue             Json?
+    
+    // Salary Cap Information
+    totalCapAllocation    Float? @db.Real
+    capSpace             Float? @db.Real
+    firstApronSpace      Float? @db.Real
+    secondApronSpace     Float? @db.Real
+    
+    // Metadata
+    createdAt         DateTime  @default(now())
+    updatedAt         DateTime  @updatedAt
+    
+    // Relations
+    players           Player[]
+    draftPicks        DraftPick[]
+    tradesFrom        Trade[] @relation("TradeFromTeam")
+    tradesTo          Trade[] @relation("TradeToTeam")
+    
+    @@index([abbreviation])
+    @@index([displayName])
+}
 
-    @@index([name])
+// Players on team rosters
+model Player {
+    id                Int       @id @default(autoincrement())
+    uid               String    @unique
+    guid              String
+    firstName         String
+    lastName          String
+    fullName          String
+    displayName       String
+    shortName         String
+    weight            Int
+    displayWeight     String
+    height            Int
+    displayHeight     String
+    age               Int
+    dateOfBirth       String
+    birthPlace        Json?
+    jersey            String
+    position          Json
+    experience        Json?
+    college           Json?
+    headshot          Json?
+    status            Json?
+    injuries          Json?
+    contract          Json?
+    statistics        Json?
+    
+    // Team relationship
+    teamId            Int
+    team              Team      @relation(fields: [teamId], references: [id])
+    
+    // Trade assets
+    tradeAssets       TradeAsset[]
+    
+    createdAt         DateTime  @default(now())
+    updatedAt         DateTime  @updatedAt
+    
+    @@unique([teamId, displayName])
+    @@index([teamId])
+    @@index([position])
+}
+
+// Draft picks (valuable trade assets)
+model DraftPick {
+    id              Int      @id @default(autoincrement())
+    year            Int      // 2024, 2025, etc.
+    round           Int      // 1 or 2
+    teamId          Int      // Team that currently owns the pick
+    isProtected     Boolean  @default(false)
+    isSwap          Boolean  @default(false)
+    description     String?  // Detailed description of the pick's status
+    
+    // Relations
+    team            Team     @relation(fields: [teamId], references: [id])
+    tradeAssets     TradeAsset[]
+    
+    createdAt       DateTime @default(now())
+    updatedAt       DateTime @updatedAt
+    
+    @@unique([year, round, teamId])
+    @@index([year, round])
+    @@index([teamId])
+}
+
+// Generated trades
+model Trade {
+    id              String   @id @default(cuid())
+    fromTeamId      Int
+    toTeamId        Int
+    isAIGenerated   Boolean  @default(false)
+    reasoning       String?  // AI explanation for the trade
+    
+    // Relations
+    fromTeam        Team     @relation("TradeFromTeam", fields: [fromTeamId], references: [id])
+    toTeam          Team     @relation("TradeToTeam", fields: [toTeamId], references: [id])
+    assets          TradeAsset[]
+    
+    createdAt       DateTime @default(now())
+    updatedAt       DateTime @updatedAt
+    
+    @@index([fromTeamId])
+    @@index([toTeamId])
+    @@index([createdAt])
+}
+
+// Assets in a trade (players or draft picks)
+model TradeAsset {
+    id              Int      @id @default(autoincrement())
+    tradeId         String
+    assetType       String   // "player" or "draft_pick"
+    
+    // For players
+    playerId        Int?
+    player          Player?  @relation(fields: [playerId], references: [id])
+    
+    // For draft picks
+    draftPickId     Int?
+    draftPick       DraftPick? @relation(fields: [draftPickId], references: [id])
+    
+    // Trade relationship
+    trade           Trade    @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+    
+    createdAt       DateTime @default(now())
+    
+    @@index([tradeId])
+    @@index([assetType])
 }

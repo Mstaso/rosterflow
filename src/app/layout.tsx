@@ -4,7 +4,7 @@ import { type Metadata } from "next";
 import { Geist } from "next/font/google";
 
 export const metadata: Metadata = {
-  title: "Roster Flow",
+  title: "Roster Flows",
   description: "Create and generate realistic NBA trades",
   icons: [{ rel: "icon", url: "/favicon.svg", type: "image/svg+xml" }],
 };

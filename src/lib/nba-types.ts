@@ -8,7 +8,7 @@ export interface NBATeam {
   displayName: string;
   shortDisplayName: string;
   name: string;
-  location: string;
+  city: string;
   color: string;
   alternateColor: string;
   isActive: boolean;

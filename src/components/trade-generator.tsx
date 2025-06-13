@@ -15,6 +15,7 @@ import type { NBATeam, NBAPlayer } from "~/lib/nba-types";
 import SelectPlayersTab from "~/components/select-players-tab";
 import TradeResultsTab from "~/components/trade-results-tab";
 import { useApi, useGenerateTrades } from "~/hooks/useApi";
+import { getApiUrl } from "~/lib/api-utils";
 
 interface SelectedAsset {
   id: string;
@@ -28,6 +29,7 @@ interface TeamRosterData {
   players: NBAPlayer[];
   isLoading: boolean;
   error?: string;
+  draftPicks: any[]; // Use any[] for now, or import the correct DraftPick type if available
 }
 
 interface TradeGeneratorProps {
@@ -35,7 +37,7 @@ interface TradeGeneratorProps {
 }
 
 export default function TradeGenerator({ nbaTeams = [] }: TradeGeneratorProps) {
-  const [selectedSport] = useState("NBA");
+  const selectedSport = "NBA";
   const [selectedTeams, setSelectedTeams] = useState<string[]>([""]);
   const [selectedAssets, setSelectedAssets] = useState<SelectedAsset[]>([]);
   const [teamRosterData, setTeamRosterData] = useState<
@@ -56,64 +58,56 @@ export default function TradeGenerator({ nbaTeams = [] }: TradeGeneratorProps) {
   const sportData = {
     teams: nbaTeams.map((team) => ({
       id: team.id.toString(),
-      name: team.displayName,
+      name: `${team.city} ${team.name}`,
     })),
   };
 
   // Create a reusable api instance for fetching team rosters
   const { fetchData: fetchRosterData } = useApi<{
-    team: any;
-    roster: Array<{
-      id: string;
-      displayName: string;
-      position?: { abbreviation: string };
-      contract?: { salary: number };
-      [key: string]: any;
-    }>;
-    rosterCount: number;
-    season: string;
+    data: {
+      players: NBAPlayer[];
+      currentDraftPicks: NBAPlayer[];
+    };
   }>(null, { immediate: false });
 
-  const fetchTeamRoster = useCallback(
-    async (teamId: string): Promise<void> => {
-      if (teamRosterData[teamId]) return;
+  const fetchTeamRoster = async (teamId: string) => {
+    if (teamRosterData[teamId]) return;
 
-      setTeamRosterData((prev) => ({
-        ...prev,
-        [teamId]: { players: [], isLoading: true },
-      }));
-
-      try {
-        // Use the hook's fetchData method with the specific team URL
-        const data = await fetchRosterData(
-          `/api/espn/nba/team/${teamId}/roster`,
-        );
-
-        if (data?.roster) {
-          setTeamRosterData((prev) => ({
-            ...prev,
-            [teamId]: {
-              players: data.roster,
-              isLoading: false,
-            },
-          }));
-        } else {
-          throw new Error("Failed to load roster data");
-        }
-      } catch (error) {
-        console.error("Error fetching roster:", error);
+    setTeamRosterData((prev) => ({
+      ...prev,
+      [teamId]: { players: [], draftPicks: [], isLoading: true },
+    }));
+    try {
+      const response = await fetch(getApiUrl(`/api/nba/team/${teamId}`));
+      const data = await response.json();
+      console.log("DATA CHECK CHECK", data);
+      if (data?.data.players) {
         setTeamRosterData((prev) => ({
           ...prev,
           [teamId]: {
-            players: [],
+            players: data.data.players,
+            draftPicks: data.data.draftPicks,
             isLoading: false,
-            error: error instanceof Error ? error.message : "Unknown error",
           },
         }));
+      } else {
+        throw new Error("Failed to load roster data");
       }
-    },
-    [teamRosterData, fetchRosterData],
-  );
+    } catch (error) {
+      console.error("Error fetching roster:", error);
+      setTeamRosterData((prev) => ({
+        ...prev,
+        [teamId]: {
+          players: [],
+          draftPicks: [],
+          isLoading: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        },
+      }));
+    }
+  };
+
+  console.log("TEAM ROSTER DATA", teamRosterData);
 
   const addTeam = () => {
     if (selectedTeams.length < MAX_TEAMS) {
@@ -292,19 +286,23 @@ export default function TradeGenerator({ nbaTeams = [] }: TradeGeneratorProps) {
 
     return rosterData.players.map((nbaPlayer) => ({
       id: nbaPlayer.id,
-      name: nbaPlayer.displayName,
-      position: nbaPlayer.position?.abbreviation || "N/A",
-      salary: nbaPlayer.contract?.salary || 0,
-      nbaData: nbaPlayer,
+      name: nbaPlayer.name,
+      position: nbaPlayer.position || "N/A",
+      salary: nbaPlayer.salary || 0,
+      contract: nbaPlayer.contractYears,
     }));
   };
 
   const getTeamDraftPicks = (teamId: string) => {
-    return [
-      { id: `${teamId}-2025-1st`, year: 2025, round: "1st", team: teamId },
-      { id: `${teamId}-2025-2nd`, year: 2025, round: "2nd", team: teamId },
-      { id: `${teamId}-2026-1st`, year: 2026, round: "1st", team: teamId },
-    ];
+    const teamRoster = teamRosterData[teamId];
+    if (!teamRoster) return [];
+
+    return teamRoster.draftPicks.map((pick) => ({
+      id: pick.id,
+      year: pick.year,
+      round: pick.round,
+      team: teamId,
+    }));
   };
 
   const isTeamRosterLoading = (teamId: string) => {

@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
         displayName: teamData.team.displayName,
         shortDisplayName: teamData.team.shortDisplayName,
         name: teamData.team.name,
-        location: teamData.team.location,
+        city: teamData.team.location,
         color: teamData.team.color,
         alternateColor: teamData.team.alternateColor,
         isActive: teamData.team.isActive,
