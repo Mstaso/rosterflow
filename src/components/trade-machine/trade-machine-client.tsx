@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "~/components/ui/tabs";
 import { TeamSelectDropdown } from "../trade-machine/team-select-dropdown";
 import { TeamCard } from "../trade-machine/team-card";
 import { Button } from "~/components/ui/button";
@@ -10,6 +10,7 @@ import { Navbar } from "~/components/layout/navbar";
 import type { Team } from "~/types";
 import { toast } from "sonner";
 import { useState } from "react";
+import Image from "next/image";
 
 const MAX_TEAMS = 5;
 
@@ -25,6 +26,7 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
   const [showTeamSelector, setShowTeamSelector] = useState(false);
   const [selectedTeamIds, setSelectedTeamIds] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("");
 
   const handleTeamSelect = async (team: Team) => {
     try {
@@ -36,7 +38,11 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
       const responseData = await response.json();
       const teamWithRoster = responseData.data;
 
-      setSelectedTeams((prev) => [...prev, teamWithRoster]);
+      setSelectedTeams((prev) => {
+        const newTeams = [...prev, teamWithRoster];
+        setTimeout(() => setActiveTab(team.id.toString()), 0);
+        return newTeams;
+      });
       setSelectedTeamIds((prev) => [...prev, team.id]);
       setShowTeamSelector(false);
     } catch (error) {
@@ -48,6 +54,8 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
   };
 
   const handleRemoveTeam = (teamId: number) => {
+    const isFirstTeamAndMultipleTeams =
+      selectedTeamIds.length > 1 && selectedTeamIds[0] === teamId;
     setSelectedTeams((prev) => prev.filter((team) => team.id !== teamId));
     setSelectedTeamIds((prev) => prev.filter((id) => id !== teamId));
     setSelectedAssets((prev) =>
@@ -62,6 +70,11 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
         }
       })
     );
+    const getNextTabValue = !isFirstTeamAndMultipleTeams
+      ? selectedTeams?.[0]?.id.toString()
+      : selectedTeamIds?.[1]?.toString();
+
+    setTimeout(() => setActiveTab(getNextTabValue || ""), 0);
   };
 
   const handleChangeTeam = async (oldTeamId: number, newTeam: Team) => {
@@ -81,6 +94,7 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
         prev.map((id) => (id === oldTeamId ? newTeam.id : id))
       );
       setSelectedAssets((prev) => prev.filter((a) => a.teamId !== oldTeamId));
+      setActiveTab(newTeam.id.toString());
     } catch (error) {
       console.error("Error fetching team data:", error);
       toast.error("Failed to load team data. Please try again.");
@@ -150,60 +164,142 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
 
         <>
           {selectedTeams.length > 0 ? (
-            <div
-              className={`grid gap-4 md:gap-6 ${
-                selectedTeams.length === 1
-                  ? "grid-cols-1 md:grid-cols-2"
-                  : selectedTeams.length === 2
-                  ? "grid-cols-1 md:grid-cols-2"
-                  : selectedTeams.length === 3
-                  ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-                  : selectedTeams.length === 4
-                  ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-4"
-                  : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
-              }`}
-            >
-              {selectedTeams.map((team) => (
-                <TeamCard
-                  key={team.id}
-                  team={team}
-                  allTeams={nbaTeams}
-                  selectedTeamIdsInMachine={selectedTeamIds}
-                  onRemoveTeam={handleRemoveTeam}
-                  onChangeTeam={handleChangeTeam}
-                  selectedAssets={selectedAssets.filter(
-                    (sa) => sa.teamId === team.id
-                  )}
-                  onAssetSelect={handleAssetSelect}
-                  setSelectedTeams={setSelectedTeams}
-                  setSelectedTeamIds={setSelectedTeamIds}
-                  setSelectedAssets={setSelectedAssets}
-                />
-              ))}
-              {selectedTeams.length === 1 && (
-                <div className="flex flex-col border rounded-lg overflow-hidden">
-                  <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-muted rounded-lg bg-muted/5 m-4">
-                    <UsersIcon
-                      className="w-12 h-12 text-muted-foreground mb-3"
-                      strokeWidth={1.5}
-                    />
-                    <h3 className="text-lg font-semibold text-foreground mb-1">
-                      Add Another Team
-                    </h3>
-                    <p className="text-sm text-muted-foreground text-center mb-4">
-                      Generate a trade by selecting a player/pick or expand your
-                      trade by adding more teams
-                    </p>
-                    <TeamSelectDropdown
-                      allTeams={nbaTeams}
-                      selectedTeamIds={selectedTeamIds}
-                      onTeamSelect={handleTeamSelect}
-                      maxTeamsReached={selectedTeams.length >= MAX_TEAMS}
-                    />
-                  </div>
+            <>
+              {/* Mobile Tabs - Only show when 2 or more teams */}
+              {selectedTeams.length >= 2 && (
+                <div className="md:hidden mb-4">
+                  <Tabs
+                    value={activeTab}
+                    onValueChange={setActiveTab}
+                    defaultValue={selectedTeams[0]?.id.toString()}
+                    className="w-full "
+                  >
+                    <TabsList
+                      className="w-full grid h-16 "
+                      style={{
+                        gridTemplateColumns: `repeat(${selectedTeams.length}, 1fr)`,
+                      }}
+                    >
+                      {selectedTeams.map((team) => (
+                        <TabsTrigger
+                          key={team.id}
+                          value={team.id.toString()}
+                          className="p-2 flex items-center justify-center"
+                        >
+                          {team.logos[0] ? (
+                            <Image
+                              src={team.logos[0].href}
+                              alt={team.logos[0].alt}
+                              width={32}
+                              height={32}
+                              className="object-contain"
+                            />
+                          ) : (
+                            <span className="text-xs">{team.displayName}</span>
+                          )}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                    {selectedTeams.map((team) => (
+                      <TabsContent key={team.id} value={team.id.toString()}>
+                        <TeamCard
+                          team={team}
+                          allTeams={nbaTeams}
+                          selectedTeamIdsInMachine={selectedTeamIds}
+                          onRemoveTeam={handleRemoveTeam}
+                          selectedAssets={selectedAssets.filter(
+                            (sa) => sa.teamId === team.id
+                          )}
+                          onAssetSelect={handleAssetSelect}
+                          setSelectedTeams={setSelectedTeams}
+                          setSelectedTeamIds={setSelectedTeamIds}
+                          setSelectedAssets={setSelectedAssets}
+                          setActiveTab={setActiveTab}
+                        />
+                      </TabsContent>
+                    ))}
+                  </Tabs>
                 </div>
               )}
-            </div>
+
+              {/* Single Team View - Mobile */}
+              {selectedTeams.length === 1 && selectedTeams[0] && (
+                <div className="md:hidden">
+                  <TeamCard
+                    team={selectedTeams[0]}
+                    allTeams={nbaTeams}
+                    selectedTeamIdsInMachine={selectedTeamIds}
+                    onRemoveTeam={handleRemoveTeam}
+                    selectedAssets={selectedAssets.filter(
+                      (sa) => sa.teamId === selectedTeams[0]?.id
+                    )}
+                    onAssetSelect={handleAssetSelect}
+                    setSelectedTeams={setSelectedTeams}
+                    setSelectedTeamIds={setSelectedTeamIds}
+                    setSelectedAssets={setSelectedAssets}
+                    setActiveTab={setActiveTab}
+                  />
+                </div>
+              )}
+
+              {/* Desktop Grid */}
+              <div
+                className="hidden md:grid gap-4 md:gap-6"
+                style={{
+                  gridTemplateColumns:
+                    selectedTeams.length === 1
+                      ? "repeat(2, 1fr)"
+                      : selectedTeams.length === 2
+                      ? "repeat(2, 1fr)"
+                      : selectedTeams.length === 3
+                      ? "repeat(3, 1fr)"
+                      : selectedTeams.length === 4
+                      ? "repeat(4, 1fr)"
+                      : "repeat(5, 1fr)",
+                }}
+              >
+                {selectedTeams.map((team) => (
+                  <TeamCard
+                    key={team.id}
+                    team={team}
+                    allTeams={nbaTeams}
+                    selectedTeamIdsInMachine={selectedTeamIds}
+                    onRemoveTeam={handleRemoveTeam}
+                    selectedAssets={selectedAssets.filter(
+                      (sa) => sa.teamId === team.id
+                    )}
+                    onAssetSelect={handleAssetSelect}
+                    setSelectedTeams={setSelectedTeams}
+                    setSelectedTeamIds={setSelectedTeamIds}
+                    setSelectedAssets={setSelectedAssets}
+                    setActiveTab={setActiveTab}
+                  />
+                ))}
+                {selectedTeams.length === 1 && (
+                  <div className="flex flex-col border rounded-lg overflow-hidden">
+                    <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-muted rounded-lg bg-muted/5 m-4">
+                      <UsersIcon
+                        className="w-12 h-12 text-muted-foreground mb-3"
+                        strokeWidth={1.5}
+                      />
+                      <h3 className="text-lg font-semibold text-foreground mb-1">
+                        Add Another Team
+                      </h3>
+                      <p className="text-sm text-muted-foreground text-center mb-4">
+                        Generate a trade by selecting a player/pick or expand
+                        your trade by adding more teams
+                      </p>
+                      <TeamSelectDropdown
+                        allTeams={nbaTeams}
+                        selectedTeamIds={selectedTeamIds}
+                        onTeamSelect={handleTeamSelect}
+                        maxTeamsReached={selectedTeams.length >= MAX_TEAMS}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
           ) : (
             <div className="text-center p-8 border rounded-lg bg-muted/50">
               <LightbulbIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />

@@ -28,12 +28,7 @@ interface TeamCardProps {
   allTeams: Team[];
   selectedTeamIdsInMachine: number[];
   onRemoveTeam: (teamId: number) => void;
-  onChangeTeam: (oldTeamId: number, newTeam: Team) => void;
-  selectedAssets: Array<{
-    id: string;
-    type: "player" | "pick";
-    teamId: number;
-  }>;
+  selectedAssets: { id: string; type: "player" | "pick"; teamId: number }[];
   onAssetSelect: (
     assetId: string,
     assetType: "player" | "pick",
@@ -43,13 +38,10 @@ interface TeamCardProps {
   setSelectedTeamIds: React.Dispatch<React.SetStateAction<number[]>>;
   setSelectedAssets: React.Dispatch<
     React.SetStateAction<
-      Array<{
-        id: string;
-        type: "player" | "pick";
-        teamId: number;
-      }>
+      { id: string; type: "player" | "pick"; teamId: number }[]
     >
   >;
+  setActiveTab?: (value: string) => void;
 }
 
 interface SelectedAsset {
@@ -65,12 +57,12 @@ export function TeamCard({
   allTeams,
   selectedTeamIdsInMachine,
   onRemoveTeam,
-  onChangeTeam,
   selectedAssets,
   onAssetSelect,
   setSelectedTeams,
   setSelectedTeamIds,
   setSelectedAssets,
+  setActiveTab,
 }: TeamCardProps) {
   const [isLoading, setIsLoading] = useState(false);
   const availableTeamsForChange = allTeams.filter(
@@ -102,6 +94,7 @@ export function TeamCard({
         (prev: { id: string; type: "player" | "pick"; teamId: number }[]) =>
           prev.filter((a) => a.teamId !== oldTeamId)
       );
+      setActiveTab?.(newTeam.id.toString());
     } catch (error) {
       console.error("Error fetching team data:", error);
       toast.error("Failed to load team data. Please try again.");
