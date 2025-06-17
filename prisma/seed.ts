@@ -89,9 +89,32 @@ async function fetchTeams() {
         logos: teamData.team.logos,
         record: teamData.team.record,
         venue: teamData.team.venue,
+        nickname: teamData.team.nickname,
+        links: teamData.team.links,
       })) || [];
 
     return teams;
+
+    // return [
+    //   {
+    //     id: data.sports[0]?.leagues[0]?.teams[0].team.id,
+    //     abbreviation: data.sports[0]?.leagues[0]?.teams[0].team.abbreviation,
+    //     displayName: data.sports[0]?.leagues[0]?.teams[0].team.displayName,
+    //     shortDisplayName:
+    //       data.sports[0]?.leagues[0]?.teams[0].team.shortDisplayName,
+    //     name: data.sports[0]?.leagues[0]?.teams[0].team.name,
+    //     location: data.sports[0]?.leagues[0]?.teams[0].team.location,
+    //     color: data.sports[0]?.leagues[0]?.teams[0].team.color,
+    //     alternateColor:
+    //       data.sports[0]?.leagues[0]?.teams[0].team.alternateColor,
+    //     isActive: data.sports[0]?.leagues[0]?.teams[0].team.isActive,
+    //     logos: data.sports[0]?.leagues[0]?.teams[0].team.logos,
+    //     record: data.sports[0]?.leagues[0]?.teams[0].team.record,
+    //     slug: data.sports[0]?.leagues[0]?.teams[0].team.slug,
+    //     nickname: data.sports[0]?.leagues[0]?.teams[0].team.nickname,
+    //     links: data.sports[0]?.leagues[0]?.teams[0].team.links,
+    //   },
+    // ];
   } catch (error) {
     console.error("Error fetching teams:", error);
     throw error;
@@ -111,9 +134,9 @@ async function fetchTeamRecord(teamId: string) {
     });
 
     const data = await response.json();
-    return data.team?.record?.summary?.items[0]?.summary
-      ? data.team?.record?.summary?.items[0]?.summary
-      : "42-42";
+    return data.team?.record?.items[0]?.summary
+      ? data.team?.record?.items[0]?.summary
+      : "41-41";
   } catch (error) {
     console.error(`Error fetching record for team ${teamId}:`, error);
     return []; // Return empty array instead of throwing
@@ -134,7 +157,7 @@ async function fetchTeamRoster(teamId: string) {
 
     if (!response.ok) {
       throw new Error(
-        `Failed to fetch roster for team ${teamId}: ${response.status}`,
+        `Failed to fetch roster for team ${teamId}: ${response.status}`
       );
     }
 
@@ -159,31 +182,29 @@ async function seedTeams() {
     const conference =
       NBA_DIVISIONS[division as keyof typeof NBA_DIVISIONS] || "Unknown";
     const getSalaryCapData = salaryCapData.find(
-      (t) => t.teamName === espnTeam.displayName,
+      (t) => t.teamName === espnTeam.displayName
     );
 
-    // Ensure logos and record are properly formatted as JSON
-    const venue = espnTeam.venue || null;
-
     const teamData = {
-      slug: espnTeam.slug,
       abbreviation: espnTeam.abbreviation,
       displayName: espnTeam.displayName,
       shortDisplayName: espnTeam.shortDisplayName,
       name: espnTeam.name,
-      city: espnTeam.location,
+      location: espnTeam.location,
+      nickname: espnTeam.nickname,
       color: espnTeam.color,
       alternateColor: espnTeam.alternateColor,
       isActive: espnTeam.isActive,
       logos: espnTeam.logos,
       record: await fetchTeamRecord(espnTeam.id),
-      venue: venue,
+      slug: espnTeam.slug,
       conference,
       division,
       totalCapAllocation: getSalaryCapData?.totalCapAllocation || 0,
       capSpace: getSalaryCapData?.capSpace || 0,
       firstApronSpace: getSalaryCapData?.firstApronSpace || 0,
       secondApronSpace: getSalaryCapData?.secondApronSpace || 0,
+      links: espnTeam.links,
     };
 
     console.log("Creating team:", teamData);
@@ -203,45 +224,11 @@ async function seedTeams() {
 async function seedPlayers(teams: any[]) {
   console.log("👥 Seeding NBA players...");
 
-  // Map of team slugs to ESPN team IDs
-  const teamIdMap: Record<string, string> = {
-    "atlanta-hawks": "1",
-    "boston-celtics": "2",
-    "brooklyn-nets": "3",
-    "charlotte-hornets": "4",
-    "chicago-bulls": "5",
-    "cleveland-cavaliers": "6",
-    "dallas-mavericks": "7",
-    "denver-nuggets": "8",
-    "detroit-pistons": "9",
-    "golden-state-warriors": "10",
-    "houston-rockets": "11",
-    "indiana-pacers": "12",
-    "los-angeles-clippers": "13",
-    "los-angeles-lakers": "14",
-    "memphis-grizzlies": "15",
-    "miami-heat": "16",
-    "milwaukee-bucks": "17",
-    "minnesota-timberwolves": "18",
-    "new-orleans-pelicans": "19",
-    "new-york-knicks": "20",
-    "oklahoma-city-thunder": "21",
-    "orlando-magic": "22",
-    "philadelphia-76ers": "23",
-    "phoenix-suns": "24",
-    "portland-trail-blazers": "25",
-    "sacramento-kings": "26",
-    "san-antonio-spurs": "27",
-    "toronto-raptors": "28",
-    "utah-jazz": "29",
-    "washington-wizards": "30",
-  };
-
   for (const team of teams) {
     const espnTeamId = teamIdMap[team.slug];
     if (!espnTeamId) {
       console.warn(
-        `No ESPN team ID found for ${team.name} (slug: ${team.slug})`,
+        `No ESPN team ID found for ${team.name} (slug: ${team.slug})`
       );
       continue;
     }
@@ -250,51 +237,51 @@ async function seedPlayers(teams: any[]) {
     console.log(`Found ${roster.length} players for ${team.name}`);
 
     for (const player of roster) {
-      const playerData = {
-        firstName: player.firstName || "",
-        lastName: player.lastName || "",
-        fullName:
-          player.fullName ||
-          `${player.firstName || ""} ${player.lastName || ""}`.trim(),
-        displayName: player.displayName || player.fullName || "",
-        shortName: player.shortName || player.displayName || "",
-        weight: player.weight || 0,
-        displayWeight: player.displayWeight || "",
-        height: player.height || 0,
-        displayHeight: player.displayHeight || "",
-        age: player.age || 0,
-        dateOfBirth: player.dateOfBirth || null,
-        birthPlace: player.birthPlace || null,
-        jersey: player.jersey || "",
-        position: player.position || "",
-        experience: player.experience || 0,
-        college: player.college || null,
-        headshot: player.headshot || null,
-        status: player.status || "Active",
-        injuries: player.injuries ? JSON.stringify(player.injuries) : null,
-        contract: player.contract ? JSON.stringify(player.contract) : null,
-        statistics: player.statistics
-          ? JSON.stringify(player.statistics)
-          : null,
-        teamId: team.id,
-      };
+      if (
+        player.contract &&
+        player.contract.salary !== 0 &&
+        player.contract.yearsRemaing !== 0
+      ) {
+        try {
+          const playerData = {
+            firstName: player.firstName,
+            lastName: player.lastName,
+            fullName: player.fullName,
+            displayName: player.displayName,
+            shortName: player.shortName,
+            weight: player.weight,
+            displayWeight: player.displayWeight,
+            height: player.height,
+            displayHeight: player.displayHeight,
+            age: player.age,
+            dateOfBirth: player.dateOfBirth || "1990-01-01T00:00:00Z", // Keep as string
+            birthPlace: player.birthPlace || null,
+            slug: player.slug,
+            headshot: player.headshot || null,
+            jersey: player.jersey,
+            position: player.position || null,
+            injuries: player.injuries || [],
+            experience: player.experience || { years: 0 },
+            contract: player.contract || null,
+            status: player.status || null,
+            teamId: team.id,
+          };
 
-      try {
-        await prisma.player.create({
-          data: playerData,
-        });
-        console.log(`✅ Added player: ${playerData.fullName}`);
-      } catch (error) {
-        console.error(`❌ Failed to add player ${playerData.fullName}:`, error);
+          console.log(`Creating player: ${playerData.displayName}`);
+          await prisma.player.create({
+            data: playerData,
+          });
+          console.log(`Successfully created player: ${playerData.displayName}`);
+        } catch (error) {
+          console.error(`Failed to add player ${player.displayName}:`, error);
+        }
       }
     }
   }
-
-  console.log("✅ Successfully seeded players\n");
 }
 
 async function seedDraftPicks(
-  teams: { id: number; name: string; city: string }[],
+  teams: { id: number; name: string; location: string }[]
 ) {
   console.log("Seeding draft picks...");
 
@@ -302,13 +289,13 @@ async function seedDraftPicks(
   const draftPicksData = JSON.parse(
     fs.readFileSync(
       path.join(__dirname, "seeddata", "nba_draft_picks.json"),
-      "utf-8",
-    ),
+      "utf-8"
+    )
   );
 
   // Create a map of team names to team IDs
   const teamMap = new Map(
-    teams.map((team) => [`${team.city} ${team.name}`, team.id]),
+    teams.map((team) => [`${team.location} ${team.name}`, team.id])
   );
 
   // Track created picks for deduplication
@@ -604,3 +591,36 @@ const salaryCapData = [
     secondApronSpace: 43477088,
   },
 ];
+
+const teamIdMap: Record<string, string> = {
+  "atlanta-hawks": "1",
+  "boston-celtics": "2",
+  "brooklyn-nets": "3",
+  "charlotte-hornets": "4",
+  "chicago-bulls": "5",
+  "cleveland-cavaliers": "6",
+  "dallas-mavericks": "7",
+  "denver-nuggets": "8",
+  "detroit-pistons": "9",
+  "golden-state-warriors": "10",
+  "houston-rockets": "11",
+  "indiana-pacers": "12",
+  "la-clippers": "13",
+  "los-angeles-lakers": "14",
+  "memphis-grizzlies": "15",
+  "miami-heat": "16",
+  "milwaukee-bucks": "17",
+  "minnesota-timberwolves": "18",
+  "new-orleans-pelicans": "19",
+  "new-york-knicks": "20",
+  "oklahoma-city-thunder": "21",
+  "orlando-magic": "22",
+  "philadelphia-76ers": "23",
+  "phoenix-suns": "24",
+  "portland-trail-blazers": "25",
+  "sacramento-kings": "26",
+  "san-antonio-spurs": "27",
+  "toronto-raptors": "28",
+  "utah-jazz": "29",
+  "washington-wizards": "30",
+};

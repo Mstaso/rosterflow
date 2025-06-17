@@ -1,24 +1,13 @@
-import TradeGenerator from "~/components/trade-generator";
-import { Handshake } from "lucide-react";
 import { getNBATeams } from "~/actions/nbaTeams";
+import TradeMachineClient from "~/components/trade-machine/trade-machine-client";
+import type { Team } from "~/types";
 
-export default async function Home() {
+export default async function TradeMachinePage() {
   const nbaTeams = await getNBATeams();
 
   return (
-    <div className="min-h-screen bg-black">
-      <div className="py-8">
-        <h1 className="mb-2 flex items-center justify-center gap-2 text-center text-3xl font-bold text-white">
-          <Handshake className="h-8 w-8" />
-          Roster Flows
-        </h1>
-        <p className="text-center text-gray-400">
-          Create and generate realistic NBA trades
-        </p>
-      </div>
-      <div className="w-full px-2 py-4 md:container md:mx-auto md:px-4">
-        <TradeGenerator nbaTeams={nbaTeams} />
-      </div>
-    </div>
+    <main className="bg-background text-foreground">
+      <TradeMachineClient nbaTeams={nbaTeams as Team[]} />
+    </main>
   );
 }

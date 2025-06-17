@@ -1,25 +1,28 @@
 import "~/styles/globals.css";
+import { ThemeProvider } from "~/components/theme-provider";
+import { Toaster } from "sonner";
+import { Inter } from "next/font/google";
 
-import { type Metadata } from "next";
-import { Geist } from "next/font/google";
-
-export const metadata: Metadata = {
-  title: "Roster Flows",
-  description: "Create and generate realistic NBA trades",
-  icons: [{ rel: "icon", url: "/favicon.svg", type: "image/svg+xml" }],
-};
-
-const geist = Geist({
-  subsets: ["latin"],
-  variable: "--font-geist-sans",
-});
+const inter = Inter({ subsets: ["latin"] });
 
 export default function RootLayout({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html lang="en" className={`${geist.variable}`}>
-      <body>{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem={false}
+          disableTransitionOnChange
+        >
+          {children}
+          <Toaster />
+        </ThemeProvider>
+      </body>
     </html>
-  );
+  )
 }
