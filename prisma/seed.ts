@@ -54,6 +54,40 @@ const TEAM_DIVISIONS: Record<string, string> = {
   "30": "Southeast", // Washington Wizards
 };
 
+// Map team slugs to ESPN team IDs
+const teamIdMap: Record<string, string> = {
+  atl: "1", // Atlanta Hawks
+  bos: "2", // Boston Celtics
+  bkn: "3", // Brooklyn Nets
+  cha: "4", // Charlotte Hornets
+  chi: "5", // Chicago Bulls
+  cle: "6", // Cleveland Cavaliers
+  dal: "7", // Dallas Mavericks
+  den: "8", // Denver Nuggets
+  det: "9", // Detroit Pistons
+  gs: "10", // Golden State Warriors
+  hou: "11", // Houston Rockets
+  ind: "12", // Indiana Pacers
+  lac: "13", // LA Clippers
+  lal: "14", // LA Lakers
+  mem: "15", // Memphis Grizzlies
+  mia: "16", // Miami Heat
+  mil: "17", // Milwaukee Bucks
+  min: "18", // Minnesota Timberwolves
+  no: "19", // New Orleans Pelicans
+  ny: "20", // New York Knicks
+  okc: "21", // Oklahoma City Thunder
+  orl: "22", // Orlando Magic
+  phi: "23", // Philadelphia 76ers
+  phx: "24", // Phoenix Suns
+  por: "25", // Portland Trail Blazers
+  sac: "26", // Sacramento Kings
+  sa: "27", // San Antonio Spurs
+  tor: "28", // Toronto Raptors
+  uta: "29", // Utah Jazz
+  wsh: "30", // Washington Wizards
+};
+
 async function fetchTeams() {
   try {
     const url =
@@ -162,10 +196,20 @@ async function fetchTeamRoster(teamId: string) {
     }
 
     const data = await response.json();
-    return data.athletes || [];
+    console.log("API Response:", JSON.stringify(data, null, 2));
+
+    if (!data.athletes) {
+      console.warn(`No athletes found in roster data for team ${teamId}`);
+      return { athletes: [], team: data.team?.displayName || "Unknown" };
+    }
+
+    return {
+      athletes: data.athletes,
+      team: data.team?.displayName || "Unknown",
+    };
   } catch (error) {
     console.error(`Error fetching roster for team ${teamId}:`, error);
-    return []; // Return empty array instead of throwing
+    return { athletes: [], team: "Unknown" };
   }
 }
 
@@ -173,6 +217,7 @@ async function seedTeams() {
   console.log("🏀 Seeding NBA teams...");
 
   const espnTeams = await fetchTeams();
+  const sortedTeams = espnTeams.sort((a: any, b: any) => a.id - b.id);
   console.log(`Found ${espnTeams.length} teams from ESPN API`);
 
   const teams = [];
@@ -224,19 +269,33 @@ async function seedTeams() {
 async function seedPlayers(teams: any[]) {
   console.log("👥 Seeding NBA players...");
 
-  for (const team of teams) {
-    const espnTeamId = teamIdMap[team.slug];
-    if (!espnTeamId) {
+  for (const [index, team] of teams.entries()) {
+    // const espnTeamId = teamIdMap[team.slug];
+    // if (!espnTeamId) {
+    //   console.warn(
+    //     `No ESPN team ID found for ${team.name} (slug: ${team.slug})`
+    //   );
+    //   continue;
+    // }
+    const IdToString = (index + 1).toString();
+    const roster: any = await fetchTeamRoster(IdToString);
+    console.log(`Found ${roster.athletes.length} players for ${team.name}`);
+
+    const findTeam = await prisma.team.findUnique({
+      where: {
+        slug: team.slug,
+      },
+    });
+
+    console.log("findTeam", findTeam);
+    if (!findTeam) {
       console.warn(
-        `No ESPN team ID found for ${team.name} (slug: ${team.slug})`
+        `Could not find team in database for ${team.name} (slug: ${team.slug})`
       );
       continue;
     }
 
-    const roster = await fetchTeamRoster(espnTeamId);
-    console.log(`Found ${roster.length} players for ${team.name}`);
-
-    for (const player of roster) {
+    for (const player of roster.athletes) {
       if (
         player.contract &&
         player.contract.salary !== 0 &&
@@ -254,7 +313,7 @@ async function seedPlayers(teams: any[]) {
             height: player.height,
             displayHeight: player.displayHeight,
             age: player.age,
-            dateOfBirth: player.dateOfBirth || "1990-01-01T00:00:00Z", // Keep as string
+            dateOfBirth: player.dateOfBirth || "1990-01-01T00:00:00Z",
             birthPlace: player.birthPlace || null,
             slug: player.slug,
             headshot: player.headshot || null,
@@ -264,10 +323,12 @@ async function seedPlayers(teams: any[]) {
             experience: player.experience || { years: 0 },
             contract: player.contract || null,
             status: player.status || null,
-            teamId: team.id,
+            teamId: findTeam.id,
           };
 
-          console.log(`Creating player: ${playerData.displayName}`);
+          console.log(
+            `Creating player: ${playerData.displayName} for team: ${team.name}`
+          );
           await prisma.player.create({
             data: playerData,
           });
@@ -591,36 +652,3 @@ const salaryCapData = [
     secondApronSpace: 43477088,
   },
 ];
-
-const teamIdMap: Record<string, string> = {
-  "atlanta-hawks": "1",
-  "boston-celtics": "2",
-  "brooklyn-nets": "3",
-  "charlotte-hornets": "4",
-  "chicago-bulls": "5",
-  "cleveland-cavaliers": "6",
-  "dallas-mavericks": "7",
-  "denver-nuggets": "8",
-  "detroit-pistons": "9",
-  "golden-state-warriors": "10",
-  "houston-rockets": "11",
-  "indiana-pacers": "12",
-  "la-clippers": "13",
-  "los-angeles-lakers": "14",
-  "memphis-grizzlies": "15",
-  "miami-heat": "16",
-  "milwaukee-bucks": "17",
-  "minnesota-timberwolves": "18",
-  "new-orleans-pelicans": "19",
-  "new-york-knicks": "20",
-  "oklahoma-city-thunder": "21",
-  "orlando-magic": "22",
-  "philadelphia-76ers": "23",
-  "phoenix-suns": "24",
-  "portland-trail-blazers": "25",
-  "sacramento-kings": "26",
-  "san-antonio-spurs": "27",
-  "toronto-raptors": "28",
-  "utah-jazz": "29",
-  "washington-wizards": "30",
-};

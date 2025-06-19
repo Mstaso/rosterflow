@@ -7,18 +7,12 @@ import { TeamCard } from "../trade-machine/team-card";
 import { Button } from "~/components/ui/button";
 import { LightbulbIcon, UsersIcon, PackageIcon } from "lucide-react"; // Added PackageIcon, PlusIcon, and Loader2
 import { Navbar } from "~/components/layout/navbar";
-import type { Team } from "~/types";
+import type { SelectedAsset, Team } from "~/types";
 import { toast } from "sonner";
 import { useState } from "react";
 import Image from "next/image";
 
 const MAX_TEAMS = 5;
-
-interface SelectedAsset {
-  id: string;
-  type: "player" | "pick";
-  teamId: number;
-}
 
 export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
   const [selectedTeams, setSelectedTeams] = useState<Team[]>([]);
@@ -50,6 +44,7 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
       toast.error("Failed to load team data. Please try again.");
     } finally {
       setIsLoading(false);
+      setSelectedAssets([]);
     }
   };
 
@@ -77,36 +72,11 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
     setTimeout(() => setActiveTab(getNextTabValue || ""), 0);
   };
 
-  const handleChangeTeam = async (oldTeamId: number, newTeam: Team) => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(`/api/nba/team/${newTeam.id}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch team data");
-      }
-      const responseData = await response.json();
-      const teamWithRoster = responseData.data;
-
-      setSelectedTeams((prev) =>
-        prev.map((t) => (t.id === oldTeamId ? (teamWithRoster as Team) : t))
-      );
-      setSelectedTeamIds((prev) =>
-        prev.map((id) => (id === oldTeamId ? newTeam.id : id))
-      );
-      setSelectedAssets((prev) => prev.filter((a) => a.teamId !== oldTeamId));
-      setActiveTab(newTeam.id.toString());
-    } catch (error) {
-      console.error("Error fetching team data:", error);
-      toast.error("Failed to load team data. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleAssetSelect = (
     assetId: string,
     assetType: "player" | "pick",
-    teamId: number
+    teamId: number,
+    targetTeamId?: number
   ) => {
     setSelectedAssets((prev) => {
       const existingAsset = prev.find(
@@ -115,9 +85,30 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
       if (existingAsset) {
         return prev.filter((a) => !(a.id === assetId && a.type === assetType));
       } else {
-        return [...prev, { id: assetId, type: assetType, teamId }];
+        return [
+          ...prev,
+          { id: assetId, type: assetType, teamId, targetTeamId },
+        ];
       }
     });
+  };
+
+  const handleGenerateTrade = async () => {
+    const trade = {
+      teams: selectedTeams,
+      selectedAssets: selectedAssets,
+    };
+    console.log("been hit UNIQUE", trade);
+    try {
+      const response = await fetch("/api/trades/generate", {
+        method: "POST",
+        body: JSON.stringify(trade),
+      });
+      const data = await response.json();
+      console.log("been hit data", data);
+    } catch (error) {
+      console.error("Error generating trade:", error);
+    }
   };
 
   const isTradeButtonActive = selectedAssets.length > 0;
@@ -149,9 +140,7 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
             )}
             <Button
               disabled={!isTradeButtonActive}
-              onClick={() =>
-                alert("Generate Trade Clicked! AI magic incoming...")
-              }
+              onClick={handleGenerateTrade}
               className="w-full sm:w-auto bg-indigoMain text-primary-white hover:bg-indigoMain/70
                          disabled:bg-muted disabled:text-muted-foreground/70 disabled:border disabled:border-muted-foreground/30 disabled:cursor-not-allowed
                          transition-all duration-150 ease-in-out"

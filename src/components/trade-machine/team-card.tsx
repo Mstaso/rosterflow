@@ -22,23 +22,35 @@ import {
 import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
+import { cn } from "~/lib/utils";
 
 interface TeamCardProps {
   team: Team;
   allTeams: Team[];
   selectedTeamIdsInMachine: number[];
   onRemoveTeam: (teamId: number) => void;
-  selectedAssets: { id: string; type: "player" | "pick"; teamId: number }[];
+  selectedAssets: {
+    id: string;
+    type: "player" | "pick";
+    teamId: number;
+    targetTeamId?: number;
+  }[];
   onAssetSelect: (
     assetId: string,
     assetType: "player" | "pick",
-    teamId: number
+    teamId: number,
+    targetTeamId?: number
   ) => void;
   setSelectedTeams: React.Dispatch<React.SetStateAction<Team[]>>;
   setSelectedTeamIds: React.Dispatch<React.SetStateAction<number[]>>;
   setSelectedAssets: React.Dispatch<
     React.SetStateAction<
-      { id: string; type: "player" | "pick"; teamId: number }[]
+      {
+        id: string;
+        type: "player" | "pick";
+        teamId: number;
+        targetTeamId?: number;
+      }[]
     >
   >;
   setActiveTab?: (value: string) => void;
@@ -217,12 +229,11 @@ export function TeamCard({
                   const isSelected = selectedAssets.some(
                     (asset) =>
                       asset.id === player.id.toString() &&
-                      asset.type === "player" &&
-                      asset.teamId === team.id
+                      asset.type === "player"
                   );
 
                   return (
-                    <DropdownMenu key={player.id} modal={false}>
+                    <DropdownMenu key={player.id}>
                       <DropdownMenuTrigger asChild>
                         <div
                           className={`group relative flex items-center justify-between p-2.5 rounded-md border-2 ${
@@ -230,6 +241,16 @@ export function TeamCard({
                               ? "bg-muted/90 border-white"
                               : "border-border bg-slate-950"
                           } hover:bg-muted/90 transition-colors cursor-pointer`}
+                          onClick={(e) => {
+                            if (otherSelectedTeams.length === 0) {
+                              e.preventDefault();
+                              onAssetSelect(
+                                player.id.toString(),
+                                "player",
+                                team.id
+                              );
+                            }
+                          }}
                         >
                           <div className="flex items-center gap-3">
                             {player.headshot && (
@@ -247,74 +268,62 @@ export function TeamCard({
                               <div className="font-medium text-sm">
                                 {player.displayName}{" "}
                                 <span className="text-xs text-muted-foreground">
-                                  ({player.position.abbreviation})
+                                  ({player.position?.abbreviation || "Unknown"})
                                 </span>
                               </div>
                               <div className="text-xs text-muted-foreground">
                                 {player.contract
-                                  ? `Sal: $${player.contract.salary.toLocaleString()}`
+                                  ? `Salary: $${(
+                                      player.contract.salary / 1000000
+                                    ).toFixed(1)}M`
                                   : "No contract"}
                               </div>
                             </div>
                           </div>
-                          <div className="relative">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                              <span className="sr-only">Open menu</span>
-                            </Button>
-                          </div>
+
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                            <span className="sr-only">Open menu</span>
+                          </Button>
                         </div>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-[200px]">
-                        <DropdownMenuItem
-                          onClick={() =>
-                            onAssetSelect(
-                              player.id.toString(),
-                              "player",
-                              team.id
-                            )
-                          }
-                          className="flex items-center gap-2"
-                        >
-                          Trade Player
-                        </DropdownMenuItem>
-                        {otherSelectedTeams.length > 0 && (
-                          <>
-                            <DropdownMenuSeparator />
-                            <div className="px-2 py-1.5 text-xs text-muted-foreground">
-                              Trade to specific team:
-                            </div>
-                            {otherSelectedTeams.map((targetTeam) => (
-                              <DropdownMenuItem
-                                key={targetTeam.id}
-                                onClick={() =>
-                                  onAssetSelect(
-                                    player.id.toString(),
-                                    "player",
-                                    targetTeam.id
-                                  )
-                                }
-                                className="flex items-center gap-2"
-                              >
-                                {targetTeam.logos[0] && (
-                                  <Image
-                                    src={targetTeam.logos[0].href}
-                                    alt={targetTeam.logos[0].alt}
-                                    width={20}
-                                    height={20}
-                                    className="object-contain"
-                                  />
-                                )}
-                                {targetTeam.displayName}
-                              </DropdownMenuItem>
-                            ))}
-                          </>
-                        )}
-                      </DropdownMenuContent>
+                      {otherSelectedTeams.length > 0 ? (
+                        <DropdownMenuContent align="end" className="w-[200px]">
+                          <DropdownMenuSeparator />
+                          <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                            Trade to specific team:
+                          </div>
+                          {otherSelectedTeams.map((targetTeam) => (
+                            <DropdownMenuItem
+                              key={targetTeam.id}
+                              onClick={() => {
+                                onAssetSelect(
+                                  player.id.toString(),
+                                  "player",
+                                  team.id,
+                                  targetTeam.id
+                                );
+                              }}
+                              className="flex items-center gap-2"
+                            >
+                              {targetTeam.logos[0] && (
+                                <Image
+                                  src={targetTeam.logos[0].href}
+                                  alt={targetTeam.logos[0].alt}
+                                  width={20}
+                                  height={20}
+                                  className="object-contain"
+                                />
+                              )}
+                              {targetTeam.displayName}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      ) : null}
                     </DropdownMenu>
                   );
                 })}
@@ -327,13 +336,11 @@ export function TeamCard({
                 {team.draftPicks?.map((pick) => {
                   const isSelected = selectedAssets.some(
                     (asset) =>
-                      asset.id === pick.id.toString() &&
-                      asset.type === "pick" &&
-                      asset.teamId === team.id
+                      asset.id === pick.id.toString() && asset.type === "pick"
                   );
 
                   return (
-                    <DropdownMenu key={pick.id} modal={false}>
+                    <DropdownMenu key={pick.id}>
                       <DropdownMenuTrigger asChild>
                         <div
                           className={`group relative flex items-center justify-between p-2.5 rounded-md border-2 ${
@@ -341,6 +348,16 @@ export function TeamCard({
                               ? "bg-muted/90 border-white"
                               : "border-border bg-slate-950"
                           } hover:bg-muted/90 transition-colors cursor-pointer`}
+                          onClick={(e) => {
+                            if (otherSelectedTeams.length === 0) {
+                              e.preventDefault();
+                              onAssetSelect(
+                                pick.id.toString(),
+                                "pick",
+                                team.id
+                              );
+                            }
+                          }}
                         >
                           <div>
                             <div className="font-medium text-sm">
@@ -348,62 +365,50 @@ export function TeamCard({
                               round {pick.isSwap ? "Pick Swap" : "Pick"}
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              {pick.description}=
+                              {pick.description}
                             </div>
                           </div>
-                          <div className="relative">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                              <span className="sr-only">Open menu</span>
-                            </Button>
-                          </div>
+
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                            <span className="sr-only">Open menu</span>
+                          </Button>
                         </div>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-[200px]">
-                        <DropdownMenuItem
-                          onClick={() =>
-                            onAssetSelect(pick.id.toString(), "pick", team.id)
-                          }
-                          className="flex items-center gap-2"
-                        >
-                          Trade Pick
-                        </DropdownMenuItem>
-                        {otherSelectedTeams.length > 0 && (
-                          <>
-                            <DropdownMenuSeparator />
-                            <div className="px-2 py-1.5 text-xs text-muted-foreground">
-                              Trade to specific team:
-                            </div>
-                            {otherSelectedTeams.map((targetTeam) => (
-                              <DropdownMenuItem
-                                key={targetTeam.id}
-                                onClick={() =>
-                                  onAssetSelect(
-                                    pick.id.toString(),
-                                    "pick",
-                                    targetTeam.id
-                                  )
-                                }
-                                className="flex items-center gap-2"
-                              >
-                                {targetTeam.logos[0] && (
-                                  <Image
-                                    src={targetTeam.logos[0].href}
-                                    alt={targetTeam.logos[0].alt}
-                                    width={20}
-                                    height={20}
-                                    className="object-contain"
-                                  />
-                                )}
-                                {targetTeam.displayName}
-                              </DropdownMenuItem>
-                            ))}
-                          </>
-                        )}
+                        <DropdownMenuSeparator />
+                        <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                          Trade to specific team:
+                        </div>
+                        {otherSelectedTeams.map((targetTeam) => (
+                          <DropdownMenuItem
+                            key={targetTeam.id}
+                            onClick={() =>
+                              onAssetSelect(
+                                pick.id.toString(),
+                                "pick",
+                                team.id,
+                                targetTeam.id
+                              )
+                            }
+                            className="flex items-center gap-2"
+                          >
+                            {targetTeam.logos[0] && (
+                              <Image
+                                src={targetTeam.logos[0].href}
+                                alt={targetTeam.logos[0].alt}
+                                width={20}
+                                height={20}
+                                className="object-contain"
+                              />
+                            )}
+                            {targetTeam.displayName}
+                          </DropdownMenuItem>
+                        ))}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   );

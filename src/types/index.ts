@@ -90,6 +90,13 @@ export type Venue = {
   roofType: string;
 };
 
+export interface SelectedAsset {
+  id: string;
+  type: "player" | "pick";
+  teamId: number;
+  targetTeamId?: number;
+}
+
 // Main model types
 export type Team = {
   id: number;
@@ -98,7 +105,7 @@ export type Team = {
   displayName: string;
   shortDisplayName: string;
   name: string;
-  city: string;
+  location: string;
   color: string;
   alternateColor: string;
   isActive: boolean;
