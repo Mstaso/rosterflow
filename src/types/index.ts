@@ -211,8 +211,8 @@ export type TeamInTradeScenario = {
 
 export type TradeScenario = {
   teams: TeamInTradeScenario[];
-  // explanation: string;
-  // salaryMatch: string;
+  explanation: string;
+  salaryMatch: string;
 };
 
 export type GeneratedTradeResponse = {

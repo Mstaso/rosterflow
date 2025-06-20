@@ -324,6 +324,8 @@ ${capContext}
       {
 
         "teamName": "Team A",
+        "explanation": "Brief explanation of trade rationale and why it makes sense for all teams",
+        "salaryMatch": "Salary matching details for NBA rules compliance"
     "gives": {
         "players": [
           {
@@ -360,6 +362,8 @@ ${capContext}
       {
 
         "teamName": "Team B", 
+        "explanation": "Brief explanation of trade rationale and why it makes sense for all teams",
+        "salaryMatch": "Salary matching details for NBA rules compliance"
    "gives": {
         "players": [
           {
