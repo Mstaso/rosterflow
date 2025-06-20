@@ -9,7 +9,7 @@ export default async function TradeMachinePage() {
     <main className="bg-background text-foreground">
       <div className="flex flex-col min-h-screen">
         <Navbar />
-        <TradeMachineClient nbaTeams={nbaTeams} />
+        {nbaTeams?.length > 0 && <TradeMachineClient nbaTeams={nbaTeams} />}
       </div>
     </main>
   );
