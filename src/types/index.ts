@@ -205,14 +205,14 @@ export type TeamTradeAssets = {
 
 export type TeamInTradeScenario = {
   teamName: string;
+  explanation: string;
+  salaryMatch: string;
   gives: TeamTradeAssets;
   receives: TeamTradeAssets;
 };
 
 export type TradeScenario = {
   teams: TeamInTradeScenario[];
-  explanation: string;
-  salaryMatch: string;
 };
 
 export type GeneratedTradeResponse = {

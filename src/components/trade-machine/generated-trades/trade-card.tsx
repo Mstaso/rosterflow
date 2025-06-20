@@ -88,7 +88,7 @@ export default function TradeCard({
               </span>
             </div>
           </CardHeader>
-          <div className="px-4 py-3 bg-muted/40">
+          <div className="px-4 py-3 bg-muted/10 ">
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
                 <div className="text-xs text-muted-foreground mb-1">
@@ -146,23 +146,89 @@ export default function TradeCard({
               </div>
             </div>
           </div>
-          <CardContent className="px-4 pb-4 flex-grow flex flex-col bg-muted/60 border-indigoMain">
-            <div className="space-y-4">
+          <CardContent className="px-4 py-4 flex-grow flex flex-col bg-muted/60 border-indigoMain">
+            <div>
+              <div className="mb-4">
+                <div className="text-sm font-semibold mb-2">
+                  Team Cap Situation
+                </div>
+                <table className="w-full border border-border rounded text-xs">
+                  <tbody>
+                    <tr className="bg-muted/40">
+                      <td className="px-2 py-1 text-muted-foreground w-1/2">
+                        Total Cap
+                      </td>
+                      <td className="px-2 py-1 font-medium w-1/2">
+                        $
+                        {tradeInfo.team?.totalCapAllocation
+                          ? (
+                              tradeInfo.team?.totalCapAllocation / 1000000
+                            ).toFixed(1)
+                          : "0.0"}
+                        M
+                      </td>
+                    </tr>
+                    <tr className="bg-background">
+                      <td className="px-2 py-1 text-muted-foreground w-1/2">
+                        Cap Space
+                      </td>
+                      <td className="px-2 py-1 font-medium w-1/2">
+                        $
+                        {tradeInfo.team?.capSpace
+                          ? (tradeInfo.team?.capSpace / 1000000).toFixed(1)
+                          : "0.0"}
+                        M
+                      </td>
+                    </tr>
+                    <tr className="bg-muted/40">
+                      <td className="px-2 py-1 text-muted-foreground w-1/2">
+                        1st Apron Space
+                      </td>
+                      <td className="px-2 py-1 font-medium w-1/2">
+                        $
+                        {tradeInfo.team?.firstApronSpace
+                          ? (tradeInfo.team?.firstApronSpace / 1000000).toFixed(
+                              1
+                            )
+                          : "0.0"}
+                        M
+                      </td>
+                    </tr>
+                    <tr className="bg-background">
+                      <td className="px-2 py-1 text-muted-foreground w-1/2">
+                        2nd Apron Space
+                      </td>
+                      <td className="px-2 py-1 font-medium w-1/2">
+                        $
+                        {tradeInfo.team?.secondApronSpace
+                          ? (
+                              tradeInfo.team?.secondApronSpace / 1000000
+                            ).toFixed(1)
+                          : "0.0"}
+                        M
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="space-y-6">
               {/* Players Received */}
               {tradeInfo.playersReceived &&
                 tradeInfo.playersReceived.length > 0 && (
                   <div>
-                    <div className="flex items-center gap-1.5 mb-2 text-sm font-medium text-muted-foreground">
+                    <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-muted-foreground">
                       <UsersIcon className="w-4 h-4" strokeWidth={1.5} />
                       Players Received
                     </div>
                     <ScrollArea className="h-auto pr-3">
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         {tradeInfo.playersReceived.map(
                           (player, playerIndex) => (
                             <div
                               key={playerIndex}
-                              className="group relative flex items-center justify-between p-2.5 rounded-md border-2 border-border bg-slate-950"
+                              className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950"
                             >
                               <div className="flex items-center gap-3">
                                 {player?.headshot && (
@@ -207,16 +273,16 @@ export default function TradeCard({
               {tradeInfo.picksReceived &&
                 tradeInfo.picksReceived.length > 0 && (
                   <div>
-                    <div className="flex items-center gap-1.5 mb-2 text-sm font-medium text-muted-foreground">
+                    <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-muted-foreground">
                       <FileTextIcon className="w-4 h-4" strokeWidth={1.5} />
                       Picks Received
                     </div>
                     <ScrollArea className="h-auto pr-3">
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         {tradeInfo.picksReceived.map((pick, pickIndex) => (
                           <div
                             key={pickIndex}
-                            className="group relative flex items-center justify-between p-2.5 rounded-md border-2 border-border bg-slate-950"
+                            className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950"
                           >
                             <div>
                               <div className="font-medium text-sm">
@@ -238,20 +304,21 @@ export default function TradeCard({
                 tradeInfo.playersReceived.length === 0) &&
                 (!tradeInfo.picksReceived ||
                   tradeInfo.picksReceived.length === 0) && (
-                  <div className="text-center py-4 text-muted-foreground">
+                  <div className="text-center py-6 text-muted-foreground">
                     <div className="text-sm">No assets received</div>
                   </div>
                 )}
             </div>
           </CardContent>
-          <CardFooter className="flex flex-row gap-2 px-4 pb-4">
+          {/* <CardFooter className="flex flex-col gap-2 px-4 pb-4">
             <div className="text-sm text-muted-foreground">
-              {trade.explanation}
+              <strong>Trade Rationale:</strong>{" "}
+              {trade.teams[index]?.explanation}
             </div>
             <div className="text-sm text-muted-foreground">
-              {trade.salaryMatch}
+              <strong>Salary Details:</strong> {trade.teams[index]?.salaryMatch}
             </div>
-          </CardFooter>
+          </CardFooter> */}
         </Card>
       ))}
     </div>

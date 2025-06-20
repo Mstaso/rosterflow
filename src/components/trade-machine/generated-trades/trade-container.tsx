@@ -11,8 +11,6 @@ export default function TradeContainer({
   tradesData: TradeScenario[];
   involvedTeams: Team[];
 }) {
-  console.log("been hit tradesData", tradesData);
-
   return (
     <div className="flex-grow p-4 md:p-6 lg:p-8">
       <div className="mb-6">
