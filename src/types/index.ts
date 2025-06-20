@@ -190,3 +190,36 @@ export type TradeAsset = {
   trade?: Trade;
   createdAt: Date;
 };
+
+// AI Generated Trade Types
+export type TradeAssetInScenario = {
+  name: string;
+  type: "player" | "pick";
+  from: string;
+};
+
+export type TeamTradeAssets = {
+  players?: TradeAssetInScenario[];
+  picks?: TradeAssetInScenario[];
+};
+
+export type TeamInTradeScenario = {
+  teamName: string;
+  gives: TeamTradeAssets;
+  receives: TeamTradeAssets;
+};
+
+export type TradeScenario = {
+  teams: TeamInTradeScenario[];
+  // explanation: string;
+  // salaryMatch: string;
+};
+
+export type GeneratedTradeResponse = {
+  success: boolean;
+  data: {
+    trades: TradeScenario[];
+    selectedAssets: SelectedAsset[];
+  };
+  source: string;
+};
