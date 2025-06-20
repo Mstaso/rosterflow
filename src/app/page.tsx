@@ -2,6 +2,8 @@ import { getNBATeams } from "~/actions/nbaTeams";
 import { Navbar } from "~/components/layout/navbar";
 import TradeMachineClient from "~/components/trade-machine/trade-machine-client";
 
+export const dynamic = "force-dynamic";
+
 export default async function TradeMachinePage() {
   const nbaTeams: any = await getNBATeams();
 
