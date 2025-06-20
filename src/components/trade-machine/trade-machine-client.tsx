@@ -29,6 +29,7 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
   const [activeTab, setActiveTab] = useState<string>("");
   const [generatedTrades, setGeneratedTrades] = useState<TradeScenario[]>([]);
   const [loadingGeneratedTrades, setLoadingGeneratedTrades] = useState(false);
+  const [showTradeContainer, setShowTradeContainer] = useState(false);
 
   const handleTeamSelect = async (team: Team) => {
     try {
@@ -128,11 +129,12 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
     return <TradeLoader />;
   }
 
-  if (generatedTrades.length > 0) {
+  if (generatedTrades.length > 0 && showTradeContainer) {
     return (
       <TradeContainer
         tradesData={generatedTrades}
         involvedTeams={selectedTeams}
+        onBack={() => setShowTradeContainer(false)}
       />
     );
   }
@@ -159,6 +161,16 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
                 {selectedAssets.length === 1 ? "" : "s"} Selected
               </span>
             </div>
+          )}
+          {generatedTrades.length > 0 && (
+            <Button
+              onClick={() => setShowTradeContainer(true)}
+              className="w-full sm:w-auto bg-green-600 text-primary-white hover:bg-green-700
+                         transition-all duration-150 ease-in-out"
+            >
+              <UsersIcon className="mr-2 h-5 w-5" strokeWidth={1.5} />
+              View Generated Trades ({generatedTrades.length})
+            </Button>
           )}
           <Button
             disabled={!isTradeButtonActive}

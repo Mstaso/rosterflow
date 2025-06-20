@@ -7,14 +7,17 @@ import TradeCard from "./trade-card";
 export default function TradeContainer({
   tradesData,
   involvedTeams,
+  onBack,
 }: {
   tradesData: TradeScenario[];
   involvedTeams: Team[];
+  onBack: () => void;
 }) {
   return (
     <div className="flex-grow p-4 md:p-6 lg:p-8">
       <div className="mb-6">
         <Button
+          onClick={onBack}
           variant="outline"
           className="w-full sm:w-auto bg-indigoMain text-primary-white hover:bg-indigoMain/70
           disabled:bg-muted disabled:text-muted-foreground/70 disabled:border disabled:border-muted-foreground/30 disabled:cursor-not-allowed
