@@ -1,16 +1,23 @@
 import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient();
+// Only create Prisma client if DATABASE_URL is available
+const prisma = process.env.DATABASE_URL ? new PrismaClient() : null;
 
 export const db = {
   teams: {
     async getAll() {
+      if (!prisma) {
+        throw new Error("Database not available");
+      }
       return prisma.team.findMany({
-        orderBy: { name: "asc" },
+        orderBy: { displayName: "asc" },
       });
     },
 
     async getById(id: number) {
+      if (!prisma) {
+        throw new Error("Database not available");
+      }
       return prisma.team.findUnique({
         where: { id },
         include: {
@@ -21,7 +28,10 @@ export const db = {
     },
 
     async getByAbbreviation(abbreviation: string) {
-      return prisma.team.findUnique({
+      if (!prisma) {
+        throw new Error("Database not available");
+      }
+      return prisma.team.findFirst({
         where: { abbreviation },
         include: {
           players: true,
@@ -31,26 +41,35 @@ export const db = {
     },
 
     async getRoster(teamId: number) {
+      if (!prisma) {
+        throw new Error("Database not available");
+      }
       return prisma.player.findMany({
         where: { teamId },
-        orderBy: { salary: "desc" },
+        orderBy: { fullName: "asc" },
       });
     },
   },
 
   players: {
     async getByTeam(teamId: number) {
+      if (!prisma) {
+        throw new Error("Database not available");
+      }
       return prisma.player.findMany({
         where: { teamId },
         include: { team: true },
-        orderBy: { salary: "desc" },
+        orderBy: { fullName: "asc" },
       });
     },
 
     async search(query: string) {
+      if (!prisma) {
+        throw new Error("Database not available");
+      }
       return prisma.player.findMany({
         where: {
-          name: {
+          fullName: {
             contains: query,
             mode: "insensitive",
           },
@@ -63,26 +82,47 @@ export const db = {
 
   trades: {
     async create(data: any) {
+      if (!prisma) {
+        throw new Error("Database not available");
+      }
       return prisma.trade.create({
         data,
       });
     },
 
     async getById(id: number) {
+      if (!prisma) {
+        throw new Error("Database not available");
+      }
       return prisma.trade.findUnique({
         where: { id },
         include: {
-          players: true,
-          draftPicks: true,
+          assets: {
+            include: {
+              player: true,
+              draftPick: true,
+            },
+          },
+          fromTeam: true,
+          toTeam: true,
         },
       });
     },
 
     async getAll() {
+      if (!prisma) {
+        throw new Error("Database not available");
+      }
       return prisma.trade.findMany({
         include: {
-          players: true,
-          draftPicks: true,
+          assets: {
+            include: {
+              player: true,
+              draftPick: true,
+            },
+          },
+          fromTeam: true,
+          toTeam: true,
         },
       });
     },
@@ -90,22 +130,26 @@ export const db = {
 
   draftPicks: {
     async getByTeam(teamId: number) {
+      if (!prisma) {
+        throw new Error("Database not available");
+      }
       return prisma.draftPick.findMany({
-        where: { currentTeamId: teamId },
+        where: { teamId },
         include: {
-          originalTeam: true,
-          currentTeam: true,
+          team: true,
         },
         orderBy: [{ year: "asc" }, { round: "asc" }],
       });
     },
 
     async getByYear(year: number) {
+      if (!prisma) {
+        throw new Error("Database not available");
+      }
       return prisma.draftPick.findMany({
         where: { year },
         include: {
-          originalTeam: true,
-          currentTeam: true,
+          team: true,
         },
         orderBy: { round: "asc" },
       });

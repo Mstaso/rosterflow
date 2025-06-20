@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ teamId: string }> },
+  { params }: { params: Promise<{ teamId: string }> }
 ) {
   try {
     const { teamId } = await params;
@@ -40,7 +42,7 @@ export async function GET(
     console.error("Error fetching team details:", error);
     return NextResponse.json(
       { success: false, error: "Failed to fetch team details" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

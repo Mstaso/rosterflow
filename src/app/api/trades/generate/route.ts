@@ -4,6 +4,8 @@ import { getApiUrl } from "~/lib/api-utils";
 import { env } from "~/env";
 import type { SelectedAsset } from "~/types";
 
+export const dynamic = "force-dynamic";
+
 // Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: env.OPENAI_API_KEY,

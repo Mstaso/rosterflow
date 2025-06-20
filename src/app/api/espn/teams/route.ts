@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -32,7 +34,7 @@ export async function GET(request: NextRequest) {
     console.error("Error fetching teams:", error);
     return NextResponse.json(
       { success: false, error: "Failed to fetch team data" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

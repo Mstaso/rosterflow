@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getNBATeamWithRosterAndDraftPicks } from "../../../../../actions/nbaTeams";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: { teamId: string } },
+  { params }: { params: { teamId: string } }
 ) {
   try {
     const { teamId } = await params;
@@ -11,7 +13,7 @@ export async function GET(
     if (isNaN(parsedTeamId)) {
       return NextResponse.json(
         { success: false, error: "Invalid teamId" },
-        { status: 400 },
+        { status: 400 }
       );
     }
     const team = await getNBATeamWithRosterAndDraftPicks(parsedTeamId);
@@ -19,7 +21,7 @@ export async function GET(
     if (!team) {
       return NextResponse.json(
         { success: false, error: "Team not found" },
-        { status: 404 },
+        { status: 404 }
       );
     }
     return NextResponse.json({ success: true, data: team });
@@ -27,7 +29,7 @@ export async function GET(
     console.error("Error fetching NBA team from DB:", error);
     return NextResponse.json(
       { success: false, error: "Failed to fetch NBA team" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
