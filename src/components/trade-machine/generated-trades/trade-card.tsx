@@ -57,15 +57,35 @@ export default function TradeCard({
       picksReceived: tradeTeam.receives?.picks,
       outGoingSalary,
       inComingSalary,
+      capDifference:
+        inComingSalary && outGoingSalary ? inComingSalary - outGoingSalary : 0,
     };
   });
 
+  const calculateUpdatedTaxValue = (
+    currentValue: number,
+    capDifference: number
+  ) => {
+    if (currentValue < 0 && capDifference < 0) {
+      return currentValue + capDifference;
+    } else if (currentValue < 0 && capDifference > 0) {
+      console.log("been hit ATL", currentValue - capDifference);
+      return currentValue - capDifference;
+    } else if (currentValue > 0 && capDifference > 0) {
+      return currentValue - capDifference;
+    } else if (currentValue > 0 && capDifference < 0) {
+      return currentValue - capDifference;
+    } else {
+      return 0;
+    }
+  };
+
   return (
-    <div className="grid gap-4 justify-center grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+    <div className="flex gap-4 justify-center">
       {TradesWithInfo.map((tradeInfo, index) => (
         <Card
           key={index}
-          className="flex flex-col h-auto overflow-hidden border-indigoMain bg-gradient-to-br from-background via-background/95 to-muted/80"
+          className="flex flex-col h-auto overflow-hidden border-indigoMain bg-gradient-to-br from-background via-background/95 to-muted/80 flex-1"
         >
           <CardHeader className="flex flex-row items-center justify-center space-y-0 pb-2 pt-4 px-4 bg-muted/60">
             <div className="flex items-center gap-2">
@@ -145,7 +165,7 @@ export default function TradeCard({
             <div>
               <div className="mb-4">
                 <div className="text-sm font-semibold mb-2">
-                  Team Cap Situation
+                  Updated Team Cap Situation
                 </div>
                 <table className="w-full border border-border rounded text-xs">
                   <tbody>
@@ -169,9 +189,12 @@ export default function TradeCard({
                       </td>
                       <td className="px-2 py-1 font-medium w-1/2">
                         $
-                        {tradeInfo.team?.capSpace
-                          ? (tradeInfo.team?.capSpace / 1000000).toFixed(1)
-                          : "0.0"}
+                        {(
+                          calculateUpdatedTaxValue(
+                            tradeInfo.team?.capSpace || 0,
+                            tradeInfo.capDifference
+                          ) / 1000000
+                        ).toFixed(1)}
                         M
                       </td>
                     </tr>
@@ -181,11 +204,12 @@ export default function TradeCard({
                       </td>
                       <td className="px-2 py-1 font-medium w-1/2">
                         $
-                        {tradeInfo.team?.firstApronSpace
-                          ? (tradeInfo.team?.firstApronSpace / 1000000).toFixed(
-                              1
-                            )
-                          : "0.0"}
+                        {(
+                          calculateUpdatedTaxValue(
+                            tradeInfo.team?.firstApronSpace || 0,
+                            tradeInfo.capDifference
+                          ) / 1000000
+                        ).toFixed(1)}
                         M
                       </td>
                     </tr>
@@ -195,11 +219,12 @@ export default function TradeCard({
                       </td>
                       <td className="px-2 py-1 font-medium w-1/2">
                         $
-                        {tradeInfo.team?.secondApronSpace
-                          ? (
-                              tradeInfo.team?.secondApronSpace / 1000000
-                            ).toFixed(1)
-                          : "0.0"}
+                        {(
+                          calculateUpdatedTaxValue(
+                            tradeInfo.team?.secondApronSpace || 0,
+                            tradeInfo.capDifference
+                          ) / 1000000
+                        ).toFixed(1)}
                         M
                       </td>
                     </tr>
@@ -269,7 +294,7 @@ export default function TradeCard({
                 tradeInfo.picksReceived.length > 0 && (
                   <div>
                     <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-muted-foreground">
-                      <FileTextIcon className="w-4 h-4" strokeWidth={1.5} />
+                      <FileTextIcon className="w-4 h-4 " strokeWidth={1.5} />
                       Picks Received
                     </div>
                     <ScrollArea className="h-auto pr-3">
@@ -279,7 +304,10 @@ export default function TradeCard({
                             key={pickIndex}
                             className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950"
                           >
-                            <div>
+                            <div className="flex flex-col gap-1">
+                              <div className="text-xs text-muted-foreground">
+                                from {pick?.from}
+                              </div>
                               <div className="font-medium text-sm">
                                 {pick?.name}
                               </div>

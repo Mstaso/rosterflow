@@ -9,8 +9,8 @@ export function TradeLoader() {
       <Card className="w-96 border-2 border-primary/20 shadow-lg">
         <CardContent className="flex flex-col items-center justify-center space-y-6 p-8">
           <div className="relative">
-            <Circle className="h-16 w-16 text-primary animate-bounce" />
-            <Loader2 className="absolute inset-0 h-16 w-16 animate-spin text-primary/30" />
+            <Circle className="h-16 w-16 text-indigoMain animate-bounce" />
+            <Loader2 className="absolute inset-0 h-16 w-16 animate-spin text-indigoMain/30" />
           </div>
 
           <div className="text-center space-y-2">

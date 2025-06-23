@@ -452,8 +452,8 @@ const salaryCapData = [
     teamName: "Boston Celtics",
     totalCapAllocation: 261900828,
     capSpace: -107253828,
-    firstApronSpace: 31838873,
-    secondApronSpace: 19959873,
+    firstApronSpace: -31838873,
+    secondApronSpace: -19959873,
   },
   {
     teamName: "Brooklyn Nets",
