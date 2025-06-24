@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import { getApiUrl } from "~/lib/api-utils";
 import { env } from "~/env";
-import type { SelectedAsset } from "~/types";
+import type { SelectedAsset, Team } from "~/types";
+import { getNBATeamWithRosterAndDraftPicks } from "~/actions/nbaTeams";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { selectedAssets, teams } = body;
+    const { selectedAssets, teams, additionalTeams } = body;
 
     if (
       !selectedAssets ||
@@ -40,10 +40,35 @@ export async function POST(request: NextRequest) {
 
     const involvedTeams = teams;
 
+    if (involvedTeams.length > 5) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Maximum of 5 teams allowed",
+        },
+        { status: 400 }
+      );
+    }
+
+    // need to send this back to client side so they can have rosters and picks for the teams added to the trade
+    let teamsAddedToTrade: Team[] = [];
+
+    if (additionalTeams) {
+      const teamWithRosterAndPicks = await Promise.all(
+        additionalTeams.map(async (team: Team) => {
+          const teamWithRosterAndPicks =
+            await getNBATeamWithRosterAndDraftPicks(team.id);
+          return teamWithRosterAndPicks;
+        })
+      );
+      involvedTeams.push(...teamWithRosterAndPicks);
+      teamsAddedToTrade = teamWithRosterAndPicks;
+    }
+
     // Build roster and cap context from the teams data passed in the request
     let rosterContext = "";
 
-    teams.forEach((team: any) => {
+    involvedTeams.forEach((team: any) => {
       const teamName = team.displayName || team.name;
 
       // Format players with salaries
@@ -576,6 +601,7 @@ Generate 3-4 different trade scenarios in this format. RESPOND WITH ONLY THE JSO
       data: {
         trades,
         selectedAssets: selectedAssets,
+        teamsAddedToTrade: teamsAddedToTrade,
       },
       source: "OpenAI GPT-4o-turbo",
     });

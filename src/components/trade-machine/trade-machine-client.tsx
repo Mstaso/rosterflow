@@ -104,9 +104,20 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
 
   const handleGenerateTrade = async () => {
     setLoadingGeneratedTrades(true);
+
+    let randomTeamsForMockTrades: Team[] = [];
+
+    if (selectedTeams.length === 1) {
+      randomTeamsForMockTrades = nbaTeams
+        .filter((team) => team.id !== selectedTeams?.[0]?.id)
+        .slice(0, 2);
+    }
+
     const trade = {
       teams: selectedTeams,
       selectedAssets: selectedAssets,
+      additionalTeams:
+        randomTeamsForMockTrades.length > 0 ? randomTeamsForMockTrades : null,
     };
 
     try {
@@ -116,6 +127,10 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
       });
       const data: GeneratedTradeResponse = await response.json();
       setGeneratedTrades(data.data.trades);
+      const copyOfSelectedTeams = [...selectedTeams];
+      const teamsAddedToTrade = data.data.teamsAddedToTrade;
+      const teamsToAddToTrade = [...copyOfSelectedTeams, ...teamsAddedToTrade];
+      setSelectedTeams(teamsToAddToTrade);
     } catch (error) {
       console.error("Error generating trade:", error);
     } finally {
@@ -348,198 +363,3 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
     </div>
   );
 }
-
-const exampleData: any = [
-  {
-    teams: [
-      {
-        teamName: "Chicago Bulls",
-        gives: {
-          players: [
-            {
-              name: "Lonzo Ball (21395348M)",
-              type: "player",
-            },
-          ],
-        },
-        receives: {
-          players: [
-            {
-              name: "Max Strus (15212068M)",
-              type: "player",
-            },
-          ],
-          picks: [
-            {
-              name: "2025 2 Round Pick - Milwaukee's 2025 2nd round pick to Cleveland",
-              type: "pick",
-            },
-          ],
-        },
-      },
-      {
-        teamName: "Cleveland Cavaliers",
-        gives: {
-          players: [
-            {
-              name: "Max Strus (15212068M)",
-              type: "player",
-            },
-          ],
-          picks: [
-            {
-              name: "2025 2 Round Pick - Milwaukee's 2025 2nd round pick to Cleveland",
-              type: "pick",
-            },
-          ],
-        },
-        receives: {
-          players: [
-            {
-              name: "Lonzo Ball (21395348M)",
-              type: "player",
-            },
-          ],
-        },
-      },
-    ],
-  },
-  {
-    teams: [
-      {
-        teamName: "Chicago Bulls",
-        gives: {
-          players: [
-            {
-              name: "Lonzo Ball (21395348M)",
-              type: "player",
-            },
-            {
-              name: "Josh Giddey (8352367M)",
-              type: "player",
-            },
-          ],
-        },
-        receives: {
-          players: [
-            {
-              name: "Max Strus (15212068M)",
-              type: "player",
-            },
-            {
-              name: "Isaac Okoro (10185185M)",
-              type: "player",
-            },
-          ],
-        },
-      },
-      {
-        teamName: "Cleveland Cavaliers",
-        gives: {
-          players: [
-            {
-              name: "Max Strus (15212068M)",
-              type: "player",
-            },
-            {
-              name: "Isaac Okoro (10185185M)",
-              type: "player",
-            },
-          ],
-        },
-        receives: {
-          players: [
-            {
-              name: "Lonzo Ball (21395348M)",
-              type: "player",
-            },
-            {
-              name: "Josh Giddey (8352367M)",
-              type: "player",
-            },
-          ],
-        },
-      },
-    ],
-  },
-  {
-    teams: [
-      {
-        teamName: "Chicago Bulls",
-        gives: {
-          players: [
-            {
-              name: "Lonzo Ball (21395348M)",
-              type: "player",
-            },
-          ],
-        },
-        receives: {
-          players: [
-            {
-              name: "Max Strus (15212068M)",
-              type: "player",
-            },
-          ],
-        },
-      },
-      {
-        teamName: "Cleveland Cavaliers",
-        gives: {
-          players: [
-            {
-              name: "Max Strus (15212068M)",
-              type: "player",
-            },
-          ],
-        },
-        receives: {
-          players: [
-            {
-              name: "Lonzo Ball (21395348M)",
-              type: "player",
-            },
-          ],
-        },
-      },
-      {
-        teamName: "Denver Nuggets",
-        gives: {
-          players: [
-            {
-              name: "Jaylon Tyson (3326160M)",
-              type: "player",
-            },
-          ],
-        },
-        receives: {
-          players: [
-            {
-              name: "Ayo Dosunmu (7000000M)",
-              type: "player",
-            },
-          ],
-        },
-      },
-      {
-        teamName: "Chicago Bulls",
-        gives: {
-          players: [
-            {
-              name: "Ayo Dosunmu (7000000M)",
-              type: "player",
-            },
-          ],
-        },
-        receives: {
-          players: [
-            {
-              name: "Jaylon Tyson (3326160M)",
-              type: "player",
-            },
-          ],
-        },
-      },
-    ],
-  },
-];

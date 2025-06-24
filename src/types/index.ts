@@ -220,6 +220,7 @@ export type GeneratedTradeResponse = {
   data: {
     trades: TradeScenario[];
     selectedAssets: SelectedAsset[];
+    teamsAddedToTrade: Team[];
   };
   source: string;
 };
