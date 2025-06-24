@@ -13,29 +13,8 @@ export function validateTrade(trade: TradeScenario, involvedTeams: Team[]) {
     );
     return team;
   });
-
-  // TODO: Validate that the trade is valid
-
-  // const findReceivedPlayers = tradeTeam.receives?.players?.map((player) => {
-  //   const findPlayerFromResponse = involvedTeams.find(
-  //     (team) => team.displayName === player.from
-  //   );
-  //   return findPlayerFromResponse?.players?.find(
-  //     (p) => p.fullName === formatPlayerName(player.name)
-  //   );
-  // });
-
-  // const findGivenPlayers = tradeTeam.gives?.players?.map((player) => {
-  //   return findTeam?.players?.find(
-  //     (p) => p.fullName === formatPlayerName(player.name)
-  //   );
-  // });
-
-  // const outGoingSalary = findGivenPlayers?.reduce((acc, player) => {
-  //   return acc + (player?.contract?.salary || 0);
-  // }, 0);
-
-  // const inComingSalary = findReceivedPlayers?.reduce((acc, player) => {
-  //   return acc + (player?.contract?.salary || 0);
-  // }, 0);
 }
+
+// function getTeamInfo(team: Team) {
+//   return team;
+// }

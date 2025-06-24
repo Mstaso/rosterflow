@@ -33,14 +33,12 @@ export default function TradeCard({
         (team) => team.displayName === player.from
       );
       return findPlayerFromResponse?.players?.find(
-        (p) => p.fullName === formatPlayerName(player.name)
+        (p) => p.fullName === player.name
       );
     });
 
     const findGivenPlayers = tradeTeam.gives?.players?.map((player) => {
-      return findTeam?.players?.find(
-        (p) => p.fullName === formatPlayerName(player.name)
-      );
+      return findTeam?.players?.find((p) => p.fullName === player.name);
     });
 
     const outGoingSalary = findGivenPlayers?.reduce((acc, player) => {
@@ -51,14 +49,37 @@ export default function TradeCard({
       return acc + (player?.contract?.salary || 0);
     }, 0);
 
+    const capDifference =
+      inComingSalary && outGoingSalary ? inComingSalary - outGoingSalary : 0;
+
+    if (
+      findTeam?.secondApronSpace &&
+      findTeam?.secondApronSpace < 0 &&
+      capDifference > 0
+    ) {
+      console.log(
+        "INVALID TRADE SECOND APRON SPACE",
+        findTeam.displayName,
+        capDifference
+      );
+      // return null;
+    } else if (
+      findTeam?.firstApronSpace &&
+      findTeam?.firstApronSpace < 0 &&
+      outGoingSalary &&
+      inComingSalary &&
+      inComingSalary > outGoingSalary * 1.1 + 100000
+    ) {
+      console.log("INVALID TRADE FIRST APRON SPACE", findTeam.displayName);
+      // return null;
+    }
     return {
       team: findTeam,
       playersReceived: findReceivedPlayers,
       picksReceived: tradeTeam.receives?.picks,
       outGoingSalary,
       inComingSalary,
-      capDifference:
-        inComingSalary && outGoingSalary ? inComingSalary - outGoingSalary : 0,
+      capDifference,
     };
   });
 
@@ -69,7 +90,6 @@ export default function TradeCard({
     if (currentValue < 0 && capDifference < 0) {
       return currentValue + capDifference;
     } else if (currentValue < 0 && capDifference > 0) {
-      console.log("been hit ATL", currentValue - capDifference);
       return currentValue - capDifference;
     } else if (currentValue > 0 && capDifference > 0) {
       return currentValue - capDifference;
@@ -161,7 +181,7 @@ export default function TradeCard({
               </div>
             </div>
           </div>
-          <CardContent className="px-4 py-4 flex-grow flex flex-col justify-center bg-muted/60 border-indigoMain">
+          <CardContent className="px-4 py-4 flex-grow flex flex-col bg-muted/60 border-indigoMain">
             <div>
               <div className="mb-4">
                 <div className="text-sm font-semibold mb-2">
@@ -173,7 +193,7 @@ export default function TradeCard({
                       <td className="px-2 py-1 text-muted-foreground w-1/2">
                         Total Cap
                       </td>
-                      <td className="px-2 py-1 font-medium w-1/2">
+                      <td className="px-2 py-1 font-medium w-1/2 text-right">
                         $
                         {tradeInfo.team?.totalCapAllocation
                           ? (
@@ -187,7 +207,7 @@ export default function TradeCard({
                       <td className="px-2 py-1 text-muted-foreground w-1/2">
                         Cap Space
                       </td>
-                      <td className="px-2 py-1 font-medium w-1/2">
+                      <td className="px-2 py-1 font-medium w-1/2 text-right">
                         $
                         {(
                           calculateUpdatedTaxValue(
@@ -202,7 +222,7 @@ export default function TradeCard({
                       <td className="px-2 py-1 text-muted-foreground w-1/2">
                         1st Apron Space
                       </td>
-                      <td className="px-2 py-1 font-medium w-1/2">
+                      <td className="px-2 py-1 font-medium w-1/2 text-right">
                         $
                         {(
                           calculateUpdatedTaxValue(
@@ -217,7 +237,7 @@ export default function TradeCard({
                       <td className="px-2 py-1 text-muted-foreground w-1/2">
                         2nd Apron Space
                       </td>
-                      <td className="px-2 py-1 font-medium w-1/2">
+                      <td className="px-2 py-1 font-medium w-1/2 text-right">
                         $
                         {(
                           calculateUpdatedTaxValue(
@@ -258,7 +278,7 @@ export default function TradeCard({
                                       alt={player.displayName}
                                       width={40}
                                       height={40}
-                                      className="rounded-full object-cover"
+                                      className="rounded-full object-cover w-10 h-10"
                                     />
                                   </div>
                                 )}
@@ -278,6 +298,13 @@ export default function TradeCard({
                                           player.contract.salary / 1000000
                                         ).toFixed(1)}M`
                                       : "No contract"}
+                                    {" | "}
+                                    {player?.contract?.yearsRemaining}
+                                    {` ${
+                                      player?.contract?.yearsRemaining === 1
+                                        ? "yr"
+                                        : "yrs"
+                                    }`}
                                   </div>
                                 </div>
                               </div>

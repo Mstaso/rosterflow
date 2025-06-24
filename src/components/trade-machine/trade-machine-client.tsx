@@ -131,6 +131,7 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
       const teamsAddedToTrade = data.data.teamsAddedToTrade;
       const teamsToAddToTrade = [...copyOfSelectedTeams, ...teamsAddedToTrade];
       setSelectedTeams(teamsToAddToTrade);
+      // console.log("prompt", data.data.prompt);
     } catch (error) {
       console.error("Error generating trade:", error);
     } finally {

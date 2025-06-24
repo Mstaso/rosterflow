@@ -245,7 +245,7 @@ export function TeamCard({
                                 alt={player.displayName}
                                 width={40}
                                 height={40}
-                                className="rounded-full object-cover"
+                                className="rounded-full object-cover w-10 h-10"
                               />
                             </div>
                           )}

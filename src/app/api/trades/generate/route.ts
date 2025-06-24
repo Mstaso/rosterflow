@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { env } from "~/env";
-import type { SelectedAsset, Team } from "~/types";
+import type { Player, SelectedAsset, Team } from "~/types";
 import { getNBATeamWithRosterAndDraftPicks } from "~/actions/nbaTeams";
+import {
+  getAssetsByTeam,
+  getCapContext,
+  getDestinationInfo,
+  getRosterContext,
+  setupAdditionalTeamsForTrade,
+} from "~/lib/server-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -51,100 +58,21 @@ export async function POST(request: NextRequest) {
     }
 
     // need to send this back to client side so they can have rosters and picks for the teams added to the trade
-    let teamsAddedToTrade: Team[] = [];
+    let teamsAddedToTrade: any[] = [];
 
     if (additionalTeams) {
-      const teamWithRosterAndPicks = await Promise.all(
-        additionalTeams.map(async (team: Team) => {
-          const teamWithRosterAndPicks =
-            await getNBATeamWithRosterAndDraftPicks(team.id);
-          return teamWithRosterAndPicks;
-        })
+      const teamWithRosterAndPicks = await setupAdditionalTeamsForTrade(
+        additionalTeams
       );
       involvedTeams.push(...teamWithRosterAndPicks);
       teamsAddedToTrade = teamWithRosterAndPicks;
     }
 
     // Build roster and cap context from the teams data passed in the request
-    let rosterContext = "";
+    let rosterContext = getRosterContext(involvedTeams);
 
-    involvedTeams.forEach((team: any) => {
-      const teamName = team.displayName || team.name;
-
-      // Format players with salaries
-      const playersWithSalaries =
-        team.players
-          ?.map(
-            (player: any) =>
-              `${
-                player.name || player.fullName
-              } (${player.contract.salary.toString()}M)`
-          )
-          .join(", ") || "No players";
-
-      // Format draft picks
-      const picksFormatted =
-        team.draftPicks
-          ?.map((pick: any) => {
-            let pickText = `${pick.year} ${pick.round} Round Pick`;
-
-            // Add protection status
-            if (pick.isProtected) {
-              pickText += " (Protected)";
-            }
-
-            // Add swap status
-            if (pick.isSwap) {
-              pickText += " (Swap)";
-            }
-
-            // Add description if available
-            if (pick.description) {
-              pickText += ` - ${pick.description}`;
-            }
-
-            return pickText;
-          })
-          .join(", ") || "No picks";
-
-      rosterContext += `**${teamName}:** Players: ${playersWithSalaries} | Picks: ${picksFormatted}\n`;
-    });
-
-    let capContext = "";
-
-    // Build cap context from teams data
-    const capEntries = involvedTeams.map((team: any) => {
-      const totalCap = ((team.totalCapAllocation || 0) / 1000000).toFixed(1);
-      const capSpace = ((team.capSpace || 0) / 1000000).toFixed(1);
-      const firstApronSpace = ((team.firstApronSpace || 0) / 1000000).toFixed(
-        1
-      );
-      const secondApronSpace = ((team.secondApronSpace || 0) / 1000000).toFixed(
-        1
-      );
-
-      let capStatus = "";
-      if ((team.secondApronSpace || 0) < 0) {
-        capStatus = "SECOND APRON (Severe restrictions)";
-      } else if ((team.firstApronSpace || 0) < 0) {
-        capStatus = "FIRST APRON (Limited flexibility)";
-      } else if ((team.capSpace || 0) < 0) {
-        capStatus = "OVER CAP (Standard restrictions)";
-      } else {
-        capStatus = "UNDER CAP (Full flexibility)";
-      }
-
-      return `**${
-        team.displayName || team.name
-      }:** Total Cap: $${totalCap}M, Cap Space: $${capSpace}M, First Apron Space: $${firstApronSpace}M, Second Apron Space: $${secondApronSpace}M - ${capStatus}`;
-    });
-
-    if (capEntries.length > 0) {
-      capContext = `\n\n**TEAM SALARY CAP POSITIONS:**
-${capEntries.join("\n")}
-
-**IMPORTANT: Consider each team's cap position when designing trades. Teams under different cap restrictions have different trade limitations.**`;
-    }
+    // get Salary Cap Information
+    let capContext = getCapContext(involvedTeams);
 
     const getPlayerorPickById = (
       teamId: string,
@@ -153,77 +81,17 @@ ${capEntries.join("\n")}
     ) => {
       if (type === "player") {
         return teams
-          .find((t: any) => t.id === teamId)
-          ?.players.find((p: any) => p.id === id);
+          .find((t: Team) => t.id.toString() === teamId)
+          ?.players.find((p: Player) => p.id.toString() === id);
       } else {
         return teams
-          .find((t: any) => t.id === teamId)
-          ?.draftPicks.find((p: any) => p.id === id);
+          .find((t: Team) => t.id.toString() === teamId)
+          ?.draftPicks.find((p: Player) => p.id.toString() === id);
       }
     };
 
     // Build assets summary for the prompt
-    const assetsByTeam = selectedAssets.reduce((acc: any, asset: any) => {
-      if (!acc[asset.teamId]) {
-        acc[asset.teamId] = { players: [], picks: [] };
-      }
-      if (asset.type === "player") {
-        acc[asset.teamId].players.push(
-          getPlayerorPickById(asset.teamId, asset.id, asset.type)
-        );
-      } else {
-        acc[asset.teamId].picks.push(
-          getPlayerorPickById(asset.teamId, asset.id, asset.type)
-        );
-      }
-      return acc;
-    }, {});
-
-    let assetsDescription = "";
-    Object.entries(assetsByTeam).forEach(([teamId, assets]: [string, any]) => {
-      const team = teams.find((t: any) => t.id === teamId);
-      const teamName = team?.displayName || team?.name || teamId;
-
-      assetsDescription += `\n**${teamName} Trading Away:**\n`;
-
-      if (assets.players.length > 0) {
-        assetsDescription += `Players: ${assets.players
-          .filter((p: any) => p && (p.name || p.fullName))
-          .map(
-            (p: any) =>
-              `${p.name || p.fullName} ($${
-                p.salary ? (p.salary / 1000000).toFixed(1) : "0"
-              }M)`
-          )
-          .join(", ")}\n`;
-      }
-
-      if (assets.picks.length > 0) {
-        assetsDescription += `Draft Picks: ${assets.picks
-          .filter((p: any) => p && p.year && p.round)
-          .map((p: any) => {
-            let pickText = `${p.year} ${p.round} Round Pick`;
-
-            // Add protection status
-            if (p.isProtected) {
-              pickText += " (Protected)";
-            }
-
-            // Add swap status
-            if (p.isSwap) {
-              pickText += " (Swap)";
-            }
-
-            // Add description if available
-            if (p.description) {
-              pickText += ` - ${p.description}`;
-            }
-
-            return pickText;
-          })
-          .join(", ")}\n`;
-      }
-    });
+    let assetsDescription = getAssetsByTeam(selectedAssets, involvedTeams);
 
     // Add destination information if specified
     const hasDestinations = selectedAssets.some(
@@ -231,58 +99,9 @@ ${capEntries.join("\n")}
     );
     let destinationInfo = "";
 
+    // TDOO: this can be improved by using the getAssetsByTeam function to get the destination info
     if (hasDestinations) {
-      destinationInfo = "\n**Destination Preferences:**\n";
-      selectedAssets.forEach((asset: SelectedAsset) => {
-        if (asset.targetTeamId) {
-          // Find the source and destination teams by id (number)
-          const fromTeam = teams.find((t: any) => t.id === asset.teamId);
-          const toTeam = teams.find((t: any) => t.id === asset.targetTeamId);
-          const fromTeamName =
-            fromTeam?.displayName || fromTeam?.name || String(asset.teamId);
-          const toTeamName =
-            toTeam?.displayName || toTeam?.name || String(asset.targetTeamId);
-
-          // Find the asset details from the team roster or draft picks
-          let assetName = "";
-          if (asset.type === "player") {
-            const player = fromTeam?.players?.find(
-              (p: any) => String(p.id) === asset.id
-            );
-            assetName = player
-              ? player.name || player.fullName || `Player ${asset.id}`
-              : `Player ${asset.id}`;
-          } else if (asset.type === "pick") {
-            const pick = fromTeam?.draftPicks?.find(
-              (p: any) => String(p.id) === asset.id
-            );
-            if (pick) {
-              let pickText = `${pick.year} ${pick.round} Round Pick`;
-
-              // Add protection status
-              if (pick.isProtected) {
-                pickText += " (Protected)";
-              }
-
-              // Add swap status
-              if (pick.isSwap) {
-                pickText += " (Swap)";
-              }
-
-              // Add description if available
-              if (pick.description) {
-                pickText += ` - ${pick.description}`;
-              }
-
-              assetName = pickText;
-            } else {
-              assetName = `Pick ${asset.id}`;
-            }
-          }
-
-          destinationInfo += `- ${assetName} from ${fromTeamName} → ${toTeamName}\n`;
-        }
-      });
+      destinationInfo = getDestinationInfo(selectedAssets, involvedTeams);
     }
 
     // Build the prompt with selected assets information
@@ -302,22 +121,18 @@ ${capContext}
 **Teams Over Salary Cap (but under aprons):**
 - Must match salaries within 125% + $100K for incoming players
 - Can aggregate multiple players in trades
-- Can use trade exceptions
-- Can sign players to minimum contracts
 
 **First Apron - CRITICAL RESTRICTIONS:**
 - If team is currently under first apron but a potential trade would put them over, all of the first apron restrictions apply
-- CANNOT aggregate salaries in trades (cannot combine multiple players to match a higher-paid player)
-- CANNOT use trade exceptions over $5M
-- CANNOT receive more salary than sent out in trades
-- Can still make trades but with much less flexibility
+- Must match salaries within 110% + $100K for incoming players
+- Can aggregate multiple players in trades
+
 
 **Second Apron - SEVERE RESTRICTIONS:**
 - If team is currently under second apron but a potential trade would put them over, all of the second apron restrictions apply
 - CANNOT trade players together (no salary aggregation)
 - CANNOT use any trade exceptions
 - CANNOT receive more money than sent out
-- CANNOT sign bought-out players over minimum
 - Draft pick penalties: Future first-round picks frozen
 - CANNOT use mid-level exception
 
@@ -445,7 +260,7 @@ Generate 3-4 different trade scenarios in this format. RESPOND WITH ONLY THE JSO
 
     // Consider using "gpt-4-turbo" for better quality and similar speed/cost to "gpt-4o-mini"
     const completion = await openai.chat.completions.create({
-      model: "gpt-4-turbo",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
