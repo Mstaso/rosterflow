@@ -10,7 +10,7 @@ import { ChevronDownIcon } from "lucide-react";
 import type { Team } from "~/types";
 import Image from "next/image";
 import { Loader2 } from "lucide-react";
-import { PlusIcon } from "lucide-react";
+import { useState } from "react";
 
 interface TeamSelectDropdownProps {
   allTeams: Team[];
@@ -27,6 +27,7 @@ export function TeamSelectDropdown({
   maxTeamsReached,
   isLoading = false,
 }: TeamSelectDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const availableTeams = allTeams.filter(
     (team) => !selectedTeamIds.includes(team.id)
   );
@@ -48,53 +49,59 @@ export function TeamSelectDropdown({
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          className="w-full md:w-auto border-indigoMain"
-          disabled={maxTeamsReached || isLoading}
+    <>
+      {/* Mobile backdrop blur */}
+      {isOpen && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden" />
+      )}
+      <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            className="w-full md:w-auto border-indigoMain relative z-50"
+            disabled={maxTeamsReached || isLoading}
+          >
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Loading...</span>
+              </div>
+            ) : (
+              <>
+                Add Team{" "}
+                <ChevronDownIcon className="ml-2 h-4 w-4" strokeWidth={1.5} />
+              </>
+            )}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="start"
+          className="w-[calc(100vw-2rem)] md:w-auto max-h-[60vh] md:max-h-60 overflow-y-auto border-indigoMain relative z-50"
+          sideOffset={5}
         >
-          {isLoading ? (
-            <div className="flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Loading...</span>
-            </div>
-          ) : (
-            <>
-              Add Team{" "}
-              <ChevronDownIcon className="ml-2 h-4 w-4" strokeWidth={1.5} />
-            </>
-          )}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="start"
-        className="w-[calc(100vw-2rem)] md:w-auto max-h-[60vh] md:max-h-60 overflow-y-auto border-indigoMain"
-        sideOffset={5}
-      >
-        <div className="h-[80vh] md:h-auto overflow-y-auto">
-          {availableTeams.map((team) => (
-            <DropdownMenuItem
-              key={team.id}
-              onSelect={() => onTeamSelect(team)}
-              className="flex items-center gap-2"
-              disabled={isLoading}
-            >
-              {team.logos[0] && (
-                <Image
-                  src={team.logos[0].href}
-                  alt={team.logos[0].alt}
-                  width={24}
-                  height={24}
-                  className="object-contain"
-                />
-              )}
-              {team.displayName}
-            </DropdownMenuItem>
-          ))}
-        </div>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <div className="h-[80vh] md:h-auto overflow-y-auto">
+            {availableTeams.map((team) => (
+              <DropdownMenuItem
+                key={team.id}
+                onSelect={() => onTeamSelect(team)}
+                className="flex items-center gap-2"
+                disabled={isLoading}
+              >
+                {team.logos[0] && (
+                  <Image
+                    src={team.logos[0].href}
+                    alt={team.logos[0].alt}
+                    width={24}
+                    height={24}
+                    className="object-contain"
+                  />
+                )}
+                {team.displayName}
+              </DropdownMenuItem>
+            ))}
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
   );
 }

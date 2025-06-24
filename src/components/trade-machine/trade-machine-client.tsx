@@ -120,6 +120,7 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
       console.error("Error generating trade:", error);
     } finally {
       setLoadingGeneratedTrades(false);
+      setShowTradeContainer(true);
     }
   };
 
