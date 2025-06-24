@@ -219,7 +219,7 @@ export function TeamCard({
             </TabsTrigger>
           </TabsList>
           <TabsContent value="players" className="flex-grow mt-2">
-            <ScrollArea className="h-auto pr-3">
+            <ScrollArea className="h-auto">
               <div className="space-y-2">
                 {team.players?.map((player) => {
                   const isSelected = selectedAssets.some(
@@ -357,7 +357,7 @@ export function TeamCard({
             </ScrollArea>
           </TabsContent>
           <TabsContent value="picks" className="flex-grow mt-2">
-            <ScrollArea className="h-auto pr-3">
+            <ScrollArea className="h-auto">
               <div className="space-y-2">
                 {team.draftPicks?.map((pick) => {
                   const isSelected = selectedAssets.some(

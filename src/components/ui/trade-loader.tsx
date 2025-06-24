@@ -18,8 +18,8 @@ export function TradeLoader() {
               Generating Trades
             </h2>
             <p className="text-muted-foreground">
-              Our AI is analyzing rosters, salary caps, and trade rules to
-              create realistic scenarios...
+              This may be take a moment, our AI is analyzing rosters, salary
+              caps, and trade rules to create realistic scenarios...
             </p>
           </div>
 

@@ -81,11 +81,11 @@ export default function TradeCard({
   };
 
   return (
-    <div className="flex gap-4 justify-center">
+    <div className="flex flex-col md:flex-row gap-4 justify-center">
       {TradesWithInfo.map((tradeInfo, index) => (
         <Card
           key={index}
-          className="flex flex-col h-auto overflow-hidden border-indigoMain bg-gradient-to-br from-background via-background/95 to-muted/80 flex-1"
+          className="flex flex-col h-auto overflow-hidden border-indigoMain bg-gradient-to-br from-background via-background/95 to-muted/80 md:flex-1"
         >
           <CardHeader className="flex flex-row items-center justify-center space-y-0 pb-2 pt-4 px-4 bg-muted/60">
             <div className="flex items-center gap-2">
@@ -161,11 +161,11 @@ export default function TradeCard({
               </div>
             </div>
           </div>
-          <CardContent className="px-4 py-4 flex-grow flex flex-col bg-muted/60 border-indigoMain">
+          <CardContent className="px-4 py-4 flex-grow flex flex-col justify-center bg-muted/60 border-indigoMain">
             <div>
               <div className="mb-4">
                 <div className="text-sm font-semibold mb-2">
-                  Updated Team Cap Situation
+                  Updated Team Cap Info
                 </div>
                 <table className="w-full border border-border rounded text-xs">
                   <tbody>
@@ -242,7 +242,7 @@ export default function TradeCard({
                       <UsersIcon className="w-4 h-4" strokeWidth={1.5} />
                       Players Received
                     </div>
-                    <ScrollArea className="h-auto pr-3">
+                    <ScrollArea className="h-auto">
                       <div className="space-y-3">
                         {tradeInfo.playersReceived.map(
                           (player, playerIndex) => (
@@ -297,7 +297,7 @@ export default function TradeCard({
                       <FileTextIcon className="w-4 h-4 " strokeWidth={1.5} />
                       Picks Received
                     </div>
-                    <ScrollArea className="h-auto pr-3">
+                    <ScrollArea className="h-auto">
                       <div className="space-y-3">
                         {tradeInfo.picksReceived.map((pick, pickIndex) => (
                           <div
