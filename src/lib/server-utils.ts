@@ -37,10 +37,11 @@ function getPickInfo(pick: DraftPick) {
     pickText += " (Swap)";
   }
 
+  // leaving out as too long for the prompt
   // Add description if available
-  if (pick.description) {
-    pickText += ` - ${pick.description}`;
-  }
+  // if (pick.description) {
+  //   pickText += ` - ${pick.description}`;
+  // }
 
   return pickText;
 }
@@ -51,11 +52,9 @@ export function getRosterContext(involvedTeams: Team[]) {
     const teamName = team.displayName || team.name;
 
     // Format players with salaries
-    const playersInfo = involvedTeams
-      .map((team: any) => {
-        return team.players?.map((player: Player) => {
-          return getPlayerInfo(player);
-        });
+    const playersInfo = team.players
+      ?.map((player: Player) => {
+        return getPlayerInfo(player);
       })
       .join(", ");
 
@@ -98,7 +97,7 @@ export function getCapContext(involvedTeams: Team[]) {
   });
 
   if (capEntries.length > 0) {
-    capContext = `\n\n**TEAM SALARY CAP POSITIONS:**
+    capContext = `
 ${capEntries.join("\n")}
 
 **IMPORTANT: Consider each team's cap position when designing trades. Teams under different cap restrictions have different trade limitations.**`;

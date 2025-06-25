@@ -108,9 +108,11 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
     let randomTeamsForMockTrades: Team[] = [];
 
     if (selectedTeams.length === 1) {
-      randomTeamsForMockTrades = nbaTeams
-        .filter((team) => team.id !== selectedTeams?.[0]?.id)
-        .slice(0, 2);
+      const copyOfNbaTeams = [...nbaTeams];
+
+      randomTeamsForMockTrades = copyOfNbaTeams
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 3);
     }
 
     const trade = {
@@ -125,13 +127,14 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
         method: "POST",
         body: JSON.stringify(trade),
       });
-      const data: GeneratedTradeResponse = await response.json();
+      const data: any = await response.json();
+      console.log("data", data);
       setGeneratedTrades(data.data.trades);
       const copyOfSelectedTeams = [...selectedTeams];
       const teamsAddedToTrade = data.data.teamsAddedToTrade;
       const teamsToAddToTrade = [...copyOfSelectedTeams, ...teamsAddedToTrade];
       setSelectedTeams(teamsToAddToTrade);
-      // console.log("prompt", data.data.prompt);
+      console.log("prompt", data.data.prompt);
     } catch (error) {
       console.error("Error generating trade:", error);
     } finally {
