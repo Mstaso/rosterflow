@@ -128,15 +128,14 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
         body: JSON.stringify(trade),
       });
       const data: any = await response.json();
-      console.log("data", data);
       setGeneratedTrades(data.data.trades);
       const copyOfSelectedTeams = [...selectedTeams];
       const teamsAddedToTrade = data.data.teamsAddedToTrade;
       const teamsToAddToTrade = [...copyOfSelectedTeams, ...teamsAddedToTrade];
       setSelectedTeams(teamsToAddToTrade);
-      console.log("prompt", data.data.prompt);
     } catch (error) {
       console.error("Error generating trade:", error);
+      toast.error("Failed to generate trade. Please try again.");
     } finally {
       setLoadingGeneratedTrades(false);
       setShowTradeContainer(true);

@@ -230,50 +230,50 @@ export function TeamCard({
 
                   return (
                     <DropdownMenu key={player.id}>
-                      <div
-                        className={`group relative flex items-center justify-between p-2.5 rounded-md border-2 ${
-                          isSelected
-                            ? "bg-muted/90 border-white"
-                            : "border-border bg-slate-950"
-                        } hover:bg-muted/90 transition-colors cursor-pointer`}
-                      >
-                        <div className="flex items-center gap-3">
-                          {player.headshot && (
-                            <div className="bg-white/20 p-1 rounded-full">
-                              <Image
-                                src={player.headshot.href}
-                                alt={player.displayName}
-                                width={40}
-                                height={40}
-                                className="rounded-full object-cover w-10 h-10"
-                              />
-                            </div>
-                          )}
-                          <div>
-                            <div className="font-medium text-sm">
-                              {player.displayName}{" "}
-                              <span className="text-xs text-muted-foreground">
-                                ({player.position?.abbreviation || "Unknown"})
-                              </span>
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {player.contract
-                                ? `Salary: $${(
-                                    player.contract.salary / 1000000
-                                  ).toFixed(1)}M`
-                                : "No contract"}
-                              {" | "}
-                              {player.contract?.yearsRemaining}
-                              {` ${
-                                player.contract?.yearsRemaining === 1
-                                  ? "yr"
-                                  : "yrs"
-                              }`}
+                      <DropdownMenuTrigger asChild>
+                        <div
+                          className={`group relative flex items-center justify-between p-2.5 rounded-md border-2 ${
+                            isSelected
+                              ? "bg-muted/90 border-white"
+                              : "border-border bg-slate-950"
+                          } hover:bg-muted/90 transition-colors cursor-pointer`}
+                        >
+                          <div className="flex items-center gap-3">
+                            {player.headshot && (
+                              <div className="bg-white/20 p-1 rounded-full">
+                                <Image
+                                  src={player.headshot.href}
+                                  alt={player.displayName}
+                                  width={40}
+                                  height={40}
+                                  className="rounded-full object-cover w-10 h-10"
+                                />
+                              </div>
+                            )}
+                            <div>
+                              <div className="font-medium text-sm">
+                                {player.displayName}{" "}
+                                <span className="text-xs text-muted-foreground">
+                                  ({player.position?.abbreviation || "Unknown"})
+                                </span>
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {player.contract
+                                  ? `Salary: $${(
+                                      player.contract.salary / 1000000
+                                    ).toFixed(1)}M`
+                                  : "No contract"}
+                                {" | "}
+                                {player.contract?.yearsRemaining}
+                                {` ${
+                                  player.contract?.yearsRemaining === 1
+                                    ? "yr"
+                                    : "yrs"
+                                }`}
+                              </div>
                             </div>
                           </div>
-                        </div>
 
-                        <DropdownMenuTrigger asChild>
                           <Button
                             variant="ghost"
                             size="icon"
@@ -282,11 +282,14 @@ export function TeamCard({
                             <MoreVertical className="h-4 w-4" />
                             <span className="sr-only">Open menu</span>
                           </Button>
-                        </DropdownMenuTrigger>
-                      </div>
-
-                      <DropdownMenuContent align="end" className="w-[200px]">
-                        <DropdownMenuSeparator />
+                        </div>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        align="end"
+                        className="w-[200px]"
+                        sideOffset={-20}
+                      >
+                        {/* <DropdownMenuSeparator /> */}
                         {isSelected ? (
                           <DropdownMenuItem
                             onClick={() => {
@@ -312,9 +315,9 @@ export function TeamCard({
                                 team.id
                               );
                             }}
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 "
                           >
-                            <UsersIcon className="h-4 w-4" />
+                            <UsersIcon className="h-4 w-4 text-indigoMain" />
                             Trade Player
                           </DropdownMenuItem>
                         ) : (
@@ -333,7 +336,7 @@ export function TeamCard({
                                     targetTeam.id
                                   );
                                 }}
-                                className="flex items-center gap-2"
+                                className="flex items-center gap-2 "
                               >
                                 {targetTeam.logos[0] && (
                                   <Image
@@ -401,7 +404,11 @@ export function TeamCard({
                         </DropdownMenuTrigger>
                       </div>
 
-                      <DropdownMenuContent align="end" className="w-[200px]">
+                      <DropdownMenuContent
+                        align="end"
+                        className="w-[200px]"
+                        sideOffset={8}
+                      >
                         <DropdownMenuSeparator />
                         {isSelected ? (
                           <DropdownMenuItem
