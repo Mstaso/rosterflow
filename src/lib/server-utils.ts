@@ -37,11 +37,10 @@ function getPickInfo(pick: DraftPick) {
     pickText += " (Swap)";
   }
 
-  // leaving out as too long for the prompt
   // Add description if available
-  // if (pick.description) {
-  //   pickText += ` - ${pick.description}`;
-  // }
+  if (pick.description) {
+    pickText += ` - ${pick.description}`;
+  }
 
   return pickText;
 }

@@ -154,7 +154,15 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
       <TradeContainer
         tradesData={generatedTrades}
         involvedTeams={selectedTeams}
-        onBack={() => setShowTradeContainer(false)}
+        onBack={() => {
+          setGeneratedTrades([]);
+          setShowTradeContainer(false);
+          setSelectedAssets([]);
+          setSelectedTeamIds([]);
+          setSelectedAssets([]);
+          setSelectedTeams([]);
+          setActiveTab("");
+        }}
       />
     );
   }
