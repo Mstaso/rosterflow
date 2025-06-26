@@ -88,6 +88,30 @@ const teamIdMap: Record<string, string> = {
   wsh: "30", // Washington Wizards
 };
 
+// Read and transform the JSON data to match the expected format
+const capDataPath = path.join(
+  __dirname,
+  "seeddata",
+  "nba_all_teams_cap_data.json"
+);
+const capData = JSON.parse(fs.readFileSync(capDataPath, "utf8"));
+
+interface CapDataTeam {
+  team: string;
+  totalCapAllocations: number;
+  capSpace: number;
+  firstApronSpace: number;
+  SecondApronSpace: number;
+}
+
+const salaryCapData = capData.map((team: CapDataTeam) => ({
+  teamName: team.team,
+  totalCapAllocation: Math.round(team.totalCapAllocations),
+  capSpace: Math.round(team.capSpace),
+  firstApronSpace: Math.round(team.firstApronSpace),
+  secondApronSpace: Math.round(team.SecondApronSpace),
+}));
+
 async function fetchTeams() {
   try {
     const url =
@@ -227,7 +251,7 @@ async function seedTeams() {
     const conference =
       NBA_DIVISIONS[division as keyof typeof NBA_DIVISIONS] || "Unknown";
     const getSalaryCapData = salaryCapData.find(
-      (t) => t.teamName === espnTeam.displayName
+      (t: { teamName: string }) => t.teamName === espnTeam.displayName
     );
 
     const teamData = {
@@ -440,215 +464,3 @@ main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
-const salaryCapData = [
-  {
-    teamName: "Atlanta Hawks",
-    totalCapAllocation: 253589875,
-    capSpace: -98942875,
-    firstApronSpace: 48995201,
-    secondApronSpace: 60874201,
-  },
-  {
-    teamName: "Boston Celtics",
-    totalCapAllocation: 261900828,
-    capSpace: -107253828,
-    firstApronSpace: -31838873,
-    secondApronSpace: -19959873,
-  },
-  {
-    teamName: "Brooklyn Nets",
-    totalCapAllocation: 191046962,
-    capSpace: -36399962,
-    firstApronSpace: 127556060,
-    secondApronSpace: 139435060,
-  },
-  {
-    teamName: "Charlotte Hornets",
-    totalCapAllocation: 183704730,
-    capSpace: -29057730,
-    firstApronSpace: 44716311,
-    secondApronSpace: 56595311,
-  },
-  {
-    teamName: "Chicago Bulls",
-    totalCapAllocation: 191320405,
-    capSpace: -36673405,
-    firstApronSpace: 59766333,
-    secondApronSpace: 71645333,
-  },
-  {
-    teamName: "Cleveland Cavaliers",
-    totalCapAllocation: 242487583,
-    capSpace: -87840583,
-    firstApronSpace: 24737272,
-    secondApronSpace: 12858272,
-  },
-  {
-    teamName: "Dallas Mavericks",
-    totalCapAllocation: 229413241,
-    capSpace: -74766241,
-    firstApronSpace: 819667,
-    secondApronSpace: 12698667,
-  },
-  {
-    teamName: "Denver Nuggets",
-    totalCapAllocation: 221452464,
-    capSpace: -66805464,
-    firstApronSpace: 4734856,
-    secondApronSpace: 7144144,
-  },
-  {
-    teamName: "Detroit Pistons",
-    totalCapAllocation: 192816729,
-    capSpace: -38169729,
-    firstApronSpace: 59745378,
-    secondApronSpace: 71624378,
-  },
-  {
-    teamName: "Golden State Warriors",
-    totalCapAllocation: 265730167,
-    capSpace: -111083167,
-    firstApronSpace: 25013673,
-    secondApronSpace: 36892673,
-  },
-  {
-    teamName: "Houston Rockets",
-    totalCapAllocation: 253829562,
-    capSpace: -99182562,
-    firstApronSpace: 4624460,
-    secondApronSpace: 16503460,
-  },
-  {
-    teamName: "Indiana Pacers",
-    totalCapAllocation: 226390359,
-    capSpace: -71743359,
-    firstApronSpace: 27482910,
-    secondApronSpace: 39361910,
-  },
-  {
-    teamName: "LA Clippers",
-    totalCapAllocation: 194043188,
-    capSpace: -39396188,
-    firstApronSpace: 23115134,
-    secondApronSpace: 34994134,
-  },
-  {
-    teamName: "Los Angeles Lakers",
-    totalCapAllocation: 214451192,
-    capSpace: -59804192,
-    firstApronSpace: 4357330,
-    secondApronSpace: 16236330,
-  },
-  {
-    teamName: "Memphis Grizzlies",
-    totalCapAllocation: 196075648,
-    capSpace: -41428648,
-    firstApronSpace: 58354751,
-    secondApronSpace: 70233751,
-  },
-  {
-    teamName: "Miami Heat",
-    totalCapAllocation: 217087890,
-    capSpace: -62440890,
-    firstApronSpace: 14948490,
-    secondApronSpace: 26827490,
-  },
-  {
-    teamName: "Milwaukee Bucks",
-    totalCapAllocation: 227849105,
-    capSpace: -73202105,
-    firstApronSpace: 28166019,
-    secondApronSpace: 40045019,
-  },
-  {
-    teamName: "Minnesota Timberwolves",
-    totalCapAllocation: 247749456,
-    capSpace: -9310245,
-    firstApronSpace: 925404,
-    secondApronSpace: 12804404,
-  },
-  {
-    teamName: "New Orleans Pelicans",
-    totalCapAllocation: 236882592,
-    capSpace: -82235592,
-    firstApronSpace: 18373158,
-    secondApronSpace: 30252158,
-  },
-  {
-    teamName: "New York Knicks",
-    totalCapAllocation: 230526428,
-    capSpace: -75879428,
-    firstApronSpace: 3833184,
-    secondApronSpace: 8045816,
-  },
-  {
-    teamName: "Oklahoma City Thunder",
-    totalCapAllocation: 192627442,
-    capSpace: -37980442,
-    firstApronSpace: 16733201,
-    secondApronSpace: 28612201,
-  },
-  {
-    teamName: "Orlando Magic",
-    totalCapAllocation: 210870199,
-    capSpace: -56223199,
-    firstApronSpace: 3421531,
-    secondApronSpace: 8457469,
-  },
-  {
-    teamName: "Philadelphia 76ers",
-    totalCapAllocation: 207994153,
-    capSpace: -53347153,
-    firstApronSpace: 18601269,
-    secondApronSpace: 30480269,
-  },
-  {
-    teamName: "Phoenix Suns",
-    totalCapAllocation: 257172509,
-    capSpace: -102525509,
-    firstApronSpace: -23287471,
-    secondApronSpace: -11408471,
-  },
-  {
-    teamName: "Portland Trail Blazers",
-    totalCapAllocation: 196218206,
-    capSpace: -41571206,
-    firstApronSpace: 23453698,
-    secondApronSpace: 35332698,
-  },
-  {
-    teamName: "Sacramento Kings",
-    totalCapAllocation: 204895175,
-    capSpace: -50248175,
-    firstApronSpace: 25696269,
-    secondApronSpace: 37575269,
-  },
-  {
-    teamName: "San Antonio Spurs",
-    totalCapAllocation: 191645048,
-    capSpace: -36998048,
-    firstApronSpace: 48927388,
-    secondApronSpace: 60806388,
-  },
-  {
-    teamName: "Toronto Raptors",
-    totalCapAllocation: 218967368,
-    capSpace: -64320368,
-    firstApronSpace: 7776625,
-    secondApronSpace: 19655625,
-  },
-  {
-    teamName: "Utah Jazz",
-    totalCapAllocation: 169163676,
-    capSpace: -14516676,
-    firstApronSpace: 42652377,
-    secondApronSpace: 54531377,
-  },
-  {
-    teamName: "Washington Wizards",
-    totalCapAllocation: 251116498,
-    capSpace: -96469498,
-    firstApronSpace: 31598088,
-    secondApronSpace: 43477088,
-  },
-];

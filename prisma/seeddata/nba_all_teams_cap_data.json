@@ -2,210 +2,210 @@
   {
     "team": "Atlanta Hawks",
     "totalCapAllocations": 251669395.0,
-    "capSpace": 97022395.0,
+    "capSpace": -97022395.0,
     "firstApronSpace": 48995201.0,
     "SecondApronSpace": 60874201.0
   },
   {
     "team": "Boston Celtics",
     "totalCapAllocations": 264684708.0,
-    "capSpace": 110037708.0,
-    "firstApronSpace": 31838873.0,
-    "SecondApronSpace": 19959873.0
+    "capSpace": -110037708.0,
+    "firstApronSpace": -31838873.0,
+    "SecondApronSpace": -19959873.0
   },
   {
     "team": "Brooklyn Nets",
     "totalCapAllocations": 193848242.0,
-    "capSpace": 39201242.0,
+    "capSpace": -39201242.0,
     "firstApronSpace": 127556060.0,
     "SecondApronSpace": 139435060.0
   },
   {
     "team": "Charlotte Hornets",
     "totalCapAllocations": 182611530.0,
-    "capSpace": 27964530.0,
+    "capSpace": -27964530.0,
     "firstApronSpace": 44716311.0,
     "SecondApronSpace": 56595311.0
   },
   {
     "team": "Chicago Bulls",
     "totalCapAllocations": 196749925.0,
-    "capSpace": 42102925.0,
+    "capSpace": -42102925.0,
     "firstApronSpace": 59766333.0,
     "SecondApronSpace": 71645333.0
   },
   {
     "team": "Cleveland Cavaliers",
     "totalCapAllocations": 242487583.0,
-    "capSpace": 87840583.0,
-    "firstApronSpace": 24737272.0,
-    "SecondApronSpace": 12858272.0
+    "capSpace": -87840583.0,
+    "firstApronSpace": -24737272.0,
+    "SecondApronSpace": -12858272.0
   },
   {
     "team": "Dallas Mavericks",
     "totalCapAllocations": 186450278.0,
-    "capSpace": 31803278.0,
+    "capSpace": -31803278.0,
     "firstApronSpace": 45782630.0,
     "SecondApronSpace": 57661630.0
   },
   {
     "team": "Denver Nuggets",
     "totalCapAllocations": 220279778.0,
-    "capSpace": 65632778.0,
-    "firstApronSpace": 1265896.0,
+    "capSpace": -65632778.0,
+    "firstApronSpace": -1265896.0,
     "SecondApronSpace": 10613104.0
   },
   {
     "team": "Detroit Pistons",
     "totalCapAllocations": 192816729.0,
-    "capSpace": 38169729.0,
+    "capSpace": -38169729.0,
     "firstApronSpace": 59745378.0,
     "SecondApronSpace": 71624378.0
   },
   {
     "team": "Golden State Warriors",
     "totalCapAllocations": 265730167.0,
-    "capSpace": 111083167.0,
+    "capSpace": -111083167.0,
     "firstApronSpace": 25013673.0,
     "SecondApronSpace": 36892673.0
   },
   {
     "team": "Houston Rockets",
     "totalCapAllocations": 203173067.0,
-    "capSpace": 48526067.0,
+    "capSpace": -48526067.0,
     "firstApronSpace": 35380955.0,
     "SecondApronSpace": 47259955.0
   },
   {
     "team": "Indiana Pacers",
     "totalCapAllocations": 223152879.0,
-    "capSpace": 68505879.0,
+    "capSpace": -68505879.0,
     "firstApronSpace": 27482910.0,
     "SecondApronSpace": 39361910.0
   },
   {
-    "team": "La Clippers",
+    "team": "LA Clippers",
     "totalCapAllocations": 196786988.0,
-    "capSpace": 42139988.0,
+    "capSpace": -42139988.0,
     "firstApronSpace": 23115134.0,
     "SecondApronSpace": 34994134.0
   },
   {
     "team": "Los Angeles Lakers",
     "totalCapAllocations": 214451192.0,
-    "capSpace": 59804192.0,
+    "capSpace": -59804192.0,
     "firstApronSpace": 4357330.0,
     "SecondApronSpace": 16236330.0
   },
   {
     "team": "Memphis Grizzlies",
     "totalCapAllocations": 197220969.0,
-    "capSpace": 42573969.0,
+    "capSpace": -42573969.0,
     "firstApronSpace": 61592011.0,
     "SecondApronSpace": 73471011.0
   },
   {
     "team": "Miami Heat",
     "totalCapAllocations": 217087890.0,
-    "capSpace": 62440890.0,
+    "capSpace": -62440890.0,
     "firstApronSpace": 14948490.0,
     "SecondApronSpace": 26827490.0
   },
   {
     "team": "Milwaukee Bucks",
     "totalCapAllocations": 227849105.0,
-    "capSpace": 73202105.0,
+    "capSpace": -73202105.0,
     "firstApronSpace": 28166019.0,
     "SecondApronSpace": 40045019.0
   },
   {
     "team": "Minnesota Timberwolves",
     "totalCapAllocations": 251950536.0,
-    "capSpace": 97303536.0,
+    "capSpace": -97303536.0,
     "firstApronSpace": 925404.0,
     "SecondApronSpace": 12804404.0
   },
   {
     "team": "New Orleans Pelicans",
     "totalCapAllocations": 245278032.0,
-    "capSpace": 90631032.0,
+    "capSpace": -90631032.0,
     "firstApronSpace": 18373158.0,
     "SecondApronSpace": 30252158.0
   },
   {
     "team": "New York Knicks",
     "totalCapAllocations": 230526428.0,
-    "capSpace": 75879428.0,
-    "firstApronSpace": 3833184.0,
+    "capSpace": -75879428.0,
+    "firstApronSpace": -3833184.0,
     "SecondApronSpace": 8045816.0
   },
   {
     "team": "Oklahoma City Thunder",
     "totalCapAllocations": 195735562.0,
-    "capSpace": 41088562.0,
+    "capSpace": -41088562.0,
     "firstApronSpace": 16733201.0,
     "SecondApronSpace": 28612201.0
   },
   {
     "team": "Orlando Magic",
     "totalCapAllocations": 197483049.0,
-    "capSpace": 42836049.0,
+    "capSpace": -42836049.0,
     "firstApronSpace": 4310169.0,
     "SecondApronSpace": 16189169.0
   },
   {
     "team": "Philadelphia 76Ers",
     "totalCapAllocations": 210033193.0,
-    "capSpace": 55386193.0,
+    "capSpace": -55386193.0,
     "firstApronSpace": 18601269.0,
     "SecondApronSpace": 30480269.0
   },
   {
     "team": "Phoenix Suns",
     "totalCapAllocations": 259936469.0,
-    "capSpace": 105289469.0,
-    "firstApronSpace": 23287471.0,
-    "SecondApronSpace": 11408471.0
+    "capSpace": -105289469.0,
+    "firstApronSpace": -23287471.0,
+    "SecondApronSpace": -11408471.0
   },
   {
     "team": "Portland Trail Blazers",
     "totalCapAllocations": 196218206.0,
-    "capSpace": 41571206.0,
+    "capSpace": -41571206.0,
     "firstApronSpace": 23453698.0,
     "SecondApronSpace": 35332698.0
   },
   {
     "team": "Sacramento Kings",
     "totalCapAllocations": 204895175.0,
-    "capSpace": 50248175.0,
+    "capSpace": -50248175.0,
     "firstApronSpace": 25696269.0,
     "SecondApronSpace": 37575269.0
   },
   {
     "team": "San Antonio Spurs",
     "totalCapAllocations": 196545368.0,
-    "capSpace": 41898368.0,
+    "capSpace": -41898368.0,
     "firstApronSpace": 48927388.0,
     "SecondApronSpace": 60806388.0
   },
   {
     "team": "Toronto Raptors",
     "totalCapAllocations": 218967368.0,
-    "capSpace": 64320368.0,
+    "capSpace": -64320368.0,
     "firstApronSpace": 7776625.0,
     "SecondApronSpace": 19655625.0
   },
   {
     "team": "Utah Jazz",
     "totalCapAllocations": 173154996.0,
-    "capSpace": 18507996.0,
+    "capSpace": -18507996.0,
     "firstApronSpace": 42652377.0,
     "SecondApronSpace": 54531377.0
   },
   {
     "team": "Washington Wizards",
     "totalCapAllocations": 249921649.0,
-    "capSpace": 95274649.0,
+    "capSpace": -95274649.0,
     "firstApronSpace": 31598088.0,
     "SecondApronSpace": 43477088.0
   }
