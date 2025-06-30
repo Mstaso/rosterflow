@@ -80,19 +80,25 @@ export function getCapContext(involvedTeams: Team[]) {
     );
 
     let capStatus = "";
+    let availableCashText = "";
     if ((team.secondApronSpace || 0) < 0) {
       capStatus = "SECOND APRON (Severe restrictions)";
+      availableCashText =
+        "NO salary aggregation, NO receiving more money than sent out";
     } else if ((team.firstApronSpace || 0) < 0) {
       capStatus = "FIRST APRON (Limited flexibility)";
+      availableCashText = "NO receiving more money than sent out";
     } else if ((team.capSpace || 0) < 0) {
       capStatus = "OVER CAP (Standard restrictions)";
+      availableCashText = `${firstApronSpace}M available cash`;
     } else {
       capStatus = "UNDER CAP (Full flexibility)";
+      availableCashText = `${firstApronSpace}M available cash`;
     }
 
     return `**${
       team.displayName || team.name
-    }:** Total Cap: $${totalCap}M, Cap Space: $${capSpace}M, First Apron Space: $${firstApronSpace}M, Second Apron Space: $${secondApronSpace}M - ${capStatus}`;
+    }:** ${capStatus} ${availableCashText}`;
   });
 
   if (capEntries.length > 0) {

@@ -295,12 +295,7 @@ export function TeamCard({
                         </DropdownMenuTrigger>
                       </div>
 
-                      <DropdownMenuContent
-                        align="end"
-                        className="w-[200px]"
-                        // sideOffset={-20}
-                      >
-                        <DropdownMenuSeparator />
+                      <DropdownMenuContent align="end" className="w-[200px]">
                         {isSelected ? (
                           <DropdownMenuItem
                             onClick={() => {

@@ -16,13 +16,6 @@ export default function TradeCard({
   trade: TradeScenario;
   involvedTeams: Team[];
 }) {
-  const formatPlayerName = (playerName: string) => {
-    const copyPlayerName = playerName;
-    const splitPlayerName = copyPlayerName.split(" ");
-    splitPlayerName.pop();
-    return `${splitPlayerName.join(" ")}`;
-  };
-
   const TradesWithInfo = trade.teams.map((tradeTeam) => {
     const findTeam = involvedTeams.find(
       (team) => team.displayName === tradeTeam.teamName

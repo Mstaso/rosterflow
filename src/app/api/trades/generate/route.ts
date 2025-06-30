@@ -88,13 +88,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Build the prompt with selected assets information
-    const prompt = `You are an expert NBA trade analyst. Generate 3-4 realistic 2025-26 season trade scenarios.
+    const prompt = `You are an expert NBA trade analyst. Generate 1-4 realistic 2025-26 season trade scenarios taking in cosideration of provided teams rosters, draft picks and salary cap positions.
 
 **SELECTED ASSETS TO TRADE (THESE MUST BE INCLUDED IN ALL TRADE SCENARIOS):**
 ${assetsDescription}${destinationInfo}
-
-**AVAILABLE PLAYERS FOR TRADES (ONLY USE THESE PLAYERS):**
-${rosterContext}
 
 **TEAM SALARY CAP POSITIONS:**
 ${capContext}
@@ -117,19 +114,16 @@ ${capContext}
 - Draft pick penalties: Future first-round picks frozen
 - CANNOT use mid-level exception
 
+**ADDITIONAL PLAYERS AND/OR DRAFT PICKS FROM THE AVAILABLE ROSTERS TO MAKE THE TRADE VALID FOR SALARY CAP RULES AND MORE REALISTIC:**
+${rosterContext}
+
 **MANDATORY REQUIREMENTS:**
 1. **MUST INCLUDE ALL SELECTED ASSETS** - Every trade scenario must include the assets listed in "SELECTED ASSETS TO TRADE" above
 2. **TRADE BALANCE IS CRITICAL** - Every player/pick received by one team MUST be given by another team. No assets can appear in "receives" without appearing in "gives" from another team.
 3. **ONLY USE PLAYERS FROM PROVIDED ROSTERS** - You can ONLY use players that are explicitly listed in the "AVAILABLE PLAYERS FOR TRADES" section above. DO NOT make up players or use players that are not in the provided rosters.
 4. **VERIFY PLAYER TEAMS** - Before including any player in a trade, verify they are actually on the team you're listing them as being from. Each player must appear in the roster of the team you claim they're from.
-5. Use the specific cap information provided in "TEAM SALARY CAP POSITIONS" to determine each team's cap status:
-   - If "UNDER CAP" - Full flexibility
-   - If "OVER CAP" - Standard 125% + $100K salary matching rules
-   - If "FIRST APRON" - NO salary aggregation, NO receiving more salary than sent out
-   - If "SECOND APRON" - NO salary aggregation, NO trade exceptions, NO receiving more money than sent out
-6. Apply the appropriate salary cap rules based on each team's actual cap position shown above
-7. Each trade can involve 2-5 teams
-8. Create realistic trades teams would actually consider given their cap constraints${
+5. Each trade can involve 2-5 teams
+6. Create realistic trades teams would actually consider given their cap constraints${
       hasDestinations
         ? "\n9. Try to respect the destination preferences when possible"
         : ""

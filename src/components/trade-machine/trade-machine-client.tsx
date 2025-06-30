@@ -128,6 +128,7 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
         body: JSON.stringify(trade),
       });
       const data: any = await response.json();
+      console.log("data", data.data.prompt);
       setGeneratedTrades(data.data.trades);
       const copyOfSelectedTeams = [...selectedTeams];
       const teamsAddedToTrade = data.data.teamsAddedToTrade;
