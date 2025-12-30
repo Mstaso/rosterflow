@@ -2,148 +2,179 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // NBA Teams with salary cap information
 model Team {
-    id                Int       @id @default(autoincrement())
-    abbreviation     String
-    displayName      String
-    shortDisplayName String
-    name             String
-    nickname         String
-    location         String
-    color            String
-    alternateColor   String
-    slug             String    @unique
-    totalCapAllocation Int
-    capSpace         Int
-    firstApronSpace  Int
-    secondApronSpace Int
-    record           Json
-    isActive         Boolean   @default(true)
-    isAllStar        Boolean   @default(false)
-    logos            Json      // Array of logo objects with href, alt, rel, width, height
-    links            Json      // Array of link objects
-    conference       String
-    division         String
-    
-    // Relations
-    players          Player[]
-    draftPicks       DraftPick[]
-    tradesFrom       Trade[]   @relation("TradeFromTeam")
-    tradesTo         Trade[]   @relation("TradeToTeam")
-    
-    createdAt        DateTime  @default(now())
-    updatedAt        DateTime  @updatedAt
+  id                 Int     @id @default(autoincrement())
+  abbreviation       String
+  displayName        String
+  shortDisplayName   String
+  name               String
+  nickname           String
+  location           String
+  color              String
+  alternateColor     String
+  slug               String  @unique
+  totalCapAllocation Int
+  capSpace           Int
+  firstApronSpace    Int
+  secondApronSpace   Int
+  record             Json
+  isActive           Boolean @default(true)
+  isAllStar          Boolean @default(false)
+  logos              Json // Array of logo objects with href, alt, rel, width, height
+  links              Json // Array of link objects
+  conference         String
+  division           String
 
-    @@index([abbreviation])
-    @@index([displayName])
+  // Relations
+  players              Player[]
+  draftPicks           DraftPick[]
+  tradeAssets          TradeAsset[] // Assets this team is trading away
+  targetTradeAssets    TradeAsset[]     @relation("TargetTeam") // Assets this team is receiving
+  userSelections       UserSelections[] // User selections from this team
+  targetUserSelections UserSelections[] @relation("UserSelectionsTargetTeam") // User selections going to this team
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([abbreviation])
+  @@index([displayName])
 }
 
 // Players on team rosters
 model Player {
-    id                Int       @id @default(autoincrement())
-    firstName        String
-    lastName         String
-    fullName         String
-    displayName      String
-    shortName        String
-    weight           Int
-    displayWeight    String
-    height           Int
-    displayHeight    String
-    age              Int
-    dateOfBirth      String    // Changed from DateTime to String to match API format
-    birthPlace       Json?     // Contains city, state, country
-    slug             String
-    headshot         Json?     // Contains href and alt
-    jersey           String
-    position         Json      // Contains id, name, displayName, abbreviation, leaf
-    injuries         Json      // Array of injuries
-    experience       Json      // Contains years
-    contract         Json      // Contains detailed contract info
-    status           Json      // Contains id, name, type, abbreviation
-    
-    // Team relationship
-    teamId           Int
-    team             Team      @relation(fields: [teamId], references: [id])
-    
-    // Trade assets
-    tradeAssets      TradeAsset[]
-    
-    createdAt        DateTime  @default(now())
-    updatedAt        DateTime  @updatedAt
-    
-    @@unique([teamId, displayName])
-    @@index([teamId])
-    @@index([position])
+  id            Int    @id @default(autoincrement())
+  firstName     String
+  lastName      String
+  fullName      String
+  displayName   String
+  shortName     String
+  weight        Int
+  displayWeight String
+  height        Int
+  displayHeight String
+  age           Int
+  dateOfBirth   String // Changed from DateTime to String to match API format
+  birthPlace    Json? // Contains city, state, country
+  slug          String
+  headshot      Json? // Contains href and alt
+  jersey        String
+  position      Json // Contains id, name, displayName, abbreviation, leaf
+  injuries      Json // Array of injuries
+  experience    Json // Contains years
+  contract      Json // Contains detailed contract info
+  status        Json // Contains id, name, type, abbreviation
+
+  // Team relationship
+  teamId Int
+  team   Team @relation(fields: [teamId], references: [id])
+
+  // Relations
+  tradeAssets    TradeAsset[]
+  userSelections UserSelections[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([teamId, displayName])
+  @@index([teamId])
+  @@index([position])
 }
 
 // Draft picks (valuable trade assets)
 model DraftPick {
-    id                Int       @id @default(autoincrement())
-    year              Int
-    round             Int
-    isProtected       Boolean   @default(false)
-    isSwap            Boolean   @default(false)
-    description       String?
-    
-    // Relations
-    teamId            Int
-    team              Team      @relation(fields: [teamId], references: [id])
-    tradeAssets       TradeAsset[]
-    
-    createdAt         DateTime  @default(now())
-    updatedAt         DateTime  @updatedAt
-    
-    @@unique([teamId, year, round])
-    @@index([teamId])
+  id          Int     @id @default(autoincrement())
+  year        Int
+  round       Int
+  isProtected Boolean @default(false)
+  isSwap      Boolean @default(false)
+  description String?
+
+  // Relations
+  teamId         Int
+  team           Team             @relation(fields: [teamId], references: [id])
+  tradeAssets    TradeAsset[]
+  userSelections UserSelections[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([teamId, year, round])
+  @@index([teamId])
 }
 
 // Generated trades
 model Trade {
-    id                Int       @id @default(autoincrement())
-    status            String    @default("pending") // pending, completed, rejected
-    createdAt         DateTime  @default(now())
-    updatedAt         DateTime  @updatedAt
-    
-    // Relations
-    fromTeamId        Int
-    fromTeam          Team      @relation("TradeFromTeam", fields: [fromTeamId], references: [id])
-    toTeamId          Int
-    toTeam            Team      @relation("TradeToTeam", fields: [toTeamId], references: [id])
-    assets            TradeAsset[]
-    
-    @@index([fromTeamId])
-    @@index([toTeamId])
+  id          Int      @id @default(autoincrement())
+  rating      Int // 0 - 10 
+  title       String // title of trade
+  description String // description or reasoning of trade 
+  salaryValid Boolean // if salary matching of trade is valid
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  assets     TradeAsset[]
+  selections UserSelections[]
 }
 
 // Assets in a trade (players or draft picks)
 model TradeAsset {
-    id                Int       @id @default(autoincrement())
-    type              String    // "player" or "pick"
-    teamId            Int       // Current team ID
-    tradeId           Int       // Trade this asset is part of
-    
-    // Relations
-    playerId          Int?      // ID of the player if type is "player"
-    player            Player?   @relation(fields: [playerId], references: [id])
-    draftPickId       Int?      // ID of the draft pick if type is "pick"
-    draftPick         DraftPick? @relation(fields: [draftPickId], references: [id])
-    trade             Trade     @relation(fields: [tradeId], references: [id])
-    
-    createdAt         DateTime  @default(now())
-    updatedAt         DateTime  @updatedAt
-    
-    @@index([teamId])
-    @@index([tradeId])
-    @@index([playerId])
-    @@index([draftPickId])
-} 
+  id           Int    @id @default(autoincrement())
+  type         String // "player" or "pick"
+  teamId       Int // Team this asset belongs to
+  targetTeamId Int // Team this asset is going to
+  tradeId      Int // Trade this asset is part of
+
+  // Relations
+  team        Team       @relation(fields: [teamId], references: [id]) // Team this asset is coming from
+  targetTeam  Team       @relation("TargetTeam", fields: [targetTeamId], references: [id]) // Team this asset is going to
+  playerId    Int? // ID of the player if type is "player"
+  player      Player?    @relation(fields: [playerId], references: [id])
+  draftPickId Int? // ID of the draft pick if type is "pick"
+  draftPick   DraftPick? @relation(fields: [draftPickId], references: [id])
+  trade       Trade      @relation(fields: [tradeId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([teamId])
+  @@index([targetTeamId])
+  @@index([tradeId])
+  @@index([playerId])
+  @@index([draftPickId])
+}
+
+model UserSelections {
+  id           Int    @id @default(autoincrement())
+  type         String // "player" or "pick"
+  teamId       Int // Team this asset is coming from
+  targetTeamId Int // Team this asset is going to
+  tradeId      Int // Trade this selection is part of
+
+  // Relations
+  team        Team       @relation(fields: [teamId], references: [id]) // Team this asset is coming from
+  targetTeam  Team       @relation("UserSelectionsTargetTeam", fields: [targetTeamId], references: [id]) // Team this asset is going to
+  playerId    Int? // ID of the player if type is "player"
+  player      Player?    @relation(fields: [playerId], references: [id])
+  draftPickId Int? // ID of the draft pick if type is "pick"
+  draftPick   DraftPick? @relation(fields: [draftPickId], references: [id])
+  trade       Trade      @relation(fields: [tradeId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([teamId])
+  @@index([targetTeamId])
+  @@index([tradeId])
+  @@index([playerId])
+  @@index([draftPickId])
+}

@@ -61,3 +61,15 @@
     @apply bg-background text-foreground;
   }
 } 
+
+@layer utilities {
+  .font-supermolot {
+    font-family: var(--font-logo), ui-sans-serif, system-ui, -apple-system,
+      Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
+      "Segoe UI Emoji";
+    font-weight: 800;
+    font-style: italic;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+}
