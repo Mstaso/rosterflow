@@ -6,12 +6,7 @@ import { TeamSelectDropdown } from "../trade-machine/team-select-dropdown";
 import { TeamCard } from "../trade-machine/team-card";
 import { Button } from "~/components/ui/button";
 import { LightbulbIcon, UsersIcon, PackageIcon } from "lucide-react"; // Added PackageIcon, PlusIcon, and Loader2
-import type {
-  GeneratedTradeResponse,
-  SelectedAsset,
-  Team,
-  TradeScenario,
-} from "~/types";
+import type { SelectedAsset, Team, TradeInfo, TradeScenario } from "~/types";
 import { toast } from "sonner";
 import { useState } from "react";
 import Image from "next/image";
@@ -145,6 +140,31 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
 
   const isTradeButtonActive = selectedAssets.length > 0;
 
+  const handleEditTrade = (tradeToEdit: TradeInfo[], involvedTeams: Team[]) => {
+    console.log("been hit edit trade", tradeToEdit, involvedTeams);
+    const selectedTeamIds: number[] = [];
+    const selectedAssets = tradeToEdit.flatMap((trade) => {
+      return trade.playersReceived?.map((player) => {
+        if (trade.team?.id && !selectedTeamIds.includes(trade.team?.id)) {
+          selectedTeamIds.push(trade.team?.id);
+        }
+        return {
+          id: player?.id?.toString() as string,
+          type: "player",
+          teamId: trade.team?.id,
+        };
+      });
+    });
+
+    // @ts-ignore come back to this
+    setSelectedAssets(selectedAssets || []);
+    setSelectedTeamIds(selectedTeamIds);
+    setSelectedTeams(tradeToEdit.map((trade) => trade.team as Team));
+    setActiveTab(selectedTeamIds[0]?.toString() || "");
+    setShowTradeContainer(false);
+    setGeneratedTrades([]);
+  };
+
   if (loadingGeneratedTrades) {
     return <TradeLoader />;
   }
@@ -163,6 +183,7 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
           setSelectedTeams([]);
           setActiveTab("");
         }}
+        onEditTrade={handleEditTrade}
       />
     );
   }

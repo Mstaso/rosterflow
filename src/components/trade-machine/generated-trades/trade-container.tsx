@@ -1,28 +1,30 @@
-import { useState } from "react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "~/components/ui/tabs";
-import type { Team, TradeScenario } from "~/types";
+import type { Team, TradeInfo, TradeScenario } from "~/types";
 import TradeCard from "./trade-card";
+import SaveTradeModal from "../save-trade-modal";
 
 export default function TradeContainer({
   tradesData,
   involvedTeams,
   onBack,
+  onEditTrade,
 }: {
   tradesData: TradeScenario[];
   involvedTeams: Team[];
   onBack: () => void;
+  onEditTrade: (tradeToEdit: TradeInfo[], involvedTeams: Team[]) => void;
 }) {
   return (
     <div className="flex-grow p-4 md:p-6 lg:p-8">
-      <div className="mb-6">
+      <div className="mb-6 flex  gap-4">
         <Button
           onClick={onBack}
-          variant="outline"
-          className="w-full sm:w-auto bg-indigoMain text-primary-white hover:bg-indigoMain/70
-          disabled:bg-muted disabled:text-muted-foreground/70 disabled:border disabled:border-muted-foreground/30 disabled:cursor-not-allowed
-          transition-all duration-150 ease-in-out"
+          variant="ghost"
+          className="text-muted-foreground w-full sm:w-auto p-0 h-auto hover:text-white hover:bg-transparent justify-start sm:justify-center"
         >
+          <ArrowLeft className="text-indigoMain" />
           Back to Trade Generator
         </Button>
       </div>
@@ -43,7 +45,11 @@ export default function TradeContainer({
 
         {tradesData.map((trade, index) => (
           <TabsContent key={index} value={`trade-${index}`} className="mt-6">
-            <TradeCard trade={trade} involvedTeams={involvedTeams} />
+            <TradeCard
+              trade={trade}
+              involvedTeams={involvedTeams}
+              onEditTrade={onEditTrade}
+            />
           </TabsContent>
         ))}
       </Tabs>

@@ -215,6 +215,15 @@ export type TradeScenario = {
   teams: TeamInTradeScenario[];
 };
 
+export type TradeInfo = {
+  team: Team | undefined;
+  playersReceived: (Player | undefined)[] | undefined;
+  picksReceived: TradeAssetInScenario[] | undefined;
+  outGoingSalary: number | undefined;
+  inComingSalary: number | undefined;
+  capDifference: number;
+};
+
 export type GeneratedTradeResponse = {
   success: boolean;
   data: {
