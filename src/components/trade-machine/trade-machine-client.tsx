@@ -63,9 +63,9 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
         if (!team) return true;
 
         if (asset.type === "player") {
-          return !team.players?.some((p) => p.id.toString() === asset.id);
+          return !team.players?.some((p) => p.id === asset.id);
         } else {
-          return !team.draftPicks?.some((p) => p.id.toString() === asset.id);
+          return !team.draftPicks?.some((p) => p.id === asset.id);
         }
       })
     );
@@ -77,7 +77,7 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
   };
 
   const handleAssetSelect = (
-    assetId: string,
+    assetId: number,
     assetType: "player" | "pick",
     teamId: number,
     targetTeamId?: number

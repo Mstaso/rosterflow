@@ -112,12 +112,12 @@ ${capEntries.join("\n")}
 
 function getSelectedAssetByTeam(
   selectedTeam: Team,
-  playerOrPickId: string,
+  playerOrPickId: number,
   type: "player" | "pick"
 ) {
   if (type === "player") {
     const findPlayer = selectedTeam.players?.find(
-      (player: Player) => playerOrPickId === player.id.toString()
+      (player: Player) => playerOrPickId === player.id
     );
     if (findPlayer) {
       return getPlayerInfo(findPlayer);
@@ -126,7 +126,7 @@ function getSelectedAssetByTeam(
     }
   } else {
     const findPick = selectedTeam.draftPicks?.find(
-      (pick: DraftPick) => playerOrPickId === pick.id.toString()
+      (pick: DraftPick) => playerOrPickId === pick.id
     );
     if (findPick) {
       return getPickInfo(findPick);
@@ -143,9 +143,7 @@ export function getAssetsByTeam(
   const assetsByTeam: any = {};
 
   selectedAssets.forEach((asset: SelectedAsset) => {
-    const team = involvedTeams.find(
-      (t: Team) => t.id.toString() === asset.teamId.toString()
-    );
+    const team = involvedTeams.find((t: Team) => t.id === asset.teamId);
     if (team) {
       if (!assetsByTeam[team.id]) {
         assetsByTeam[team.id] = {
@@ -200,22 +198,22 @@ export function getDestinationInfo(
         (t: Team) => t.id === asset.targetTeamId
       );
       const fromTeamName =
-        fromTeam?.displayName || fromTeam?.name || String(asset.teamId);
+        fromTeam?.displayName || fromTeam?.name || asset.teamId;
       const toTeamName =
-        toTeam?.displayName || toTeam?.name || String(asset.targetTeamId);
+        toTeam?.displayName || toTeam?.name || asset.targetTeamId;
 
       // Find the asset details from the team roster or draft picks
       let assetName = "";
       if (asset.type === "player") {
         const player = fromTeam?.players?.find(
-          (p: Player) => String(p.id) === asset.id
+          (p: Player) => p.id === asset.id
         );
         assetName = player
           ? player.fullName || `Player ${asset.id}`
           : `Player ${asset.id}`;
       } else if (asset.type === "pick") {
         const pick = fromTeam?.draftPicks?.find(
-          (p: DraftPick) => String(p.id) === asset.id
+          (p: DraftPick) => p.id === asset.id
         );
         if (pick) {
           let pickText = `${pick.year} ${pick.round} Round Pick`;
