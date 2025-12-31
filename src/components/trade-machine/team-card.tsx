@@ -33,13 +33,13 @@ interface TeamCardProps {
   selectedTeamIdsInMachine: number[];
   onRemoveTeam: (teamId: number) => void;
   selectedAssets: {
-    id: string;
+    id: number;
     type: "player" | "pick";
     teamId: number;
     targetTeamId?: number;
   }[];
   onAssetSelect: (
-    assetId: string,
+    assetId: number,
     assetType: "player" | "pick",
     teamId: number,
     targetTeamId?: number
@@ -49,7 +49,7 @@ interface TeamCardProps {
   setSelectedAssets: React.Dispatch<
     React.SetStateAction<
       {
-        id: string;
+        id: number;
         type: "player" | "pick";
         teamId: number;
         targetTeamId?: number;
@@ -226,9 +226,7 @@ export function TeamCard({
               <div className="space-y-2">
                 {team.players?.map((player) => {
                   const isSelected = selectedAssets.some(
-                    (asset) =>
-                      asset.id === player.id.toString() &&
-                      asset.type === "player"
+                    (asset) => asset.id === player.id && asset.type === "player"
                   );
 
                   return (
@@ -300,11 +298,7 @@ export function TeamCard({
                           <DropdownMenuItem
                             onClick={() => {
                               setTimeout(() => {
-                                onAssetSelect(
-                                  player.id.toString(),
-                                  "player",
-                                  team.id
-                                );
+                                onAssetSelect(player.id, "player", team.id);
                               }, 500);
                             }}
                             className="flex items-center gap-2 text-red-500 hover:text-red-600"
@@ -315,11 +309,7 @@ export function TeamCard({
                         ) : otherSelectedTeams.length === 0 ? (
                           <DropdownMenuItem
                             onClick={() => {
-                              onAssetSelect(
-                                player.id.toString(),
-                                "player",
-                                team.id
-                              );
+                              onAssetSelect(player.id, "player", team.id);
                             }}
                             className="flex items-center gap-2 "
                           >
@@ -336,7 +326,7 @@ export function TeamCard({
                                 key={targetTeam.id}
                                 onClick={() => {
                                   onAssetSelect(
-                                    player.id.toString(),
+                                    player.id,
                                     "player",
                                     team.id,
                                     targetTeam.id
@@ -370,8 +360,7 @@ export function TeamCard({
               <div className="space-y-2">
                 {team.draftPicks?.map((pick) => {
                   const isSelected = selectedAssets.some(
-                    (asset) =>
-                      asset.id === pick.id.toString() && asset.type === "pick"
+                    (asset) => asset.id === pick.id && asset.type === "pick"
                   );
 
                   return (
@@ -385,7 +374,7 @@ export function TeamCard({
                         onClick={(e) => {
                           if (otherSelectedTeams.length === 0) {
                             e.preventDefault();
-                            onAssetSelect(pick.id.toString(), "pick", team.id);
+                            onAssetSelect(pick.id, "pick", team.id);
                           }
                         }}
                       >
@@ -427,11 +416,7 @@ export function TeamCard({
                         {isSelected ? (
                           <DropdownMenuItem
                             onClick={() => {
-                              onAssetSelect(
-                                pick.id.toString(),
-                                "pick",
-                                team.id
-                              );
+                              onAssetSelect(pick.id, "pick", team.id);
                             }}
                             className="flex items-center gap-2 text-red-500 hover:text-red-600"
                           >
@@ -441,11 +426,7 @@ export function TeamCard({
                         ) : otherSelectedTeams.length === 0 ? (
                           <DropdownMenuItem
                             onClick={() => {
-                              onAssetSelect(
-                                pick.id.toString(),
-                                "pick",
-                                team.id
-                              );
+                              onAssetSelect(pick.id, "pick", team.id);
                             }}
                             className="flex items-center gap-2"
                           >
@@ -462,7 +443,7 @@ export function TeamCard({
                                 key={targetTeam.id}
                                 onClick={() =>
                                   onAssetSelect(
-                                    pick.id.toString(),
+                                    pick.id,
                                     "pick",
                                     team.id,
                                     targetTeam.id

@@ -5,6 +5,7 @@ import { UsersIcon, FileTextIcon, AlertCircle, PencilIcon } from "lucide-react";
 import Image from "next/image";
 import SaveTradeModal from "../save-trade-modal";
 import { Button } from "~/components/ui/button";
+import { Activity } from "react";
 
 export default function TradeCard({
   trade,
@@ -114,14 +115,17 @@ export default function TradeCard({
           Edit Trade
         </Button>
       </div>
-      {!isValidTrade && (
-        <div className="flex items-center justify-center gap-2 py-3 px-4 mb-4 mx-auto max-w-md rounded-md border border-destructive/50 bg-destructive/10 text-destructive">
+      <Activity mode={!isValidTrade ? "visible" : "hidden"}>
+        <div
+          className="flex items-center gap-2 py-3 px-4 mb-4 rounded-md border border-destructive/50 bg-destructive/10 text-destructive
+          justify-center w-fit mx-auto md:mx-0 md:justify-start"
+        >
           <AlertCircle className="w-4 h-4 shrink-0" />
           <div className="text-sm font-medium">
             {salaryRationale || "Invalid trade"}
           </div>
         </div>
-      )}
+      </Activity>
       <div className="flex flex-col md:flex-row gap-4 justify-center">
         {TradesWithInfo.map((tradeInfo, index) => (
           <Card
@@ -285,7 +289,7 @@ export default function TradeCard({
                         <UsersIcon className="w-4 h-4" strokeWidth={1.5} />
                         Players Received
                       </div>
-                      <ScrollArea className="h-auto">
+                      <div className="h-auto">
                         <div className="space-y-3">
                           {tradeInfo.playersReceived.map(
                             (player, playerIndex) => (
@@ -335,7 +339,7 @@ export default function TradeCard({
                             )
                           )}
                         </div>
-                      </ScrollArea>
+                      </div>
                     </div>
                   )}
 
@@ -347,7 +351,7 @@ export default function TradeCard({
                         <FileTextIcon className="w-4 h-4 " strokeWidth={1.5} />
                         Picks Received
                       </div>
-                      <ScrollArea className="h-auto">
+                      <div className="h-auto">
                         <div className="space-y-3">
                           {tradeInfo.picksReceived.map((pick, pickIndex) => (
                             <div
@@ -368,7 +372,7 @@ export default function TradeCard({
                             </div>
                           ))}
                         </div>
-                      </ScrollArea>
+                      </div>
                     </div>
                   )}
 

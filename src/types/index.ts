@@ -91,7 +91,7 @@ export type Venue = {
 };
 
 export interface SelectedAsset {
-  id: string;
+  id: number;
   type: "player" | "pick";
   teamId: number;
   targetTeamId?: number;
