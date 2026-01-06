@@ -1,0 +1,423 @@
+"use client";
+
+import { Card, CardContent, CardHeader } from "~/components/ui/card";
+import { Button } from "~/components/ui/button";
+import { Badge } from "~/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "~/components/ui/alert-dialog";
+import {
+  ArrowLeft,
+  TrashIcon,
+  CalendarIcon,
+  StarIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  UsersIcon,
+  FileTextIcon,
+} from "lucide-react";
+import { deleteTrade } from "~/actions/trades";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { useState } from "react";
+
+type SavedTradeWithAssets = {
+  id: number;
+  title: string;
+  description: string;
+  rating: number;
+  salaryValid: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  assets: {
+    id: number;
+    type: string;
+    teamId: number;
+    targetTeamId: number;
+    playerId: number | null;
+    draftPickId: number | null;
+    player: {
+      id: number;
+      displayName: string;
+      fullName: string;
+      headshot: any;
+      position: any;
+      contract: any;
+    } | null;
+    draftPick: {
+      id: number;
+      year: number;
+      round: number;
+      description: string | null;
+    } | null;
+    team: {
+      id: number;
+      displayName: string;
+      abbreviation: string;
+      logos: any;
+      totalCapAllocation: number;
+      capSpace: number;
+      firstApronSpace: number;
+      secondApronSpace: number;
+    };
+    targetTeam: {
+      id: number;
+      displayName: string;
+      abbreviation: string;
+      logos: any;
+      totalCapAllocation: number;
+      capSpace: number;
+      firstApronSpace: number;
+      secondApronSpace: number;
+    };
+  }[];
+};
+
+type TeamTradeInfo = {
+  team: SavedTradeWithAssets["assets"][0]["targetTeam"];
+  playersReceived: SavedTradeWithAssets["assets"][];
+  picksReceived: SavedTradeWithAssets["assets"][];
+  outgoingSalary: number;
+  incomingSalary: number;
+  capDifference: number;
+};
+
+export function SavedTradeDetail({ trade }: { trade: SavedTradeWithAssets }) {
+  const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteTrade(trade.id);
+      router.push("/my-trades");
+    } catch (error) {
+      console.error("Error deleting trade:", error);
+      setIsDeleting(false);
+    }
+  };
+
+  const formatDate = (date: Date) => {
+    return new Date(date).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  // Group assets by target team to show what each team receives
+  const groupAssetsByTargetTeam = (): TeamTradeInfo[] => {
+    const teamMap = new Map<number, TeamTradeInfo>();
+
+    trade.assets.forEach((asset) => {
+      const targetTeamId = asset.targetTeamId;
+
+      if (!teamMap.has(targetTeamId)) {
+        teamMap.set(targetTeamId, {
+          team: asset.targetTeam,
+          playersReceived: [],
+          picksReceived: [],
+          outgoingSalary: 0,
+          incomingSalary: 0,
+          capDifference: 0,
+        });
+      }
+
+      const teamInfo = teamMap.get(targetTeamId)!;
+
+      if (asset.type === "player" && asset.player) {
+        teamInfo.playersReceived.push(asset);
+        teamInfo.incomingSalary += asset.player.contract?.salary || 0;
+      } else if (asset.type === "pick" && asset.draftPick) {
+        teamInfo.picksReceived.push(asset);
+      }
+    });
+
+    // Calculate outgoing salary for each team
+    trade.assets.forEach((asset) => {
+      const fromTeamId = asset.teamId;
+      if (teamMap.has(fromTeamId) && asset.type === "player" && asset.player) {
+        const teamInfo = teamMap.get(fromTeamId)!;
+        teamInfo.outgoingSalary += asset.player.contract?.salary || 0;
+      }
+    });
+
+    // Calculate cap difference
+    teamMap.forEach((teamInfo) => {
+      teamInfo.capDifference = teamInfo.incomingSalary - teamInfo.outgoingSalary;
+    });
+
+    return Array.from(teamMap.values());
+  };
+
+  const teamsInfo = groupAssetsByTargetTeam();
+
+  return (
+    <div className="flex-grow p-4 md:p-6 lg:p-8">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="mb-6">
+          <Button
+            onClick={() => router.push("/my-trades")}
+            variant="ghost"
+            className="text-muted-foreground p-0 h-auto hover:text-white hover:bg-transparent mb-4"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4 text-indigoMain" />
+            Back to My Trades
+          </Button>
+
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold mb-2">{trade.title}</h1>
+              <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <CalendarIcon className="h-4 w-4" />
+                  {formatDate(trade.createdAt)}
+                </span>
+                <span className="flex items-center gap-1">
+                  <StarIcon className="h-4 w-4 text-yellow-500" />
+                  {trade.rating}/10
+                </span>
+                {trade.salaryValid ? (
+                  <Badge
+                    variant="outline"
+                    className="text-green-500 border-green-500"
+                  >
+                    <CheckCircleIcon className="h-3.5 w-3.5 mr-1" />
+                    Salary Valid
+                  </Badge>
+                ) : (
+                  <Badge
+                    variant="outline"
+                    className="text-red-500 border-red-500"
+                  >
+                    <XCircleIcon className="h-3.5 w-3.5 mr-1" />
+                    Salary Invalid
+                  </Badge>
+                )}
+              </div>
+            </div>
+
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                  disabled={isDeleting}
+                >
+                  <TrashIcon className="h-4 w-4 mr-2" />
+                  Delete Trade
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Trade</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete "{trade.title}"? This action
+                    cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDelete}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+
+          {/* Description */}
+          <p className="text-muted-foreground mt-4">{trade.description}</p>
+        </div>
+
+        {/* Trade Cards - Similar to trade-card.tsx */}
+        <div className="flex flex-col md:flex-row gap-4 justify-center">
+          {teamsInfo.map((teamInfo, index) => (
+            <Card
+              key={index}
+              className="flex flex-col h-auto overflow-hidden border-indigoMain bg-gradient-to-br from-background via-background/95 to-muted/80 md:flex-1"
+            >
+              <CardHeader className="flex flex-row items-center justify-center space-y-0 pb-2 pt-4 px-4 bg-muted/60">
+                <div className="flex items-center gap-2">
+                  {teamInfo.team.logos?.[0]?.href && (
+                    <Image
+                      src={teamInfo.team.logos[0].href}
+                      alt={teamInfo.team.displayName}
+                      width={24}
+                      height={24}
+                      className="object-contain"
+                    />
+                  )}
+                  <span className="text-lg font-semibold">
+                    {teamInfo.team.displayName}
+                  </span>
+                </div>
+              </CardHeader>
+
+              {/* Salary Info */}
+              <div className="px-4 py-3 bg-muted/10">
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <div className="text-xs text-muted-foreground mb-1">
+                      Outgoing Salary
+                    </div>
+                    <div className="text-sm font-medium">
+                      ${(teamInfo.outgoingSalary / 1000000).toFixed(1)}M
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground mb-1">
+                      Incoming Salary
+                    </div>
+                    <div className="text-sm font-medium">
+                      ${(teamInfo.incomingSalary / 1000000).toFixed(1)}M
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground mb-1">
+                      Cap Difference
+                    </div>
+                    <div
+                      className={`text-sm font-medium ${
+                        teamInfo.capDifference > 0
+                          ? "text-red-500"
+                          : teamInfo.capDifference < 0
+                          ? "text-green-500"
+                          : "text-foreground"
+                      }`}
+                    >
+                      ${(teamInfo.capDifference / 1000000).toFixed(1)}M
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <CardContent className="px-4 py-4 flex-grow flex flex-col bg-muted/60 border-indigoMain">
+                <div className="space-y-6">
+                  {/* Players Received */}
+                  {teamInfo.playersReceived.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-muted-foreground">
+                        <UsersIcon className="w-4 h-4" strokeWidth={1.5} />
+                        Players Received
+                      </div>
+                      <div className="space-y-3">
+                        {teamInfo.playersReceived.map((asset) => (
+                          <div
+                            key={asset.id}
+                            className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950"
+                          >
+                            <div className="flex items-center gap-3">
+                              {asset.player?.headshot?.href && (
+                                <div className="bg-white/20 p-1 rounded-full">
+                                  <Image
+                                    src={asset.player.headshot.href}
+                                    alt={asset.player.displayName}
+                                    width={40}
+                                    height={40}
+                                    className="rounded-full object-cover w-10 h-10"
+                                  />
+                                </div>
+                              )}
+                              <div>
+                                <div className="font-medium text-sm">
+                                  {asset.player?.displayName}{" "}
+                                  <span className="text-xs text-muted-foreground">
+                                    (
+                                    {asset.player?.position?.abbreviation ||
+                                      "Unknown"}
+                                    )
+                                  </span>
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {asset.player?.contract
+                                    ? `Salary: $${(
+                                        asset.player.contract.salary / 1000000
+                                      ).toFixed(1)}M`
+                                    : "No contract"}
+                                  {asset.player?.contract?.yearsRemaining && (
+                                    <>
+                                      {" | "}
+                                      {asset.player.contract.yearsRemaining}
+                                      {` ${
+                                        asset.player.contract.yearsRemaining ===
+                                        1
+                                          ? "yr"
+                                          : "yrs"
+                                      }`}
+                                    </>
+                                  )}
+                                </div>
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  from {asset.team.abbreviation}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Picks Received */}
+                  {teamInfo.picksReceived.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-muted-foreground">
+                        <FileTextIcon className="w-4 h-4" strokeWidth={1.5} />
+                        Picks Received
+                      </div>
+                      <div className="space-y-3">
+                        {teamInfo.picksReceived.map((asset) => (
+                          <div
+                            key={asset.id}
+                            className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950"
+                          >
+                            <div className="flex flex-col gap-1">
+                              <div className="text-xs text-muted-foreground">
+                                from {asset.team.abbreviation}
+                              </div>
+                              <div className="font-medium text-sm">
+                                {asset.draftPick?.year} Round{" "}
+                                {asset.draftPick?.round} Pick
+                              </div>
+                              {asset.draftPick?.description && (
+                                <div className="text-xs text-muted-foreground">
+                                  {asset.draftPick.description}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* No assets received */}
+                  {teamInfo.playersReceived.length === 0 &&
+                    teamInfo.picksReceived.length === 0 && (
+                      <div className="text-center py-6 text-muted-foreground">
+                        <div className="text-sm">No assets received</div>
+                      </div>
+                    )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+

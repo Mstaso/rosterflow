@@ -1,6 +1,5 @@
 import type { Team, TradeScenario, TradeInfo } from "~/types";
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
-import { ScrollArea } from "~/components/ui/scroll-area";
 import { UsersIcon, FileTextIcon, AlertCircle, PencilIcon } from "lucide-react";
 import Image from "next/image";
 import SaveTradeModal from "../save-trade-modal";
@@ -103,8 +102,8 @@ export default function TradeCard({
       <div className="flex flex-col sm:flex-row gap-4 sm:gap-3 mb-4">
         <SaveTradeModal
           isLoading={false}
-          fromTeamId={involvedTeams?.[0]?.id || 0}
-          toTeamId={involvedTeams?.[1]?.id || 0}
+          tradeInfo={TradesWithInfo}
+          isValidTrade={isValidTrade}
         />
         <Button
           variant="outline"

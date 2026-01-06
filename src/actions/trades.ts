@@ -3,49 +3,108 @@
 import { z } from "zod";
 import { db } from "~/server/db";
 
-const schema = z.object({
-  title: z.string().min(1).max(100),
-  description: z.string().min(1).max(500),
-  rating: z.coerce.number().min(0).max(10),
-  fromTeamId: z.coerce.number().int().positive().optional(),
-  toTeamId: z.coerce.number().int().positive().optional(),
+const tradeAssetSchema = z.object({
+  type: z.enum(["player", "pick"]),
+  teamId: z.number().int().positive(),
+  targetTeamId: z.number().int().positive(),
+  playerId: z.number().int().positive().optional(),
+  draftPickId: z.number().int().positive().optional(),
 });
 
-export async function saveTradeAction(formData: FormData) {
-  const rawData = {
-    title: formData.get("title"),
-    description: formData.get("description"),
-    rating: formData.get("rating"),
-    fromTeamId: formData.get("fromTeamId"),
-    toTeamId: formData.get("toTeamId"),
-  };
+const saveTradeSchema = z.object({
+  title: z.string().min(1).max(100),
+  description: z.string().min(1).max(500),
+  rating: z.number().min(0).max(10),
+  salaryValid: z.boolean(),
+  assets: z.array(tradeAssetSchema),
+});
 
-  console.log("Raw form data:", rawData);
+export type SaveTradeInput = z.infer<typeof saveTradeSchema>;
 
-  const parseResult = schema.safeParse(rawData);
+export async function saveTradeAction(input: SaveTradeInput) {
+  const parseResult = saveTradeSchema.safeParse(input);
 
   if (!parseResult.success) {
     console.error("Validation errors:", parseResult.error.errors);
     throw new Error(
-      `Invalid form data: ${JSON.stringify(parseResult.error.errors)}`
+      `Invalid trade data: ${JSON.stringify(parseResult.error.errors)}`
     );
   }
 
-  const { title, description, rating, fromTeamId, toTeamId } = parseResult.data;
+  const { title, description, rating, salaryValid, assets } = parseResult.data;
 
-  // Build data object conforming to current Prisma schema
-  const data: any = {
-    title,
-    description,
-    rating,
-    salaryValid: true,
-  };
-  if (typeof fromTeamId === "number") {
-    data.fromTeam = { connect: { id: fromTeamId } };
-  }
-  if (typeof toTeamId === "number") {
-    data.toTeam = { connect: { id: toTeamId } };
-  }
+  // Create the trade with its assets in a transaction
+  const trade = await db.trade.create({
+    data: {
+      title,
+      description,
+      rating,
+      salaryValid,
+      assets: {
+        create: assets.map((asset) => ({
+          type: asset.type,
+          teamId: asset.teamId,
+          targetTeamId: asset.targetTeamId,
+          playerId: asset.playerId ?? null,
+          draftPickId: asset.draftPickId ?? null,
+        })),
+      },
+    },
+    include: {
+      assets: true,
+    },
+  });
 
-  await db.trade.create({ data });
+  return trade;
+}
+
+export async function getSavedTrades() {
+  const trades = await db.trade.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+    include: {
+      assets: {
+        include: {
+          player: true,
+          draftPick: true,
+          team: true,
+          targetTeam: true,
+        },
+      },
+    },
+  });
+
+  return trades;
+}
+
+export async function deleteTrade(tradeId: number) {
+  // Delete associated assets first, then the trade
+  await db.tradeAsset.deleteMany({
+    where: { tradeId },
+  });
+
+  await db.trade.delete({
+    where: { id: tradeId },
+  });
+
+  return { success: true };
+}
+
+export async function getTradeById(tradeId: number) {
+  const trade = await db.trade.findUnique({
+    where: { id: tradeId },
+    include: {
+      assets: {
+        include: {
+          player: true,
+          draftPick: true,
+          team: true,
+          targetTeam: true,
+        },
+      },
+    },
+  });
+
+  return trade;
 }
