@@ -3,7 +3,6 @@ import { Button } from "~/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "~/components/ui/tabs";
 import type { Team, TradeInfo, TradeScenario } from "~/types";
 import TradeCard from "./trade-card";
-import SaveTradeModal from "../save-trade-modal";
 
 export default function TradeContainer({
   tradesData,

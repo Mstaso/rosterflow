@@ -103,8 +103,8 @@ export default function TradeCard({
       <div className="flex flex-col sm:flex-row gap-4 sm:gap-3 mb-4">
         <SaveTradeModal
           isLoading={false}
-          fromTeamId={involvedTeams?.[0]?.id || 0}
-          toTeamId={involvedTeams?.[1]?.id || 0}
+          tradeInfo={TradesWithInfo}
+          isValidTrade={isValidTrade}
         />
         <Button
           variant="outline"
