@@ -155,7 +155,11 @@ export function SavedTradesClient({ trades }: { trades: TradeWithAssets[] }) {
           {trades.map((trade) => {
             const movements = groupAssetsByMovement(trade.assets);
             return (
-              <Card key={trade.id} className="overflow-hidden">
+              <Card
+                key={trade.id}
+                className="overflow-hidden cursor-pointer transition-colors hover:border-indigoMain/50"
+                onClick={() => router.push(`/my-trades/${trade.id}`)}
+              >
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
@@ -191,11 +195,12 @@ export function SavedTradesClient({ trades }: { trades: TradeWithAssets[] }) {
                           size="icon"
                           className="text-muted-foreground hover:text-destructive"
                           disabled={deletingId === trade.id}
+                          onClick={(e) => e.stopPropagation()}
                         >
                           <TrashIcon className="h-4 w-4" />
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent>
+                      <AlertDialogContent onClick={(e) => e.stopPropagation()}>
                         <AlertDialogHeader>
                           <AlertDialogTitle>Delete Trade</AlertDialogTitle>
                           <AlertDialogDescription>

@@ -1,6 +1,5 @@
 import type { Team, TradeScenario, TradeInfo } from "~/types";
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
-import { ScrollArea } from "~/components/ui/scroll-area";
 import { UsersIcon, FileTextIcon, AlertCircle, PencilIcon } from "lucide-react";
 import Image from "next/image";
 import SaveTradeModal from "../save-trade-modal";

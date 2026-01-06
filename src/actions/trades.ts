@@ -90,3 +90,21 @@ export async function deleteTrade(tradeId: number) {
 
   return { success: true };
 }
+
+export async function getTradeById(tradeId: number) {
+  const trade = await db.trade.findUnique({
+    where: { id: tradeId },
+    include: {
+      assets: {
+        include: {
+          player: true,
+          draftPick: true,
+          team: true,
+          targetTeam: true,
+        },
+      },
+    },
+  });
+
+  return trade;
+}
