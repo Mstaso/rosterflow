@@ -6,10 +6,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import { ChevronDownIcon } from "lucide-react";
+import { ChevronDownIcon, PlusIcon, Loader2 } from "lucide-react";
 import type { Team } from "~/types";
 import Image from "next/image";
-import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
 interface TeamSelectDropdownProps {
@@ -58,18 +57,19 @@ export function TeamSelectDropdown({
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
-            className="w-full md:w-auto border-indigoMain relative z-50"
+            className="w-full md:w-auto border-indigoMain relative z-50 flex items-center justify-center gap-2"
             disabled={maxTeamsReached || isLoading}
           >
             {isLoading ? (
-              <div className="flex items-center gap-2">
+              <>
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span>Loading...</span>
-              </div>
+              </>
             ) : (
               <>
-                Add Team{" "}
-                <ChevronDownIcon className="ml-2 h-4 w-4" strokeWidth={1.5} />
+                <PlusIcon className="h-4 w-4" strokeWidth={1.5} />
+                <span>Add Team</span>
+                <ChevronDownIcon className="h-4 w-4" strokeWidth={1.5} />
               </>
             )}
           </Button>

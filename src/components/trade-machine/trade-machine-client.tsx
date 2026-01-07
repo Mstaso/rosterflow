@@ -5,17 +5,32 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "~/components/ui/tabs";
 import { TeamSelectDropdown } from "../trade-machine/team-select-dropdown";
 import { TeamCard } from "../trade-machine/team-card";
 import { Button } from "~/components/ui/button";
-import { LightbulbIcon, UsersIcon, PackageIcon } from "lucide-react"; // Added PackageIcon, PlusIcon, and Loader2
+import { LightbulbIcon, UsersIcon, PlayIcon } from "lucide-react";
 import type { SelectedAsset, Team, TradeInfo, TradeScenario } from "~/types";
 import { toast } from "sonner";
 import { useState } from "react";
 import Image from "next/image";
 import { TradeLoader } from "../ui/trade-loader";
 import TradeContainer from "./generated-trades/trade-container";
+import {
+  SelectedAssetsTrigger,
+  SelectedAssetsContent,
+} from "./selected-assets-panel";
+import TryTradePreview from "./try-trade-preview";
 
 const MAX_TEAMS = 5;
 
-export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
+interface TradeMachineClientProps {
+  nbaTeams: Team[];
+  initialTeamIds?: number[];
+  initialAssets?: SelectedAsset[];
+}
+
+export default function TradeMachineClient({
+  nbaTeams,
+  initialTeamIds = [],
+  initialAssets = [],
+}: TradeMachineClientProps) {
   const [selectedTeams, setSelectedTeams] = useState<Team[]>([]);
   const [selectedAssets, setSelectedAssets] = useState<SelectedAsset[]>([]);
   const [showTeamSelector, setShowTeamSelector] = useState(false);
@@ -25,6 +40,44 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
   const [generatedTrades, setGeneratedTrades] = useState<TradeScenario[]>([]);
   const [loadingGeneratedTrades, setLoadingGeneratedTrades] = useState(false);
   const [showTradeContainer, setShowTradeContainer] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
+  const [assetsExpanded, setAssetsExpanded] = useState(false);
+  const [showTryTradePreview, setShowTryTradePreview] = useState(false);
+
+  // Initialize from URL params (for editing saved trades)
+  React.useEffect(() => {
+    if (hasInitialized || initialTeamIds.length === 0) return;
+
+    const loadInitialTeams = async () => {
+      setIsLoading(true);
+      try {
+        const teamsWithRosters: Team[] = [];
+
+        for (const teamId of initialTeamIds) {
+          const response = await fetch(`/api/nba/team/${teamId}`);
+          if (response.ok) {
+            const responseData = await response.json();
+            teamsWithRosters.push(responseData.data);
+          }
+        }
+
+        setSelectedTeams(teamsWithRosters);
+        setSelectedTeamIds(initialTeamIds);
+        setSelectedAssets(initialAssets);
+        const firstTeamId = initialTeamIds[0];
+        if (firstTeamId !== undefined) {
+          setActiveTab(firstTeamId.toString());
+        }
+      } catch (error) {
+        console.error("Error loading initial teams:", error);
+      } finally {
+        setIsLoading(false);
+        setHasInitialized(true);
+      }
+    };
+
+    loadInitialTeams();
+  }, [initialTeamIds, initialAssets, hasInitialized]);
 
   const handleTeamSelect = async (team: Team) => {
     try {
@@ -140,27 +193,100 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
 
   const isTradeButtonActive = selectedAssets.length > 0;
 
+  // Check if Try Trade button should be enabled:
+  // - At least 2 teams selected
+  // - At least one asset selected from each team
+  const isTryTradeEnabled = (() => {
+    if (selectedTeams.length < 2) return false;
+
+    // Check that each team has at least one asset being traded away
+    const teamsWithAssets = new Set(selectedAssets.map((a) => a.teamId));
+
+    // All selected teams must have at least one asset
+    return selectedTeams.every((team) => teamsWithAssets.has(team.id));
+  })();
+
   const handleEditTrade = (tradeToEdit: TradeInfo[], involvedTeams: Team[]) => {
-    console.log("been hit edit trade", tradeToEdit, involvedTeams);
-    const selectedTeamIds: number[] = [];
-    const selectedAssets = tradeToEdit.flatMap((trade) => {
-      return trade.playersReceived?.map((player) => {
-        if (trade.team?.id && !selectedTeamIds.includes(trade.team?.id)) {
-          selectedTeamIds.push(trade.team?.id);
+    // Build selected assets from the trade info
+    // Each team in tradeToEdit has playersReceived - we need to find where each player came FROM
+    // and set that as the teamId, with the receiving team as targetTeamId
+    const newSelectedAssets: SelectedAsset[] = [];
+    const teamIdsSet = new Set<number>();
+
+    tradeToEdit.forEach((tradeInfo) => {
+      const receivingTeam = tradeInfo.team;
+      if (!receivingTeam?.id) return;
+
+      // Add receiving team to the set
+      teamIdsSet.add(receivingTeam.id);
+
+      // Process players received by this team
+      tradeInfo.playersReceived?.forEach((player) => {
+        if (!player?.id) return;
+
+        // Find which team this player originally belongs to
+        const originalTeam = involvedTeams.find((team) =>
+          team.players?.some((p) => p.id === player.id)
+        );
+
+        if (originalTeam?.id) {
+          teamIdsSet.add(originalTeam.id);
+          newSelectedAssets.push({
+            id: player.id,
+            type: "player",
+            teamId: originalTeam.id,
+            targetTeamId: receivingTeam.id,
+          });
         }
-        return {
-          id: player?.id?.toString() as string,
-          type: "player",
-          teamId: trade.team?.id,
-        };
+      });
+
+      // Process picks received by this team
+      tradeInfo.picksReceived?.forEach((pick) => {
+        if (!pick?.from) return;
+
+        // Find the team that originally owned this pick
+        const originalTeam = involvedTeams.find(
+          (team) => team.displayName === pick.from
+        );
+
+        if (originalTeam?.id) {
+          teamIdsSet.add(originalTeam.id);
+
+          // Find the draft pick ID from the original team's draft picks
+          const draftPick = originalTeam.draftPicks?.find((dp) => {
+            // Match by year and round from the pick name (e.g., "2025 1st Round Pick")
+            const pickName = pick.name || "";
+            const yearMatch = pickName.match(/(\d{4})/);
+            const roundMatch = pickName.match(
+              /(\d)(?:st|nd|rd|th)?\s*[Rr]ound/i
+            );
+
+            if (yearMatch?.[1] && roundMatch?.[1]) {
+              const year = parseInt(yearMatch[1]);
+              const round = parseInt(roundMatch[1]);
+              return dp.year === year && dp.round === round;
+            }
+            return false;
+          });
+
+          if (draftPick?.id) {
+            newSelectedAssets.push({
+              id: draftPick.id,
+              type: "pick",
+              teamId: originalTeam.id,
+              targetTeamId: receivingTeam.id,
+            });
+          }
+        }
       });
     });
 
-    // @ts-ignore come back to this
-    setSelectedAssets(selectedAssets || []);
-    setSelectedTeamIds(selectedTeamIds);
-    setSelectedTeams(tradeToEdit.map((trade) => trade.team as Team));
-    setActiveTab(selectedTeamIds[0]?.toString() || "");
+    const newSelectedTeamIds = Array.from(teamIdsSet);
+
+    setSelectedAssets(newSelectedAssets);
+    setSelectedTeamIds(newSelectedTeamIds);
+    setSelectedTeams(involvedTeams.filter((t) => teamIdsSet.has(t.id)));
+    setActiveTab(newSelectedTeamIds[0]?.toString() || "");
     setShowTradeContainer(false);
     setGeneratedTrades([]);
   };
@@ -188,6 +314,16 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
     );
   }
 
+  if (showTryTradePreview) {
+    return (
+      <TryTradePreview
+        selectedTeams={selectedTeams}
+        selectedAssets={selectedAssets}
+        onBack={() => setShowTryTradePreview(false)}
+      />
+    );
+  }
+
   return (
     <div className="flex-grow p-4 md:p-6 lg:p-8">
       <div className="my-6 flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -198,40 +334,78 @@ export default function TradeMachineClient({ nbaTeams }: { nbaTeams: Team[] }) {
           maxTeamsReached={selectedTeams.length >= MAX_TEAMS}
           isLoading={isLoading}
         />
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
-          {selectedAssets.length > 0 && (
-            <div className="flex items-center text-sm text-muted-foreground border border-border bg-muted/30 px-3 py-2 rounded-md w-full sm:w-auto">
-              <PackageIcon
-                className="mr-2 h-4 w-4 text-primary"
-                strokeWidth={1.5}
-              />
-              <span>
-                {selectedAssets.length} Asset
-                {selectedAssets.length === 1 ? "" : "s"} Selected
-              </span>
-            </div>
-          )}
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto sm:justify-end">
           {generatedTrades.length > 0 && (
             <Button
               onClick={() => setShowTradeContainer(true)}
-              className="w-full sm:w-auto bg-green-600 text-primary-white hover:bg-green-700
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-green-600 text-primary-white hover:bg-green-700
                          transition-all duration-150 ease-in-out"
             >
-              <UsersIcon className="mr-2 h-5 w-5" strokeWidth={1.5} />
-              View Generated Trades ({generatedTrades.length})
+              <UsersIcon className="h-4 w-4" strokeWidth={1.5} />
+              <span>View Generated Trades ({generatedTrades.length})</span>
             </Button>
           )}
           <Button
-            disabled={!isTradeButtonActive}
-            onClick={handleGenerateTrade}
-            className="w-full sm:w-auto bg-indigoMain text-primary-white hover:bg-indigoMain/70
+            disabled={!isTryTradeEnabled}
+            onClick={() => setShowTryTradePreview(true)}
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-600 text-primary-white hover:bg-emerald-700
                          disabled:bg-muted disabled:text-muted-foreground/70 disabled:border disabled:border-muted-foreground/30 disabled:cursor-not-allowed
                          transition-all duration-150 ease-in-out"
           >
-            <LightbulbIcon className="mr-2 h-5 w-5" strokeWidth={1.5} />
-            Generate Trade
+            <PlayIcon className="h-4 w-4" strokeWidth={1.5} />
+            <span>Try Trade</span>
           </Button>
+          <Button
+            disabled={!isTradeButtonActive}
+            onClick={handleGenerateTrade}
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigoMain text-primary-white hover:bg-indigoMain/70
+                         disabled:bg-muted disabled:text-muted-foreground/70 disabled:border disabled:border-muted-foreground/30 disabled:cursor-not-allowed
+                         transition-all duration-150 ease-in-out"
+          >
+            <LightbulbIcon className="h-4 w-4" strokeWidth={1.5} />
+            <span>Generate Trade</span>
+          </Button>
+          <SelectedAssetsTrigger
+            selectedAssets={selectedAssets}
+            isOpen={assetsExpanded}
+            onToggle={() => setAssetsExpanded(!assetsExpanded)}
+          />
+          {/* Mobile: Selected Assets Content appears after all buttons */}
+          <div className="w-full sm:hidden">
+            <SelectedAssetsContent
+              selectedAssets={selectedAssets}
+              selectedTeams={selectedTeams}
+              onRemoveAsset={(assetId, assetType) =>
+                handleAssetSelect(
+                  assetId,
+                  assetType,
+                  selectedAssets.find(
+                    (a) => a.id === assetId && a.type === assetType
+                  )?.teamId || 0
+                )
+              }
+              isOpen={assetsExpanded}
+            />
+          </div>
         </div>
+      </div>
+
+      {/* Desktop: Selected Assets Content appears below buttons row with margin before team cards */}
+      <div className={`hidden sm:block ${assetsExpanded ? "mb-6" : ""}`}>
+        <SelectedAssetsContent
+          selectedAssets={selectedAssets}
+          selectedTeams={selectedTeams}
+          onRemoveAsset={(assetId, assetType) =>
+            handleAssetSelect(
+              assetId,
+              assetType,
+              selectedAssets.find(
+                (a) => a.id === assetId && a.type === assetType
+              )?.teamId || 0
+            )
+          }
+          isOpen={assetsExpanded}
+        />
       </div>
 
       <>

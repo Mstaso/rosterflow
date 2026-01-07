@@ -137,8 +137,8 @@ export default function TradeCard({
                   <Image
                     src={tradeInfo.team.logos[0].href}
                     alt={tradeInfo.team.logos[0].alt}
-                    width={24}
-                    height={24}
+                    width={32}
+                    height={32}
                     className="object-contain"
                   />
                 )}
@@ -302,9 +302,9 @@ export default function TradeCard({
                                       <Image
                                         src={player.headshot.href}
                                         alt={player.displayName}
-                                        width={40}
-                                        height={40}
-                                        className="rounded-full object-cover w-10 h-10"
+                                        width={48}
+                                        height={48}
+                                        className="rounded-full object-cover w-12 h-12"
                                       />
                                     </div>
                                   )}

@@ -23,6 +23,7 @@ import {
   XCircleIcon,
   UsersIcon,
   FileTextIcon,
+  PencilIcon,
 } from "lucide-react";
 import { deleteTrade } from "~/actions/trades";
 import { useRouter } from "next/navigation";
@@ -81,10 +82,12 @@ type SavedTradeWithAssets = {
   }[];
 };
 
+type TradeAsset = SavedTradeWithAssets["assets"][0];
+
 type TeamTradeInfo = {
-  team: SavedTradeWithAssets["assets"][0]["targetTeam"];
-  playersReceived: SavedTradeWithAssets["assets"][];
-  picksReceived: SavedTradeWithAssets["assets"][];
+  team: TradeAsset["targetTeam"];
+  playersReceived: TradeAsset[];
+  picksReceived: TradeAsset[];
   outgoingSalary: number;
   incomingSalary: number;
   capDifference: number;
@@ -152,13 +155,39 @@ export function SavedTradeDetail({ trade }: { trade: SavedTradeWithAssets }) {
 
     // Calculate cap difference
     teamMap.forEach((teamInfo) => {
-      teamInfo.capDifference = teamInfo.incomingSalary - teamInfo.outgoingSalary;
+      teamInfo.capDifference =
+        teamInfo.incomingSalary - teamInfo.outgoingSalary;
     });
 
     return Array.from(teamMap.values());
   };
 
   const teamsInfo = groupAssetsByTargetTeam();
+
+  // Build URL params to edit trade in trade machine
+  const handleEditTrade = () => {
+    // Get unique team IDs involved in the trade
+    const teamIds = new Set<number>();
+    trade.assets.forEach((asset) => {
+      teamIds.add(asset.teamId);
+      teamIds.add(asset.targetTeamId);
+    });
+
+    // Build selected assets array
+    const selectedAssets = trade.assets.map((asset) => ({
+      id: asset.type === "player" ? asset.playerId : asset.draftPickId,
+      type: asset.type,
+      teamId: asset.teamId,
+      targetTeamId: asset.targetTeamId,
+    }));
+
+    // Encode the data as URL params
+    const params = new URLSearchParams();
+    params.set("teamIds", Array.from(teamIds).join(","));
+    params.set("assets", JSON.stringify(selectedAssets));
+
+    router.push(`/?${params.toString()}`);
+  };
 
   return (
     <div className="flex-grow p-4 md:p-6 lg:p-8">
@@ -206,36 +235,46 @@ export function SavedTradeDetail({ trade }: { trade: SavedTradeWithAssets }) {
               </div>
             </div>
 
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
-                  disabled={isDeleting}
-                >
-                  <TrashIcon className="h-4 w-4 mr-2" />
-                  Delete Trade
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Trade</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete "{trade.title}"? This action
-                    cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleDelete}
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="border-indigoMain text-indigoMain hover:bg-indigoMain hover:text-white"
+                onClick={handleEditTrade}
+              >
+                <PencilIcon className="h-4 w-4 mr-2" />
+                Edit Trade
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                    disabled={isDeleting}
                   >
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+                    <TrashIcon className="h-4 w-4 mr-2" />
+                    Delete Trade
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Trade</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete "{trade.title}"? This
+                      action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDelete}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </div>
 
           {/* Description */}
@@ -255,8 +294,8 @@ export function SavedTradeDetail({ trade }: { trade: SavedTradeWithAssets }) {
                     <Image
                       src={teamInfo.team.logos[0].href}
                       alt={teamInfo.team.displayName}
-                      width={24}
-                      height={24}
+                      width={32}
+                      height={32}
                       className="object-contain"
                     />
                   )}
@@ -325,9 +364,9 @@ export function SavedTradeDetail({ trade }: { trade: SavedTradeWithAssets }) {
                                   <Image
                                     src={asset.player.headshot.href}
                                     alt={asset.player.displayName}
-                                    width={40}
-                                    height={40}
-                                    className="rounded-full object-cover w-10 h-10"
+                                    width={48}
+                                    height={48}
+                                    className="rounded-full object-cover w-12 h-12"
                                   />
                                 </div>
                               )}
@@ -420,4 +459,3 @@ export function SavedTradeDetail({ trade }: { trade: SavedTradeWithAssets }) {
     </div>
   );
 }
-

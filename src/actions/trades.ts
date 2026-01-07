@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { auth } from "@clerk/nextjs/server";
 import { db } from "~/server/db";
 
 const tradeAssetSchema = z.object({
@@ -22,6 +23,8 @@ const saveTradeSchema = z.object({
 export type SaveTradeInput = z.infer<typeof saveTradeSchema>;
 
 export async function saveTradeAction(input: SaveTradeInput) {
+  const { userId } = await auth();
+
   const parseResult = saveTradeSchema.safeParse(input);
 
   if (!parseResult.success) {
@@ -40,6 +43,7 @@ export async function saveTradeAction(input: SaveTradeInput) {
       description,
       rating,
       salaryValid,
+      userId: userId ?? null, // Associate with current user if logged in
       assets: {
         create: assets.map((asset) => ({
           type: asset.type,
@@ -58,8 +62,61 @@ export async function saveTradeAction(input: SaveTradeInput) {
   return trade;
 }
 
-export async function getSavedTrades() {
+export async function getSavedTrades(options?: { userOnly?: boolean }) {
+  const { userId } = await auth();
+
   const trades = await db.trade.findMany({
+    where: options?.userOnly && userId ? { userId } : undefined,
+    orderBy: {
+      createdAt: "desc",
+    },
+    include: {
+      assets: {
+        include: {
+          player: true,
+          draftPick: true,
+          team: true,
+          targetTeam: true,
+        },
+      },
+    },
+  });
+
+  return trades;
+}
+
+export async function getAllTrades() {
+  const trades = await db.trade.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+    include: {
+      assets: {
+        include: {
+          player: true,
+          draftPick: true,
+          team: true,
+          targetTeam: true,
+        },
+      },
+    },
+  });
+
+  return trades;
+}
+
+// Export the trade type for use in components
+export type TradeWithAssets = Awaited<ReturnType<typeof getAllTrades>>[number];
+
+export async function getUserTrades() {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return [] as Awaited<ReturnType<typeof getAllTrades>>;
+  }
+
+  const trades = await db.trade.findMany({
+    where: { userId },
     orderBy: {
       createdAt: "desc",
     },
