@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { Navbar } from "~/components/layout/navbar";
-import { getSavedTrades } from "~/actions/trades";
+import { getAllTrades, getUserTrades } from "~/actions/trades";
 import { SavedTradesClient } from "~/components/my-trades/saved-trades-client";
 
 export const dynamic = "force-dynamic";
@@ -13,13 +13,20 @@ export default async function MyTradesPage() {
     redirect("/");
   }
 
-  const trades = await getSavedTrades();
+  const [allTrades, userTrades] = await Promise.all([
+    getAllTrades(),
+    getUserTrades(),
+  ]);
 
   return (
     <main className="bg-background text-foreground">
       <div className="flex flex-col min-h-screen">
         <Navbar />
-        <SavedTradesClient trades={trades} />
+        <SavedTradesClient
+          allTrades={allTrades}
+          userTrades={userTrades}
+          currentUserId={userId}
+        />
       </div>
     </main>
   );

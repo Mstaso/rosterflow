@@ -114,6 +114,7 @@ model DraftPick {
 // Generated trades
 model Trade {
   id          Int      @id @default(autoincrement())
+  userId      String? // Clerk user ID who created this trade (nullable for existing trades)
   rating      Int // 0 - 10 
   title       String // title of trade
   description String // description or reasoning of trade 
@@ -124,6 +125,8 @@ model Trade {
   // Relations
   assets     TradeAsset[]
   selections UserSelections[]
+
+  @@index([userId])
 }
 
 // Assets in a trade (players or draft picks)

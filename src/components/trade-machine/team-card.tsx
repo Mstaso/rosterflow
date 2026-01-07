@@ -132,8 +132,8 @@ export function TeamCard({
                     <Image
                       src={team.logos[0].href}
                       alt={team.logos[0].alt}
-                      width={24}
-                      height={24}
+                      width={32}
+                      height={32}
                       className="object-contain"
                     />
                   )}
@@ -161,8 +161,8 @@ export function TeamCard({
                   <Image
                     src={newTeam.logos[0].href}
                     alt={newTeam.logos[0].alt}
-                    width={24}
-                    height={24}
+                    width={28}
+                    height={28}
                     className="object-contain"
                   />
                 )}
@@ -236,7 +236,7 @@ export function TeamCard({
                           isSelected
                             ? "bg-muted/90 border-white"
                             : "border-border bg-slate-950"
-                        } hover:bg-muted/90 transition-colors cursor-pointer`}
+                        } transition-colors cursor-pointer`}
                       >
                         <div className="flex items-center gap-3">
                           {player.headshot && (
@@ -244,9 +244,9 @@ export function TeamCard({
                               <Image
                                 src={player.headshot.href}
                                 alt={player.displayName}
-                                width={40}
-                                height={40}
-                                className="rounded-full object-cover w-10 h-10"
+                                width={48}
+                                height={48}
+                                className="rounded-full object-cover w-12 h-12"
                               />
                             </div>
                           )}
@@ -273,16 +273,16 @@ export function TeamCard({
                             </div>
                           </div>
                         </div>
-                        <DropdownMenuTrigger>
+                        <DropdownMenuTrigger asChild>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                           >
                             {isSelected ? (
-                              <Minus className="h-4 w-4 " />
+                              <Minus className="h-4 w-4" />
                             ) : (
-                              <Plus className="h-4 w-4 " />
+                              <Plus className="h-4 w-4" />
                             )}
                             <span className="sr-only">
                               {isSelected
@@ -370,7 +370,7 @@ export function TeamCard({
                           isSelected
                             ? "bg-muted/90 border-white"
                             : "border-border bg-slate-950"
-                        } hover:bg-muted/90 transition-colors cursor-pointer`}
+                        } transition-colors cursor-pointer`}
                         onClick={(e) => {
                           if (otherSelectedTeams.length === 0) {
                             e.preventDefault();
@@ -391,7 +391,7 @@ export function TeamCard({
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                           >
                             {isSelected ? (
                               <Minus className="h-4 w-4" />
