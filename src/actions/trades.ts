@@ -79,6 +79,7 @@ export async function getSavedTrades(options?: { userOnly?: boolean }) {
           targetTeam: true,
         },
       },
+      votes: true,
     },
   });
 
@@ -99,6 +100,7 @@ export async function getAllTrades() {
           targetTeam: true,
         },
       },
+      votes: true,
     },
   });
 
@@ -129,6 +131,7 @@ export async function getUserTrades() {
           targetTeam: true,
         },
       },
+      votes: true,
     },
   });
 
@@ -160,8 +163,116 @@ export async function getTradeById(tradeId: number) {
           targetTeam: true,
         },
       },
+      votes: true,
     },
   });
 
   return trade;
+}
+
+// ============ VOTING ACTIONS ============
+
+export async function voteOnTrade(tradeId: number, value: 1 | -1) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    throw new Error("You must be logged in to vote");
+  }
+
+  // Check if user already voted on this trade
+  const existingVote = await db.tradeVote.findUnique({
+    where: {
+      userId_tradeId: {
+        userId,
+        tradeId,
+      },
+    },
+  });
+
+  if (existingVote) {
+    if (existingVote.value === value) {
+      // Same vote - remove it (toggle off)
+      await db.tradeVote.delete({
+        where: { id: existingVote.id },
+      });
+      return { action: "removed", value: 0 };
+    } else {
+      // Different vote - update it
+      await db.tradeVote.update({
+        where: { id: existingVote.id },
+        data: { value },
+      });
+      return { action: "changed", value };
+    }
+  } else {
+    // No existing vote - create new one
+    await db.tradeVote.create({
+      data: {
+        userId,
+        tradeId,
+        value,
+      },
+    });
+    return { action: "created", value };
+  }
+}
+
+export async function getTradeVotes(tradeId: number) {
+  const { userId } = await auth();
+
+  const votes = await db.tradeVote.findMany({
+    where: { tradeId },
+  });
+
+  const upvotes = votes.filter((v) => v.value === 1).length;
+  const downvotes = votes.filter((v) => v.value === -1).length;
+  const score = upvotes - downvotes;
+  const userVote = userId
+    ? votes.find((v) => v.userId === userId)?.value ?? 0
+    : 0;
+
+  return { upvotes, downvotes, score, userVote };
+}
+
+export async function getUserUpvotedTrades() {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return [] as Awaited<ReturnType<typeof getAllTrades>>;
+  }
+
+  // Get all trades the user has upvoted
+  const upvotedTradeIds = await db.tradeVote.findMany({
+    where: {
+      userId,
+      value: 1,
+    },
+    select: {
+      tradeId: true,
+    },
+  });
+
+  const trades = await db.trade.findMany({
+    where: {
+      id: {
+        in: upvotedTradeIds.map((v) => v.tradeId),
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    include: {
+      assets: {
+        include: {
+          player: true,
+          draftPick: true,
+          team: true,
+          targetTeam: true,
+        },
+      },
+      votes: true,
+    },
+  });
+
+  return trades;
 }

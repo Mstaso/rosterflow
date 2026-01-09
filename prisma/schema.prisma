@@ -125,8 +125,27 @@ model Trade {
   // Relations
   assets     TradeAsset[]
   selections UserSelections[]
+  votes      TradeVote[]
 
   @@index([userId])
+}
+
+// Reddit-style voting on trades
+model TradeVote {
+  id        Int      @id @default(autoincrement())
+  userId    String // Clerk user ID who voted
+  tradeId   Int // Trade being voted on
+  value     Int // 1 for upvote, -1 for downvote
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  trade Trade @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+
+  // Each user can only vote once per trade
+  @@unique([userId, tradeId])
+  @@index([userId])
+  @@index([tradeId])
 }
 
 // Assets in a trade (players or draft picks)
