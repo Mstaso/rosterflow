@@ -34,7 +34,7 @@ export default async function TradeDetailPage({
     <main className="bg-background text-foreground">
       <div className="flex flex-col min-h-screen">
         <Navbar />
-        <SavedTradeDetail trade={trade} />
+        <SavedTradeDetail trade={trade} currentUserId={userId} />
       </div>
     </main>
   );

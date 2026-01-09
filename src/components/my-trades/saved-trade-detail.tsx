@@ -24,14 +24,18 @@ import {
   UsersIcon,
   FileTextIcon,
   PencilIcon,
+  ArrowBigUp,
+  ArrowBigDown,
 } from "lucide-react";
-import { deleteTrade } from "~/actions/trades";
+import { deleteTrade, voteOnTrade } from "~/actions/trades";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useState } from "react";
+import { cn } from "~/lib/utils";
 
 type SavedTradeWithAssets = {
   id: number;
+  userId: string | null;
   title: string;
   description: string;
   rating: number;
@@ -80,6 +84,12 @@ type SavedTradeWithAssets = {
       secondApronSpace: number;
     };
   }[];
+  votes?: {
+    id: number;
+    userId: string;
+    tradeId: number;
+    value: number;
+  }[];
 };
 
 type TradeAsset = SavedTradeWithAssets["assets"][0];
@@ -93,9 +103,16 @@ type TeamTradeInfo = {
   capDifference: number;
 };
 
-export function SavedTradeDetail({ trade }: { trade: SavedTradeWithAssets }) {
+export function SavedTradeDetail({
+  trade,
+  currentUserId,
+}: {
+  trade: SavedTradeWithAssets;
+  currentUserId: string;
+}) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isVoting, setIsVoting] = useState(false);
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -107,6 +124,30 @@ export function SavedTradeDetail({ trade }: { trade: SavedTradeWithAssets }) {
       setIsDeleting(false);
     }
   };
+
+  const handleVote = async (value: 1 | -1) => {
+    setIsVoting(true);
+    try {
+      await voteOnTrade(trade.id, value);
+      router.refresh();
+    } catch (error) {
+      console.error("Error voting:", error);
+    } finally {
+      setIsVoting(false);
+    }
+  };
+
+  const getVoteInfo = () => {
+    const votes = trade.votes || [];
+    const upvotes = votes.filter((v) => v.value === 1).length;
+    const downvotes = votes.filter((v) => v.value === -1).length;
+    const score = upvotes - downvotes;
+    const userVote = votes.find((v) => v.userId === currentUserId)?.value ?? 0;
+    return { score, userVote, upvotes, downvotes };
+  };
+
+  const { score, userVote, upvotes, downvotes } = getVoteInfo();
+  const isOwnTrade = trade.userId === currentUserId;
 
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString("en-US", {
@@ -222,77 +263,137 @@ export function SavedTradeDetail({ trade }: { trade: SavedTradeWithAssets }) {
           </Button>
 
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold mb-2">{trade.title}</h1>
-              <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <CalendarIcon className="h-4 w-4" />
-                  {formatDate(trade.createdAt)}
+            <div className="flex gap-4">
+              {/* Vote buttons */}
+              <div className="flex flex-col items-center gap-0.5">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "h-9 w-9 rounded-md transition-all duration-200",
+                    userVote === 1
+                      ? "text-orange-500 bg-orange-500/10 hover:bg-orange-500/20 scale-110"
+                      : "text-muted-foreground hover:text-orange-500 hover:bg-orange-500/10 hover:scale-110"
+                  )}
+                  disabled={isVoting}
+                  onClick={() => handleVote(1)}
+                >
+                  <ArrowBigUp className={cn(
+                    "h-6 w-6 transition-all duration-200",
+                    userVote === 1 && "fill-current"
+                  )} />
+                </Button>
+                <span
+                  className={cn(
+                    "text-lg font-bold tabular-nums transition-colors duration-200",
+                    score > 0 && "text-orange-500",
+                    score < 0 && "text-blue-500",
+                    score === 0 && "text-muted-foreground"
+                  )}
+                >
+                  {score}
                 </span>
-                <span className="flex items-center gap-1">
-                  <StarIcon className="h-4 w-4 text-yellow-500" />
-                  {trade.rating}/10
-                </span>
-                {trade.salaryValid ? (
-                  <Badge
-                    variant="outline"
-                    className="text-green-500 border-green-500"
-                  >
-                    <CheckCircleIcon className="h-3.5 w-3.5 mr-1" />
-                    Salary Valid
-                  </Badge>
-                ) : (
-                  <Badge
-                    variant="outline"
-                    className="text-red-500 border-red-500"
-                  >
-                    <XCircleIcon className="h-3.5 w-3.5 mr-1" />
-                    Salary Invalid
-                  </Badge>
-                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "h-9 w-9 rounded-md transition-all duration-200",
+                    userVote === -1
+                      ? "text-blue-500 bg-blue-500/10 hover:bg-blue-500/20 scale-110"
+                      : "text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 hover:scale-110"
+                  )}
+                  disabled={isVoting}
+                  onClick={() => handleVote(-1)}
+                >
+                  <ArrowBigDown className={cn(
+                    "h-6 w-6 transition-all duration-200",
+                    userVote === -1 && "fill-current"
+                  )} />
+                </Button>
+              </div>
+
+              <div>
+                <h1 className="text-2xl font-bold mb-2">{trade.title}</h1>
+                <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <CalendarIcon className="h-4 w-4" />
+                    {formatDate(trade.createdAt)}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <StarIcon className="h-4 w-4 text-yellow-500" />
+                    {trade.rating}/10
+                  </span>
+                  <span className="flex items-center gap-1 text-orange-500">
+                    <ArrowBigUp className="h-4 w-4" />
+                    {upvotes}
+                  </span>
+                  <span className="flex items-center gap-1 text-blue-500">
+                    <ArrowBigDown className="h-4 w-4" />
+                    {downvotes}
+                  </span>
+                  {trade.salaryValid ? (
+                    <Badge
+                      variant="outline"
+                      className="text-green-500 border-green-500"
+                    >
+                      <CheckCircleIcon className="h-3.5 w-3.5 mr-1" />
+                      Salary Valid
+                    </Badge>
+                  ) : (
+                    <Badge
+                      variant="outline"
+                      className="text-red-500 border-red-500"
+                    >
+                      <XCircleIcon className="h-3.5 w-3.5 mr-1" />
+                      Salary Invalid
+                    </Badge>
+                  )}
+                </div>
               </div>
             </div>
 
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                className="w-full md:w-auto border-indigoMain relative z-50 flex items-center justify-center gap-2"
-                onClick={handleEditTrade}
-              >
-                <PencilIcon className="h-4 w-4 mr-2" />
-                Edit Trade
-              </Button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
-                    disabled={isDeleting}
-                  >
-                    <TrashIcon className="h-4 w-4 mr-2" />
-                    Delete Trade
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Trade</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Are you sure you want to delete "{trade.title}"? This
-                      action cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleDelete}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            {isOwnTrade && (
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="w-full md:w-auto border-indigoMain relative z-50 flex items-center justify-center gap-2"
+                  onClick={handleEditTrade}
+                >
+                  <PencilIcon className="h-4 w-4 mr-2" />
+                  Edit Trade
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                      disabled={isDeleting}
                     >
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
+                      <TrashIcon className="h-4 w-4 mr-2" />
+                      Delete Trade
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Trade</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete "{trade.title}"? This
+                        action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDelete}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            )}
           </div>
 
           {/* Description */}
