@@ -164,6 +164,24 @@ export function SavedTradeDetail({ trade }: { trade: SavedTradeWithAssets }) {
 
   const teamsInfo = groupAssetsByTargetTeam();
 
+  // Calculate updated tax value after trade
+  const calculateUpdatedTaxValue = (
+    currentValue: number,
+    capDifference: number
+  ) => {
+    if (currentValue < 0 && capDifference < 0) {
+      return currentValue + capDifference;
+    } else if (currentValue < 0 && capDifference > 0) {
+      return currentValue - capDifference;
+    } else if (currentValue > 0 && capDifference > 0) {
+      return currentValue - capDifference;
+    } else if (currentValue > 0 && capDifference < 0) {
+      return currentValue - capDifference;
+    } else {
+      return 0;
+    }
+  };
+
   // Build URL params to edit trade in trade machine
   const handleEditTrade = () => {
     // Get unique team IDs involved in the trade
@@ -190,8 +208,8 @@ export function SavedTradeDetail({ trade }: { trade: SavedTradeWithAssets }) {
   };
 
   return (
-    <div className="flex-grow p-4 md:p-6 lg:p-8">
-      <div className="max-w-6xl mx-auto">
+    <div className="flex-grow">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6">
         {/* Header */}
         <div className="mb-6">
           <Button
@@ -238,7 +256,7 @@ export function SavedTradeDetail({ trade }: { trade: SavedTradeWithAssets }) {
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                className="border-indigoMain text-indigoMain hover:bg-indigoMain hover:text-white"
+                className="w-full md:w-auto border-indigoMain relative z-50 flex items-center justify-center gap-2"
                 onClick={handleEditTrade}
               >
                 <PencilIcon className="h-4 w-4 mr-2" />
@@ -344,6 +362,75 @@ export function SavedTradeDetail({ trade }: { trade: SavedTradeWithAssets }) {
               </div>
 
               <CardContent className="px-4 py-4 flex-grow flex flex-col bg-muted/60 border-indigoMain">
+                {/* Updated Team Cap Info */}
+                <div className="mb-4">
+                  <div className="text-sm font-semibold mb-2">
+                    Updated Team Cap Info
+                  </div>
+                  <table className="w-full border border-border rounded text-xs">
+                    <tbody>
+                      <tr className="bg-muted/40">
+                        <td className="px-2 py-1 text-muted-foreground w-1/2">
+                          Total Cap
+                        </td>
+                        <td className="px-2 py-1 font-medium w-1/2 text-right">
+                          $
+                          {teamInfo.team.totalCapAllocation
+                            ? (
+                                teamInfo.team.totalCapAllocation / 1000000
+                              ).toFixed(1)
+                            : "0.0"}
+                          M
+                        </td>
+                      </tr>
+                      <tr className="bg-background">
+                        <td className="px-2 py-1 text-muted-foreground w-1/2">
+                          Cap Space
+                        </td>
+                        <td className="px-2 py-1 font-medium w-1/2 text-right">
+                          $
+                          {(
+                            calculateUpdatedTaxValue(
+                              teamInfo.team.capSpace || 0,
+                              teamInfo.capDifference
+                            ) / 1000000
+                          ).toFixed(1)}
+                          M
+                        </td>
+                      </tr>
+                      <tr className="bg-muted/40">
+                        <td className="px-2 py-1 text-muted-foreground w-1/2">
+                          1st Apron Space
+                        </td>
+                        <td className="px-2 py-1 font-medium w-1/2 text-right">
+                          $
+                          {(
+                            calculateUpdatedTaxValue(
+                              teamInfo.team.firstApronSpace || 0,
+                              teamInfo.capDifference
+                            ) / 1000000
+                          ).toFixed(1)}
+                          M
+                        </td>
+                      </tr>
+                      <tr className="bg-background">
+                        <td className="px-2 py-1 text-muted-foreground w-1/2">
+                          2nd Apron Space
+                        </td>
+                        <td className="px-2 py-1 font-medium w-1/2 text-right">
+                          $
+                          {(
+                            calculateUpdatedTaxValue(
+                              teamInfo.team.secondApronSpace || 0,
+                              teamInfo.capDifference
+                            ) / 1000000
+                          ).toFixed(1)}
+                          M
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
                 <div className="space-y-6">
                   {/* Players Received */}
                   {teamInfo.playersReceived.length > 0 && (
@@ -364,8 +451,8 @@ export function SavedTradeDetail({ trade }: { trade: SavedTradeWithAssets }) {
                                   <Image
                                     src={asset.player.headshot.href}
                                     alt={asset.player.displayName}
-                                    width={48}
-                                    height={48}
+                                    width={96}
+                                    height={96}
                                     className="rounded-full object-cover w-12 h-12"
                                   />
                                 </div>

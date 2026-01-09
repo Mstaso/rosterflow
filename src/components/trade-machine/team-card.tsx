@@ -244,8 +244,8 @@ export function TeamCard({
                               <Image
                                 src={player.headshot.href}
                                 alt={player.displayName}
-                                width={48}
-                                height={48}
+                                width={96}
+                                height={96}
                                 className="rounded-full object-cover w-12 h-12"
                               />
                             </div>

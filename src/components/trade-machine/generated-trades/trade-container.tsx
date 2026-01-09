@@ -16,42 +16,44 @@ export default function TradeContainer({
   onEditTrade: (tradeToEdit: TradeInfo[], involvedTeams: Team[]) => void;
 }) {
   return (
-    <div className="flex-grow p-4 md:p-6 lg:p-8">
-      <div className="mb-6 flex  gap-4">
-        <Button
-          onClick={onBack}
-          variant="ghost"
-          className="text-muted-foreground w-full sm:w-auto p-0 h-auto hover:text-white hover:bg-transparent justify-start sm:justify-center"
-        >
-          <ArrowLeft className="text-indigoMain" />
-          Back to Trade Generator
-        </Button>
-      </div>
+    <div className="flex-grow">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6">
+        <div className="mb-6 flex gap-4">
+          <Button
+            onClick={onBack}
+            variant="ghost"
+            className="text-muted-foreground w-full sm:w-auto p-0 h-auto hover:text-white hover:bg-transparent justify-start sm:justify-center"
+          >
+            <ArrowLeft className="text-indigoMain" />
+            Back to Trade Generator
+          </Button>
+        </div>
 
-      <Tabs defaultValue="trade-0" className="w-full">
-        <TabsList
-          className="grid w-full"
-          style={{
-            gridTemplateColumns: `repeat(${tradesData.length}, 1fr)`,
-          }}
-        >
+        <Tabs defaultValue="trade-0" className="w-full">
+          <TabsList
+            className="grid w-full"
+            style={{
+              gridTemplateColumns: `repeat(${tradesData.length}, 1fr)`,
+            }}
+          >
+            {tradesData.map((trade, index) => (
+              <TabsTrigger key={index} value={`trade-${index}`} className="p-2">
+                Trade {index + 1}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
           {tradesData.map((trade, index) => (
-            <TabsTrigger key={index} value={`trade-${index}`} className="p-2">
-              Trade {index + 1}
-            </TabsTrigger>
+            <TabsContent key={index} value={`trade-${index}`} className="mt-6">
+              <TradeCard
+                trade={trade}
+                involvedTeams={involvedTeams}
+                onEditTrade={onEditTrade}
+              />
+            </TabsContent>
           ))}
-        </TabsList>
-
-        {tradesData.map((trade, index) => (
-          <TabsContent key={index} value={`trade-${index}`} className="mt-6">
-            <TradeCard
-              trade={trade}
-              involvedTeams={involvedTeams}
-              onEditTrade={onEditTrade}
-            />
-          </TabsContent>
-        ))}
-      </Tabs>
+        </Tabs>
+      </div>
     </div>
   );
 }

@@ -17,6 +17,7 @@ import {
   SelectedAssetsContent,
 } from "./selected-assets-panel";
 import TryTradePreview from "./try-trade-preview";
+import { TRADE_STORAGE_KEY } from "./save-trade-modal";
 
 const MAX_TEAMS = 5;
 
@@ -78,6 +79,72 @@ export default function TradeMachineClient({
 
     loadInitialTeams();
   }, [initialTeamIds, initialAssets, hasInitialized]);
+
+  // Restore trade from localStorage (for users returning after sign-in)
+  React.useEffect(() => {
+    if (hasInitialized || initialTeamIds.length > 0) return;
+
+    const restoreFromStorage = async () => {
+      try {
+        const stored = localStorage.getItem(TRADE_STORAGE_KEY);
+        if (!stored) {
+          setHasInitialized(true);
+          return;
+        }
+
+        const pendingTrade = JSON.parse(stored);
+
+        // Check if the stored trade is less than 1 hour old
+        const oneHour = 60 * 60 * 1000;
+        if (Date.now() - pendingTrade.timestamp > oneHour) {
+          localStorage.removeItem(TRADE_STORAGE_KEY);
+          setHasInitialized(true);
+          return;
+        }
+
+        const { selectedAssets: storedAssets, selectedTeamIds: storedTeamIds } =
+          pendingTrade;
+
+        if (!storedAssets?.length || !storedTeamIds?.length) {
+          localStorage.removeItem(TRADE_STORAGE_KEY);
+          setHasInitialized(true);
+          return;
+        }
+
+        setIsLoading(true);
+
+        // Load teams with rosters
+        const teamsWithRosters: Team[] = [];
+        for (const teamId of storedTeamIds) {
+          const response = await fetch(`/api/nba/team/${teamId}`);
+          if (response.ok) {
+            const responseData = await response.json();
+            teamsWithRosters.push(responseData.data);
+          }
+        }
+
+        if (teamsWithRosters.length > 0) {
+          setSelectedTeams(teamsWithRosters);
+          setSelectedTeamIds(storedTeamIds);
+          setSelectedAssets(storedAssets);
+          setActiveTab(storedTeamIds[0]?.toString() || "");
+          // Show the try trade preview so user can save their trade
+          setShowTryTradePreview(true);
+        }
+
+        // Clear the stored trade after restoring
+        localStorage.removeItem(TRADE_STORAGE_KEY);
+      } catch (error) {
+        console.error("Error restoring trade from storage:", error);
+        localStorage.removeItem(TRADE_STORAGE_KEY);
+      } finally {
+        setIsLoading(false);
+        setHasInitialized(true);
+      }
+    };
+
+    restoreFromStorage();
+  }, [hasInitialized, initialTeamIds.length]);
 
   const handleTeamSelect = async (team: Team) => {
     try {
@@ -325,248 +392,250 @@ export default function TradeMachineClient({
   }
 
   return (
-    <div className="flex-grow p-4 md:p-6 lg:p-8">
-      <div className="my-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-        <TeamSelectDropdown
-          allTeams={nbaTeams}
-          selectedTeamIds={selectedTeamIds}
-          onTeamSelect={handleTeamSelect}
-          maxTeamsReached={selectedTeams.length >= MAX_TEAMS}
-          isLoading={isLoading}
-        />
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto sm:justify-end">
-          {generatedTrades.length > 0 && (
+    <div className="flex-grow">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6">
+        <div className="my-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <TeamSelectDropdown
+            allTeams={nbaTeams}
+            selectedTeamIds={selectedTeamIds}
+            onTeamSelect={handleTeamSelect}
+            maxTeamsReached={selectedTeams.length >= MAX_TEAMS}
+            isLoading={isLoading}
+          />
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto sm:justify-end">
+            {generatedTrades.length > 0 && (
+              <Button
+                onClick={() => setShowTradeContainer(true)}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-green-600 text-primary-white hover:bg-green-700
+                         transition-all duration-150 ease-in-out"
+              >
+                <UsersIcon className="h-4 w-4" strokeWidth={1.5} />
+                <span>View Generated Trades ({generatedTrades.length})</span>
+              </Button>
+            )}
             <Button
-              onClick={() => setShowTradeContainer(true)}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-green-600 text-primary-white hover:bg-green-700
+              disabled={!isTryTradeEnabled}
+              onClick={() => setShowTryTradePreview(true)}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-600 text-primary-white hover:bg-emerald-700
+                         disabled:bg-muted disabled:text-muted-foreground/70 disabled:border disabled:border-muted-foreground/30 disabled:cursor-not-allowed
                          transition-all duration-150 ease-in-out"
             >
-              <UsersIcon className="h-4 w-4" strokeWidth={1.5} />
-              <span>View Generated Trades ({generatedTrades.length})</span>
+              <PlayIcon className="h-4 w-4" strokeWidth={1.5} />
+              <span>Try Trade</span>
             </Button>
-          )}
-          <Button
-            disabled={!isTryTradeEnabled}
-            onClick={() => setShowTryTradePreview(true)}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-600 text-primary-white hover:bg-emerald-700
+            <Button
+              disabled={!isTradeButtonActive}
+              onClick={handleGenerateTrade}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigoMain text-primary-white hover:bg-indigoMain/70
                          disabled:bg-muted disabled:text-muted-foreground/70 disabled:border disabled:border-muted-foreground/30 disabled:cursor-not-allowed
                          transition-all duration-150 ease-in-out"
-          >
-            <PlayIcon className="h-4 w-4" strokeWidth={1.5} />
-            <span>Try Trade</span>
-          </Button>
-          <Button
-            disabled={!isTradeButtonActive}
-            onClick={handleGenerateTrade}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigoMain text-primary-white hover:bg-indigoMain/70
-                         disabled:bg-muted disabled:text-muted-foreground/70 disabled:border disabled:border-muted-foreground/30 disabled:cursor-not-allowed
-                         transition-all duration-150 ease-in-out"
-          >
-            <LightbulbIcon className="h-4 w-4" strokeWidth={1.5} />
-            <span>Generate Trade</span>
-          </Button>
-          <SelectedAssetsTrigger
-            selectedAssets={selectedAssets}
-            isOpen={assetsExpanded}
-            onToggle={() => setAssetsExpanded(!assetsExpanded)}
-          />
-          {/* Mobile: Selected Assets Content appears after all buttons */}
-          <div className="w-full sm:hidden">
-            <SelectedAssetsContent
+            >
+              <LightbulbIcon className="h-4 w-4" strokeWidth={1.5} />
+              <span>Generate Trade</span>
+            </Button>
+            <SelectedAssetsTrigger
               selectedAssets={selectedAssets}
-              selectedTeams={selectedTeams}
-              onRemoveAsset={(assetId, assetType) =>
-                handleAssetSelect(
-                  assetId,
-                  assetType,
-                  selectedAssets.find(
-                    (a) => a.id === assetId && a.type === assetType
-                  )?.teamId || 0
-                )
-              }
               isOpen={assetsExpanded}
+              onToggle={() => setAssetsExpanded(!assetsExpanded)}
             />
+            {/* Mobile: Selected Assets Content appears after all buttons */}
+            <div className="w-full sm:hidden">
+              <SelectedAssetsContent
+                selectedAssets={selectedAssets}
+                selectedTeams={selectedTeams}
+                onRemoveAsset={(assetId, assetType) =>
+                  handleAssetSelect(
+                    assetId,
+                    assetType,
+                    selectedAssets.find(
+                      (a) => a.id === assetId && a.type === assetType
+                    )?.teamId || 0
+                  )
+                }
+                isOpen={assetsExpanded}
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Desktop: Selected Assets Content appears below buttons row with margin before team cards */}
-      <div className={`hidden sm:block ${assetsExpanded ? "mb-6" : ""}`}>
-        <SelectedAssetsContent
-          selectedAssets={selectedAssets}
-          selectedTeams={selectedTeams}
-          onRemoveAsset={(assetId, assetType) =>
-            handleAssetSelect(
-              assetId,
-              assetType,
-              selectedAssets.find(
-                (a) => a.id === assetId && a.type === assetType
-              )?.teamId || 0
-            )
-          }
-          isOpen={assetsExpanded}
-        />
-      </div>
+        {/* Desktop: Selected Assets Content appears below buttons row with margin before team cards */}
+        <div className={`hidden sm:block ${assetsExpanded ? "mb-6" : ""}`}>
+          <SelectedAssetsContent
+            selectedAssets={selectedAssets}
+            selectedTeams={selectedTeams}
+            onRemoveAsset={(assetId, assetType) =>
+              handleAssetSelect(
+                assetId,
+                assetType,
+                selectedAssets.find(
+                  (a) => a.id === assetId && a.type === assetType
+                )?.teamId || 0
+              )
+            }
+            isOpen={assetsExpanded}
+          />
+        </div>
 
-      <>
-        {selectedTeams.length > 0 ? (
-          <>
-            {/* Mobile Tabs - Only show when 2 or more teams */}
-            {selectedTeams.length >= 2 && (
-              <div className="md:hidden mb-4">
-                <Tabs
-                  value={activeTab}
-                  onValueChange={setActiveTab}
-                  defaultValue={selectedTeams[0]?.id.toString()}
-                  className="w-full "
-                >
-                  <TabsList
-                    className="w-full grid h-16 "
-                    style={{
-                      gridTemplateColumns: `repeat(${selectedTeams.length}, 1fr)`,
-                    }}
+        <>
+          {selectedTeams.length > 0 ? (
+            <>
+              {/* Mobile Tabs - Only show when 2 or more teams */}
+              {selectedTeams.length >= 2 && (
+                <div className="md:hidden mb-4">
+                  <Tabs
+                    value={activeTab}
+                    onValueChange={setActiveTab}
+                    defaultValue={selectedTeams[0]?.id.toString()}
+                    className="w-full "
                   >
+                    <TabsList
+                      className="w-full grid h-16 "
+                      style={{
+                        gridTemplateColumns: `repeat(${selectedTeams.length}, 1fr)`,
+                      }}
+                    >
+                      {selectedTeams.map((team) => (
+                        <TabsTrigger
+                          key={team.id}
+                          value={team.id.toString()}
+                          className="p-2 flex items-center justify-center"
+                        >
+                          {team.logos[0] ? (
+                            <Image
+                              src={team.logos[0].href}
+                              alt={team.logos[0].alt}
+                              width={32}
+                              height={32}
+                              className="object-contain"
+                            />
+                          ) : (
+                            <span className="text-xs">{team.displayName}</span>
+                          )}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
                     {selectedTeams.map((team) => (
-                      <TabsTrigger
-                        key={team.id}
-                        value={team.id.toString()}
-                        className="p-2 flex items-center justify-center"
-                      >
-                        {team.logos[0] ? (
-                          <Image
-                            src={team.logos[0].href}
-                            alt={team.logos[0].alt}
-                            width={32}
-                            height={32}
-                            className="object-contain"
-                          />
-                        ) : (
-                          <span className="text-xs">{team.displayName}</span>
-                        )}
-                      </TabsTrigger>
+                      <TabsContent key={team.id} value={team.id.toString()}>
+                        <TeamCard
+                          team={team}
+                          allTeams={nbaTeams}
+                          selectedTeamIdsInMachine={selectedTeamIds}
+                          onRemoveTeam={handleRemoveTeam}
+                          selectedAssets={selectedAssets.filter(
+                            (sa) => sa.teamId === team.id
+                          )}
+                          onAssetSelect={handleAssetSelect}
+                          setSelectedTeams={setSelectedTeams}
+                          setSelectedTeamIds={setSelectedTeamIds}
+                          setSelectedAssets={setSelectedAssets}
+                          setActiveTab={setActiveTab}
+                        />
+                      </TabsContent>
                     ))}
-                  </TabsList>
-                  {selectedTeams.map((team) => (
-                    <TabsContent key={team.id} value={team.id.toString()}>
-                      <TeamCard
-                        team={team}
-                        allTeams={nbaTeams}
-                        selectedTeamIdsInMachine={selectedTeamIds}
-                        onRemoveTeam={handleRemoveTeam}
-                        selectedAssets={selectedAssets.filter(
-                          (sa) => sa.teamId === team.id
-                        )}
-                        onAssetSelect={handleAssetSelect}
-                        setSelectedTeams={setSelectedTeams}
-                        setSelectedTeamIds={setSelectedTeamIds}
-                        setSelectedAssets={setSelectedAssets}
-                        setActiveTab={setActiveTab}
-                      />
-                    </TabsContent>
-                  ))}
-                </Tabs>
-              </div>
-            )}
-
-            {/* Single Team View - Mobile */}
-            {selectedTeams.length === 1 && selectedTeams[0] && (
-              <div className="md:hidden">
-                <TeamCard
-                  team={selectedTeams[0]}
-                  allTeams={nbaTeams}
-                  selectedTeamIdsInMachine={selectedTeamIds}
-                  onRemoveTeam={handleRemoveTeam}
-                  selectedAssets={selectedAssets.filter(
-                    (sa) => sa.teamId === selectedTeams[0]?.id
-                  )}
-                  onAssetSelect={handleAssetSelect}
-                  setSelectedTeams={setSelectedTeams}
-                  setSelectedTeamIds={setSelectedTeamIds}
-                  setSelectedAssets={setSelectedAssets}
-                  setActiveTab={setActiveTab}
-                />
-              </div>
-            )}
-
-            {/* Desktop Grid */}
-            <div
-              className="hidden md:grid gap-4 md:gap-6"
-              style={{
-                gridTemplateColumns:
-                  selectedTeams.length === 1
-                    ? "repeat(2, 1fr)"
-                    : selectedTeams.length === 2
-                    ? "repeat(2, 1fr)"
-                    : selectedTeams.length === 3
-                    ? "repeat(3, 1fr)"
-                    : selectedTeams.length === 4
-                    ? "repeat(4, 1fr)"
-                    : "repeat(5, 1fr)",
-              }}
-            >
-              {selectedTeams.map((team) => (
-                <TeamCard
-                  key={team.id}
-                  team={team}
-                  allTeams={nbaTeams}
-                  selectedTeamIdsInMachine={selectedTeamIds}
-                  onRemoveTeam={handleRemoveTeam}
-                  selectedAssets={selectedAssets.filter(
-                    (sa) => sa.teamId === team.id
-                  )}
-                  onAssetSelect={handleAssetSelect}
-                  setSelectedTeams={setSelectedTeams}
-                  setSelectedTeamIds={setSelectedTeamIds}
-                  setSelectedAssets={setSelectedAssets}
-                  setActiveTab={setActiveTab}
-                />
-              ))}
-              {selectedTeams.length === 1 && (
-                <div className="flex flex-col border rounded-lg overflow-hidden">
-                  <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-muted rounded-lg bg-muted/5 m-4">
-                    <UsersIcon
-                      className="w-12 h-12 text-muted-foreground mb-3"
-                      strokeWidth={1.5}
-                    />
-                    <h3 className="text-lg font-semibold text-foreground mb-1">
-                      Add Another Team
-                    </h3>
-                    <p className="text-sm text-muted-foreground text-center mb-4">
-                      Generate a trade by selecting a player/pick or expand your
-                      trade by adding more teams
-                    </p>
-                    <TeamSelectDropdown
-                      allTeams={nbaTeams}
-                      selectedTeamIds={selectedTeamIds}
-                      onTeamSelect={handleTeamSelect}
-                      maxTeamsReached={selectedTeams.length >= MAX_TEAMS}
-                    />
-                  </div>
+                  </Tabs>
                 </div>
               )}
-            </div>
-          </>
-        ) : (
-          <div className="text-center p-8 border rounded-lg bg-muted/50">
-            <LightbulbIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Teams Selected</h3>
-            <p className="text-muted-foreground mb-4">
-              Add teams to start building your trade
-            </p>
-          </div>
-        )}
-      </>
 
-      {showTeamSelector && (
-        <TeamSelectDropdown
-          allTeams={nbaTeams.filter(
-            (team) => !selectedTeamIds.includes(team.id)
+              {/* Single Team View - Mobile */}
+              {selectedTeams.length === 1 && selectedTeams[0] && (
+                <div className="md:hidden">
+                  <TeamCard
+                    team={selectedTeams[0]}
+                    allTeams={nbaTeams}
+                    selectedTeamIdsInMachine={selectedTeamIds}
+                    onRemoveTeam={handleRemoveTeam}
+                    selectedAssets={selectedAssets.filter(
+                      (sa) => sa.teamId === selectedTeams[0]?.id
+                    )}
+                    onAssetSelect={handleAssetSelect}
+                    setSelectedTeams={setSelectedTeams}
+                    setSelectedTeamIds={setSelectedTeamIds}
+                    setSelectedAssets={setSelectedAssets}
+                    setActiveTab={setActiveTab}
+                  />
+                </div>
+              )}
+
+              {/* Desktop Grid */}
+              <div
+                className="hidden md:grid gap-4 md:gap-6"
+                style={{
+                  gridTemplateColumns:
+                    selectedTeams.length === 1
+                      ? "repeat(2, 1fr)"
+                      : selectedTeams.length === 2
+                      ? "repeat(2, 1fr)"
+                      : selectedTeams.length === 3
+                      ? "repeat(3, 1fr)"
+                      : selectedTeams.length === 4
+                      ? "repeat(4, 1fr)"
+                      : "repeat(5, 1fr)",
+                }}
+              >
+                {selectedTeams.map((team) => (
+                  <TeamCard
+                    key={team.id}
+                    team={team}
+                    allTeams={nbaTeams}
+                    selectedTeamIdsInMachine={selectedTeamIds}
+                    onRemoveTeam={handleRemoveTeam}
+                    selectedAssets={selectedAssets.filter(
+                      (sa) => sa.teamId === team.id
+                    )}
+                    onAssetSelect={handleAssetSelect}
+                    setSelectedTeams={setSelectedTeams}
+                    setSelectedTeamIds={setSelectedTeamIds}
+                    setSelectedAssets={setSelectedAssets}
+                    setActiveTab={setActiveTab}
+                  />
+                ))}
+                {selectedTeams.length === 1 && (
+                  <div className="flex flex-col border rounded-lg overflow-hidden">
+                    <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-muted rounded-lg bg-muted/5 m-4">
+                      <UsersIcon
+                        className="w-12 h-12 text-muted-foreground mb-3"
+                        strokeWidth={1.5}
+                      />
+                      <h3 className="text-lg font-semibold text-foreground mb-1">
+                        Add Another Team
+                      </h3>
+                      <p className="text-sm text-muted-foreground text-center mb-4">
+                        Generate a trade by selecting a player/pick or expand
+                        your trade by adding more teams
+                      </p>
+                      <TeamSelectDropdown
+                        allTeams={nbaTeams}
+                        selectedTeamIds={selectedTeamIds}
+                        onTeamSelect={handleTeamSelect}
+                        maxTeamsReached={selectedTeams.length >= MAX_TEAMS}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="text-center p-8 border rounded-lg bg-muted/50">
+              <LightbulbIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No Teams Selected</h3>
+              <p className="text-muted-foreground mb-4">
+                Add teams to start building your trade
+              </p>
+            </div>
           )}
-          selectedTeamIds={selectedTeamIds}
-          onTeamSelect={handleTeamSelect}
-          maxTeamsReached={selectedTeams.length >= MAX_TEAMS}
-        />
-      )}
+        </>
+
+        {showTeamSelector && (
+          <TeamSelectDropdown
+            allTeams={nbaTeams.filter(
+              (team) => !selectedTeamIds.includes(team.id)
+            )}
+            selectedTeamIds={selectedTeamIds}
+            onTeamSelect={handleTeamSelect}
+            maxTeamsReached={selectedTeams.length >= MAX_TEAMS}
+          />
+        )}
+      </div>
     </div>
   );
 }

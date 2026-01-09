@@ -196,6 +196,7 @@ export type TradeAssetInScenario = {
   name: string;
   type: "player" | "pick";
   from: string;
+  id?: number; // Optional draft pick ID for direct lookup
 };
 
 export type TeamTradeAssets = {

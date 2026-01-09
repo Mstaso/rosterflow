@@ -76,7 +76,7 @@ export function TeamSelectDropdown({
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="start"
-          className="w-[calc(100vw-2rem)] md:w-auto max-h-[60vh] md:max-h-60 overflow-y-auto border-indigoMain relative z-50"
+          className="w-[calc(100vw-2rem)] md:w-auto max-h-[60vh] md:max-h-96 overflow-y-auto border-indigoMain relative z-50"
           sideOffset={5}
         >
           <div className="h-[80vh] md:h-auto overflow-y-auto">

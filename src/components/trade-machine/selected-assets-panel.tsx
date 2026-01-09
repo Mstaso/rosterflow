@@ -128,8 +128,8 @@ export function SelectedAssetsContent({
                               <Image
                                 src={player.headshot.href}
                                 alt={player.displayName}
-                                width={40}
-                                height={40}
+                                width={80}
+                                height={80}
                                 className="rounded-full object-cover w-10 h-10"
                               />
                             </div>
