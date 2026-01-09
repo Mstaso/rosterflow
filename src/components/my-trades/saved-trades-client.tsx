@@ -214,7 +214,7 @@ export function SavedTradesClient({
                           ?.href && (
                           <Image
                             src={
-                              (movement.from.logos as { href: string }[])[0]
+                              (movement.from.logos as { href: string }[])[0]!
                                 .href
                             }
                             alt={movement.from.displayName}
@@ -236,7 +236,7 @@ export function SavedTradesClient({
                           ?.href && (
                           <Image
                             src={
-                              (movement.to.logos as { href: string }[])[0].href
+                              (movement.to.logos as { href: string }[])[0]!.href
                             }
                             alt={movement.to.displayName}
                             width={28}
@@ -277,10 +277,10 @@ export function SavedTradesClient({
   };
 
   return (
-    <div className="flex-grow p-4 md:p-6 lg:p-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="flex-grow">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Saved Trades</h1>
+          <h1 className="text-xl font-semibold">Saved Trades</h1>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

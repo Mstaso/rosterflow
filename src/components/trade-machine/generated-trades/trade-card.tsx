@@ -1,10 +1,15 @@
 import type { Team, TradeScenario, TradeInfo } from "~/types";
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
-import { UsersIcon, FileTextIcon, AlertCircle, PencilIcon } from "lucide-react";
+import {
+  UsersIcon,
+  FileTextIcon,
+  AlertCircle,
+  CheckCircle,
+  PencilIcon,
+} from "lucide-react";
 import Image from "next/image";
 import SaveTradeModal from "../save-trade-modal";
 import { Button } from "~/components/ui/button";
-import { Activity } from "react";
 
 export default function TradeCard({
   trade,
@@ -36,40 +41,80 @@ export default function TradeCard({
       return findTeam?.players?.find((p) => p.fullName === player.name);
     });
 
-    const outGoingSalary = findGivenPlayers?.reduce((acc, player) => {
-      return acc + (player?.contract?.salary || 0);
-    }, 0);
+    const outGoingSalary =
+      findGivenPlayers?.reduce((acc, player) => {
+        return acc + (player?.contract?.salary || 0);
+      }, 0) || 0;
 
-    const inComingSalary = findReceivedPlayers?.reduce((acc, player) => {
-      return acc + (player?.contract?.salary || 0);
-    }, 0);
+    const inComingSalary =
+      findReceivedPlayers?.reduce((acc, player) => {
+        return acc + (player?.contract?.salary || 0);
+      }, 0) || 0;
 
-    const capDifference =
-      inComingSalary && outGoingSalary ? inComingSalary - outGoingSalary : 0;
+    const capDifference = inComingSalary - outGoingSalary;
 
-    if (
-      findTeam?.secondApronSpace &&
-      findTeam?.secondApronSpace < 0 &&
-      capDifference > 0
-    ) {
-      console.log(
-        "INVALID TRADE SECOND APRON SPACE",
-        findTeam.displayName,
-        capDifference
-      );
-      isValidTrade = false;
-      salaryRationale = `INVALID TRADE, ${findTeam.displayName} goes into SECOND APRON SPACE`;
-    } else if (
-      findTeam?.firstApronSpace &&
-      findTeam?.firstApronSpace < 0 &&
-      outGoingSalary &&
-      inComingSalary &&
-      inComingSalary > outGoingSalary * 1.1 + 100000
-    ) {
-      console.log("INVALID TRADE FIRST APRON SPACE", findTeam.displayName);
-      isValidTrade = false;
-      salaryRationale = `INVALID TRADE, ${findTeam.displayName} goes into FIRST APRON SPACE`;
+    // Validate salary matching rules
+    if (findTeam && outGoingSalary > 0 && inComingSalary > 0) {
+      const secondApronSpace = findTeam.secondApronSpace || 0;
+      const firstApronSpace = findTeam.firstApronSpace || 0;
+      const capSpace = findTeam.capSpace || 0;
+
+      // Calculate if trade would push team into/further into aprons
+      const postTradeSecondApronSpace = secondApronSpace - capDifference;
+      const postTradeFirstApronSpace = firstApronSpace - capDifference;
+
+      // Check 1: Second Apron - Cannot receive more money than sent out
+      // Applies if team is already over second apron OR trade would put them over
+      const isOverSecondApron = secondApronSpace < 0;
+      const wouldCrossSecondApron =
+        secondApronSpace >= 0 && postTradeSecondApronSpace < 0;
+
+      if ((isOverSecondApron || wouldCrossSecondApron) && capDifference > 0) {
+        console.log(
+          "INVALID TRADE - SECOND APRON",
+          findTeam.displayName,
+          "Cannot take on more salary"
+        );
+        isValidTrade = false;
+        salaryRationale = `Invalid: ${findTeam.displayName} is over/would cross second apron and cannot take on additional salary`;
+      }
+      // Check 2: First Apron - Must match within 110% + $100K
+      // Applies if team is already over first apron OR trade would put them over
+      else {
+        const isOverFirstApron = firstApronSpace < 0;
+        const wouldCrossFirstApron =
+          firstApronSpace >= 0 && postTradeFirstApronSpace < 0;
+        const maxAllowedFirstApron = outGoingSalary * 1.1 + 100000;
+
+        if (
+          (isOverFirstApron || wouldCrossFirstApron) &&
+          inComingSalary > maxAllowedFirstApron
+        ) {
+          console.log(
+            "INVALID TRADE - FIRST APRON",
+            findTeam.displayName,
+            `Incoming: ${inComingSalary}, Max allowed: ${maxAllowedFirstApron}`
+          );
+          isValidTrade = false;
+          salaryRationale = `Invalid: ${findTeam.displayName} exceeds 110% + $100K salary matching rule for first apron teams`;
+        }
+        // Check 3: Over cap but under aprons - Must match within 125% + $100K
+        else if (capSpace < 0 && firstApronSpace >= 0) {
+          const maxAllowedOverCap = outGoingSalary * 1.25 + 100000;
+
+          if (inComingSalary > maxAllowedOverCap) {
+            console.log(
+              "INVALID TRADE - OVER CAP",
+              findTeam.displayName,
+              `Incoming: ${inComingSalary}, Max allowed: ${maxAllowedOverCap}`
+            );
+            isValidTrade = false;
+            salaryRationale = `Invalid: ${findTeam.displayName} exceeds 125% + $100K salary matching rule for over-cap teams`;
+          }
+        }
+      }
     }
+
     return {
       team: findTeam,
       playersReceived: findReceivedPlayers,
@@ -104,6 +149,7 @@ export default function TradeCard({
           isLoading={false}
           tradeInfo={TradesWithInfo}
           isValidTrade={isValidTrade}
+          selectedTeamIds={involvedTeams.map((t) => t.id)}
         />
         <Button
           variant="outline"
@@ -114,17 +160,27 @@ export default function TradeCard({
           Edit Trade
         </Button>
       </div>
-      <Activity mode={!isValidTrade ? "visible" : "hidden"}>
+      {isValidTrade ? (
+        <div
+          className="flex items-center gap-2 py-3 px-4 mb-4 rounded-md border border-green-500/50 bg-green-500/10 text-green-500
+          justify-center w-full md:w-fit md:mx-0 md:justify-start"
+        >
+          <CheckCircle className="w-4 h-4 shrink-0" />
+          <div className="text-sm font-medium">
+            Valid trade - Salary rules satisfied
+          </div>
+        </div>
+      ) : (
         <div
           className="flex items-center gap-2 py-3 px-4 mb-4 rounded-md border border-destructive/50 bg-destructive/10 text-destructive
-          justify-center w-fit mx-auto md:mx-0 md:justify-start"
+          justify-center w-full md:w-fit md:mx-0 md:justify-start"
         >
           <AlertCircle className="w-4 h-4 shrink-0" />
           <div className="text-sm font-medium">
             {salaryRationale || "Invalid trade"}
           </div>
         </div>
-      </Activity>
+      )}
       <div className="flex flex-col md:flex-row gap-4 justify-center">
         {TradesWithInfo.map((tradeInfo, index) => (
           <Card
@@ -302,8 +358,8 @@ export default function TradeCard({
                                       <Image
                                         src={player.headshot.href}
                                         alt={player.displayName}
-                                        width={48}
-                                        height={48}
+                                        width={96}
+                                        height={96}
                                         className="rounded-full object-cover w-12 h-12"
                                       />
                                     </div>

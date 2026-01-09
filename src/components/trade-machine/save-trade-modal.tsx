@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "~/components/ui/button";
 import {
   Dialog,
@@ -33,6 +34,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useUser, SignInButton } from "@clerk/nextjs";
 import { SaveIcon } from "lucide-react";
+import { toast } from "sonner";
 import type { TradeInfo } from "~/types";
 
 const saveTradeSchema = z.object({
@@ -61,15 +63,27 @@ interface SaveTradeModalProps {
   isLoading?: boolean;
   tradeInfo: TradeInfo[];
   isValidTrade: boolean;
+  selectedAssets?: {
+    id: number;
+    type: string;
+    teamId: number;
+    targetTeamId?: number;
+  }[];
+  selectedTeamIds?: number[];
 }
+
+export const TRADE_STORAGE_KEY = "rosterflow_pending_trade";
 
 export default function SaveTradeModal({
   isLoading = false,
   tradeInfo,
   isValidTrade,
+  selectedAssets = [],
+  selectedTeamIds = [],
 }: SaveTradeModalProps) {
   const [open, setOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const router = useRouter();
 
   const form = useForm<SaveTradeFormData>({
     resolver: zodResolver(saveTradeSchema),
@@ -168,24 +182,29 @@ export default function SaveTradeModal({
 
       // Picks received by this team
       info.picksReceived?.forEach((pick) => {
-        // Find the team this pick is coming from
+        // Find the team this pick is coming from (the sender)
         const fromTeam = tradeInfo.find(
           (t) => t.team?.displayName === pick.from
         );
-        if (fromTeam?.team?.id) {
-          // Find matching draft pick ID from the team's draft picks
-          const draftPickId = findMatchingDraftPick(
-            pick.name,
-            fromTeam.team.draftPicks
-          );
 
-          assets.push({
-            type: "pick",
-            teamId: fromTeam.team.id,
-            targetTeamId: targetTeamId,
-            draftPickId,
-          });
+        // Skip if we can't find the sending team or if sender equals receiver
+        // (this would mean the pick isn't actually being traded)
+        if (!fromTeam?.team?.id || fromTeam.team.id === targetTeamId) {
+          return;
         }
+
+        // Find matching draft pick ID from the sending team's draft picks
+        const draftPickId = findMatchingDraftPick(
+          pick.name,
+          fromTeam.team.draftPicks
+        );
+
+        assets.push({
+          type: "pick",
+          teamId: fromTeam.team.id,
+          targetTeamId: targetTeamId,
+          draftPickId,
+        });
       });
     });
 
@@ -206,8 +225,19 @@ export default function SaveTradeModal({
       });
       setOpen(false);
       form.reset();
+
+      toast.success("Trade saved successfully!", {
+        description: "Your trade has been saved to your collection.",
+        action: {
+          label: "View Trades",
+          onClick: () => router.push("/my-trades"),
+        },
+      });
     } catch (error) {
       console.error("Error saving trade:", error);
+      toast.error("Failed to save trade", {
+        description: "Please try again.",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -227,18 +257,19 @@ export default function SaveTradeModal({
             Save Trade
           </Button>
 
-          <DialogContent className="w-[95vw] max-w-[425px] mx-auto border-white/80 rounded-xl">
-            <DialogHeader>
-              <DialogTitle>Save Trade</DialogTitle>
-              <DialogDescription>
-                Add a title, rating, and description to save this trade for
-                future reference.
+          <DialogContent className="w-[90vw] max-w-[425px] mx-auto border-white/80 rounded-xl p-4 sm:p-6">
+            <DialogHeader className="space-y-1 sm:space-y-2">
+              <DialogTitle className="text-base sm:text-lg">
+                Save Trade
+              </DialogTitle>
+              <DialogDescription className="text-xs sm:text-sm">
+                Add a title, rating, and description to save this trade.
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(handleSubmit)}
-                className="space-y-4"
+                className="space-y-3 sm:space-y-4"
               >
                 <FormField
                   control={form.control}
@@ -296,7 +327,7 @@ export default function SaveTradeModal({
                       <FormControl>
                         <Textarea
                           placeholder="Describe the trade reasoning, benefits, etc..."
-                          className="min-h-[100px]"
+                          className="min-h-[70px] sm:min-h-[100px]"
                           {...field}
                         />
                       </FormControl>
@@ -305,7 +336,7 @@ export default function SaveTradeModal({
                   )}
                 />
 
-                <DialogFooter className="flex flex-col sm:flex-row gap-3 sm:gap-2">
+                <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-2 pt-2">
                   <Button
                     type="button"
                     variant="outline"
@@ -334,6 +365,20 @@ export default function SaveTradeModal({
             className="w-full sm:w-auto bg-indigoMain text-primary-white hover:bg-indigoMain/70
             disabled:bg-muted disabled:text-muted-foreground/70 disabled:border disabled:border-muted-foreground/30 disabled:cursor-not-allowed
             transition-all duration-150 ease-in-out"
+            onClick={() => {
+              // Save trade data to localStorage before sign-in redirect
+              if (selectedAssets.length > 0 && selectedTeamIds.length > 0) {
+                const pendingTrade = {
+                  selectedAssets,
+                  selectedTeamIds,
+                  timestamp: Date.now(),
+                };
+                localStorage.setItem(
+                  TRADE_STORAGE_KEY,
+                  JSON.stringify(pendingTrade)
+                );
+              }
+            }}
           >
             <SaveIcon className="mr-2 h-5 w-5" strokeWidth={1.5} />
             Save Trade
