@@ -107,6 +107,90 @@ export async function getAllTrades() {
   return trades;
 }
 
+const TRADES_PER_PAGE = 10;
+
+export type SortOption = "recent" | "popular";
+
+export async function getPaginatedTrades(page: number = 1, sortBy: SortOption = "recent") {
+  const skip = (page - 1) * TRADES_PER_PAGE;
+
+  if (sortBy === "popular") {
+    // For popular sorting, we need to calculate vote scores
+    // First get all trades with votes, then sort by score
+    const allTrades = await db.trade.findMany({
+      include: {
+        assets: {
+          include: {
+            player: true,
+            draftPick: true,
+            team: true,
+            targetTeam: true,
+          },
+        },
+        votes: true,
+      },
+    });
+
+    // Calculate score for each trade and sort
+    const tradesWithScores = allTrades.map((trade) => {
+      const score = trade.votes.reduce((acc, vote) => acc + vote.value, 0);
+      return { ...trade, _score: score };
+    });
+
+    // Sort by score (descending), then by date (descending) for ties
+    tradesWithScores.sort((a, b) => {
+      if (b._score !== a._score) return b._score - a._score;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+
+    // Paginate
+    const paginatedTrades = tradesWithScores.slice(skip, skip + TRADES_PER_PAGE);
+    // Remove the _score field before returning
+    const trades = paginatedTrades.map(({ _score, ...trade }) => trade);
+
+    return {
+      trades,
+      totalCount: allTrades.length,
+      totalPages: Math.ceil(allTrades.length / TRADES_PER_PAGE),
+      currentPage: page,
+      hasMore: skip + trades.length < allTrades.length,
+    };
+  }
+
+  // Default: sort by recent
+  const [trades, totalCount] = await Promise.all([
+    db.trade.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      include: {
+        assets: {
+          include: {
+            player: true,
+            draftPick: true,
+            team: true,
+            targetTeam: true,
+          },
+        },
+        votes: true,
+      },
+      skip,
+      take: TRADES_PER_PAGE,
+    }),
+    db.trade.count(),
+  ]);
+
+  return {
+    trades,
+    totalCount,
+    totalPages: Math.ceil(totalCount / TRADES_PER_PAGE),
+    currentPage: page,
+    hasMore: skip + trades.length < totalCount,
+  };
+}
+
+export type PaginatedTradesResult = Awaited<ReturnType<typeof getPaginatedTrades>>;
+
 // Export the trade type for use in components
 export type TradeWithAssets = Awaited<ReturnType<typeof getAllTrades>>[number];
 
@@ -136,6 +220,53 @@ export async function getUserTrades() {
   });
 
   return trades;
+}
+
+export async function getPaginatedUserTrades(page: number = 1) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return {
+      trades: [] as TradeWithAssets[],
+      totalCount: 0,
+      totalPages: 0,
+      currentPage: 1,
+      hasMore: false,
+    };
+  }
+
+  const skip = (page - 1) * TRADES_PER_PAGE;
+
+  const [trades, totalCount] = await Promise.all([
+    db.trade.findMany({
+      where: { userId },
+      orderBy: {
+        createdAt: "desc",
+      },
+      include: {
+        assets: {
+          include: {
+            player: true,
+            draftPick: true,
+            team: true,
+            targetTeam: true,
+          },
+        },
+        votes: true,
+      },
+      skip,
+      take: TRADES_PER_PAGE,
+    }),
+    db.trade.count({ where: { userId } }),
+  ]);
+
+  return {
+    trades,
+    totalCount,
+    totalPages: Math.ceil(totalCount / TRADES_PER_PAGE),
+    currentPage: page,
+    hasMore: skip + trades.length < totalCount,
+  };
 }
 
 export async function deleteTrade(tradeId: number) {
@@ -275,4 +406,66 @@ export async function getUserUpvotedTrades() {
   });
 
   return trades;
+}
+
+export async function getPaginatedUpvotedTrades(page: number = 1) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return {
+      trades: [] as TradeWithAssets[],
+      totalCount: 0,
+      totalPages: 0,
+      currentPage: 1,
+      hasMore: false,
+    };
+  }
+
+  const skip = (page - 1) * TRADES_PER_PAGE;
+
+  // Get all upvoted trade IDs for this user
+  const upvotedTradeIds = await db.tradeVote.findMany({
+    where: {
+      userId,
+      value: 1,
+    },
+    select: {
+      tradeId: true,
+    },
+  });
+
+  const tradeIds = upvotedTradeIds.map((v) => v.tradeId);
+  const totalCount = tradeIds.length;
+
+  const trades = await db.trade.findMany({
+    where: {
+      id: {
+        in: tradeIds,
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    include: {
+      assets: {
+        include: {
+          player: true,
+          draftPick: true,
+          team: true,
+          targetTeam: true,
+        },
+      },
+      votes: true,
+    },
+    skip,
+    take: TRADES_PER_PAGE,
+  });
+
+  return {
+    trades,
+    totalCount,
+    totalPages: Math.ceil(totalCount / TRADES_PER_PAGE),
+    currentPage: page,
+    hasMore: skip + trades.length < totalCount,
+  };
 }

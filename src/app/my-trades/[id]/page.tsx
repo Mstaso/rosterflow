@@ -3,8 +3,18 @@ import { redirect, notFound } from "next/navigation";
 import { Navbar } from "~/components/layout/navbar";
 import { getTradeById } from "~/actions/trades";
 import { SavedTradeDetail } from "~/components/my-trades/saved-trade-detail";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Trade Details",
+  description: "View detailed NBA trade analysis and breakdown.",
+  robots: {
+    index: false, // User-specific page, don't index
+    follow: false,
+  },
+};
 
 export default async function TradeDetailPage({
   params,
