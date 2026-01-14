@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { useState, useTransition } from "react";
+import { Card, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
@@ -29,33 +29,54 @@ import {
   ArrowBigUp,
   ArrowBigDown,
   HeartIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  Loader2Icon,
+  ClockIcon,
+  FlameIcon,
 } from "lucide-react";
 import {
   deleteTrade,
   voteOnTrade,
+  getPaginatedTrades,
+  getPaginatedUserTrades,
+  getPaginatedUpvotedTrades,
   type TradeWithAssets,
+  type PaginatedTradesResult,
+  type SortOption,
 } from "~/actions/trades";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { cn } from "~/lib/utils";
 
 interface SavedTradesClientProps {
-  allTrades: TradeWithAssets[];
-  userTrades: TradeWithAssets[];
-  upvotedTrades: TradeWithAssets[];
+  initialAllTrades: PaginatedTradesResult;
+  initialUserTrades: PaginatedTradesResult;
+  initialUpvotedTrades: PaginatedTradesResult;
   currentUserId: string;
 }
 
 export function SavedTradesClient({
-  allTrades,
-  userTrades,
-  upvotedTrades,
+  initialAllTrades,
+  initialUserTrades,
+  initialUpvotedTrades,
   currentUserId,
 }: SavedTradesClientProps) {
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<string>("my-trades");
+  const [activeTab, setActiveTab] = useState<string>("all-trades");
   const [votingId, setVotingId] = useState<number | null>(null);
+
+  // Pagination state for each tab
+  const [allTradesPagination, setAllTradesPagination] =
+    useState<PaginatedTradesResult>(initialAllTrades);
+  const [userTradesPagination, setUserTradesPagination] =
+    useState<PaginatedTradesResult>(initialUserTrades);
+  const [upvotedTradesPagination, setUpvotedTradesPagination] =
+    useState<PaginatedTradesResult>(initialUpvotedTrades);
+
+  const [isPending, startTransition] = useTransition();
+  const [sortBy, setSortBy] = useState<"recent" | "popular">("recent");
 
   const handleDelete = async (tradeId: number) => {
     setDeletingId(tradeId);
@@ -79,11 +100,58 @@ export function SavedTradesClient({
     try {
       await voteOnTrade(tradeId, value);
       router.refresh();
+      // Refresh the current page based on active tab
+      if (activeTab === "all-trades") {
+        const refreshed = await getPaginatedTrades(
+          allTradesPagination.currentPage,
+          sortBy
+        );
+        setAllTradesPagination(refreshed);
+      } else if (activeTab === "my-trades") {
+        const refreshed = await getPaginatedUserTrades(
+          userTradesPagination.currentPage
+        );
+        setUserTradesPagination(refreshed);
+      } else if (activeTab === "upvoted") {
+        const refreshed = await getPaginatedUpvotedTrades(
+          upvotedTradesPagination.currentPage
+        );
+        setUpvotedTradesPagination(refreshed);
+      }
     } catch (error) {
       console.error("Error voting:", error);
     } finally {
       setVotingId(null);
     }
+  };
+
+  const handleAllTradesPageChange = (newPage: number) => {
+    startTransition(async () => {
+      const result = await getPaginatedTrades(newPage, sortBy);
+      setAllTradesPagination(result);
+    });
+  };
+
+  const handleUserTradesPageChange = (newPage: number) => {
+    startTransition(async () => {
+      const result = await getPaginatedUserTrades(newPage);
+      setUserTradesPagination(result);
+    });
+  };
+
+  const handleUpvotedTradesPageChange = (newPage: number) => {
+    startTransition(async () => {
+      const result = await getPaginatedUpvotedTrades(newPage);
+      setUpvotedTradesPagination(result);
+    });
+  };
+
+  const handleSortChange = (newSort: SortOption) => {
+    setSortBy(newSort);
+    startTransition(async () => {
+      const result = await getPaginatedTrades(1, newSort);
+      setAllTradesPagination(result);
+    });
   };
 
   const getVoteInfo = (trade: TradeWithAssets) => {
@@ -386,7 +454,7 @@ export function SavedTradesClient({
               <UserIcon className="h-4 w-4" />
               <span className="hidden sm:inline">My Trades</span>
               <Badge variant="secondary" className="ml-0 sm:ml-1">
-                {userTrades.length}
+                {userTradesPagination.totalCount}
               </Badge>
             </TabsTrigger>
             <TabsTrigger
@@ -396,7 +464,7 @@ export function SavedTradesClient({
               <HeartIcon className="h-4 w-4" />
               <span className="hidden sm:inline">Upvoted</span>
               <Badge variant="secondary" className="ml-0 sm:ml-1">
-                {upvotedTrades.length}
+                {upvotedTradesPagination.totalCount}
               </Badge>
             </TabsTrigger>
             <TabsTrigger
@@ -406,34 +474,195 @@ export function SavedTradesClient({
               <GlobeIcon className="h-4 w-4" />
               <span className="hidden sm:inline">All Trades</span>
               <Badge variant="secondary" className="ml-0 sm:ml-1">
-                {allTrades.length}
+                {allTradesPagination.totalCount}
               </Badge>
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="my-trades">
             {renderTradesList(
-              userTrades,
+              userTradesPagination.trades,
               "No Saved Trades Yet",
               "Generate and save trades to see them here"
+            )}
+
+            {/* Pagination controls */}
+            {userTradesPagination.totalPages > 1 && (
+              <div className="flex items-center justify-center gap-4 mt-6">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    handleUserTradesPageChange(
+                      userTradesPagination.currentPage - 1
+                    )
+                  }
+                  disabled={userTradesPagination.currentPage === 1 || isPending}
+                >
+                  <ChevronLeftIcon className="h-4 w-4 mr-1" />
+                  Previous
+                </Button>
+
+                <div className="flex items-center gap-2">
+                  {isPending ? (
+                    <Loader2Icon className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <span className="text-sm text-muted-foreground">
+                      Page {userTradesPagination.currentPage} of{" "}
+                      {userTradesPagination.totalPages}
+                    </span>
+                  )}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    handleUserTradesPageChange(
+                      userTradesPagination.currentPage + 1
+                    )
+                  }
+                  disabled={!userTradesPagination.hasMore || isPending}
+                >
+                  Next
+                  <ChevronRightIcon className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
             )}
           </TabsContent>
 
           <TabsContent value="upvoted">
             {renderTradesList(
-              upvotedTrades,
+              upvotedTradesPagination.trades,
               "No Upvoted Trades",
               "Upvote trades you like to save them here",
               true
             )}
+
+            {/* Pagination controls */}
+            {upvotedTradesPagination.totalPages > 1 && (
+              <div className="flex items-center justify-center gap-4 mt-6">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    handleUpvotedTradesPageChange(
+                      upvotedTradesPagination.currentPage - 1
+                    )
+                  }
+                  disabled={
+                    upvotedTradesPagination.currentPage === 1 || isPending
+                  }
+                >
+                  <ChevronLeftIcon className="h-4 w-4 mr-1" />
+                  Previous
+                </Button>
+
+                <div className="flex items-center gap-2">
+                  {isPending ? (
+                    <Loader2Icon className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <span className="text-sm text-muted-foreground">
+                      Page {upvotedTradesPagination.currentPage} of{" "}
+                      {upvotedTradesPagination.totalPages}
+                    </span>
+                  )}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    handleUpvotedTradesPageChange(
+                      upvotedTradesPagination.currentPage + 1
+                    )
+                  }
+                  disabled={!upvotedTradesPagination.hasMore || isPending}
+                >
+                  Next
+                  <ChevronRightIcon className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="all-trades">
+            {/* Sort controls */}
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-sm text-muted-foreground">Sort by:</span>
+              <div className="flex gap-1">
+                <Button
+                  variant={sortBy === "recent" ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => handleSortChange("recent")}
+                  disabled={isPending}
+                  className="h-8"
+                >
+                  <ClockIcon className="h-4 w-4 mr-1" />
+                  Recent
+                </Button>
+                <Button
+                  variant={sortBy === "popular" ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => handleSortChange("popular")}
+                  disabled={isPending}
+                  className="h-8"
+                >
+                  <FlameIcon className="h-4 w-4 mr-1" />
+                  Popular
+                </Button>
+              </div>
+            </div>
+
             {renderTradesList(
-              allTrades,
+              allTradesPagination.trades,
               "No Trades Available",
               "Be the first to create a trade!",
               true
+            )}
+
+            {/* Pagination controls */}
+            {allTradesPagination.totalPages > 1 && (
+              <div className="flex items-center justify-center gap-4 mt-6">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    handleAllTradesPageChange(
+                      allTradesPagination.currentPage - 1
+                    )
+                  }
+                  disabled={allTradesPagination.currentPage === 1 || isPending}
+                >
+                  <ChevronLeftIcon className="h-4 w-4 mr-1" />
+                  Previous
+                </Button>
+
+                <div className="flex items-center gap-2">
+                  {isPending ? (
+                    <Loader2Icon className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <span className="text-sm text-muted-foreground">
+                      Page {allTradesPagination.currentPage} of{" "}
+                      {allTradesPagination.totalPages}
+                    </span>
+                  )}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    handleAllTradesPageChange(
+                      allTradesPagination.currentPage + 1
+                    )
+                  }
+                  disabled={!allTradesPagination.hasMore || isPending}
+                >
+                  Next
+                  <ChevronRightIcon className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
             )}
           </TabsContent>
         </Tabs>

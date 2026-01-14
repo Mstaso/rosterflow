@@ -1,10 +1,12 @@
 import "~/styles/globals.css";
 import { ThemeProvider } from "~/components/theme-provider";
+import { PostHogProvider } from "~/components/posthog-provider";
 import { Toaster } from "sonner";
 import { Inter } from "next/font/google";
 import { Exo_2 } from "next/font/google";
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import { WebsiteJsonLd, OrganizationJsonLd } from "~/components/seo/json-ld";
 
 const inter = Inter({ subsets: ["latin"] });
 const logo = Exo_2({
@@ -14,15 +16,78 @@ const logo = Exo_2({
   variable: "--font-logo",
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://rosterflow.com";
+
 export const metadata: Metadata = {
-  title: "Roster Flows",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "RosterFlow - AI-Powered NBA Trade Machine & Simulator",
+    template: "%s | RosterFlow",
+  },
   description:
-    "Generate realistic NBA trades with AI-powered analysis and salary cap compliance",
+    "Create realistic NBA trades with AI-powered analysis. Our trade machine validates salary cap compliance, analyzes trade value, and generates smart trade suggestions. Build your perfect NBA roster today.",
+  keywords: [
+    "NBA trade machine",
+    "NBA trade simulator",
+    "NBA trades",
+    "basketball trade analyzer",
+    "NBA salary cap",
+    "NBA roster builder",
+    "AI trade generator",
+    "NBA trade ideas",
+    "fantasy basketball trades",
+    "NBA trade rumors",
+    "basketball trade calculator",
+    "NBA player trades",
+  ],
+  authors: [{ name: "RosterFlow" }],
+  creator: "RosterFlow",
+  publisher: "RosterFlow",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
     apple: "/favicon.svg",
   },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: siteUrl,
+    siteName: "RosterFlow",
+    title: "RosterFlow - AI-Powered NBA Trade Machine & Simulator",
+    description:
+      "Create realistic NBA trades with AI-powered analysis. Validate salary cap compliance, analyze trade value, and generate smart trade suggestions.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "RosterFlow - AI-Powered NBA Trade Machine",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "RosterFlow - AI-Powered NBA Trade Machine & Simulator",
+    description:
+      "Create realistic NBA trades with AI-powered analysis. Validate salary cap compliance and generate smart trade suggestions.",
+    images: ["/og-image.png"],
+    creator: "@rosterflow",
+  },
+  alternates: {
+    canonical: siteUrl,
+  },
+  category: "Sports",
 };
 
 export default function RootLayout({
@@ -38,6 +103,8 @@ export default function RootLayout({
         <head>
           <link rel="icon" href="/favicon.svg" />
           <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+          <WebsiteJsonLd />
+          <OrganizationJsonLd />
         </head>
         <body className={`${inter.className} ${logo.variable}`}>
           <ThemeProvider
@@ -46,7 +113,9 @@ export default function RootLayout({
             enableSystem={false}
             disableTransitionOnChange
           >
-            {children}
+            <PostHogProvider>
+              {children}
+            </PostHogProvider>
             <Toaster />
           </ThemeProvider>
         </body>
