@@ -111,7 +111,10 @@ const TRADES_PER_PAGE = 10;
 
 export type SortOption = "recent" | "popular";
 
-export async function getPaginatedTrades(page: number = 1, sortBy: SortOption = "recent") {
+export async function getPaginatedTrades(
+  page: number = 1,
+  sortBy: SortOption = "recent"
+) {
   const skip = (page - 1) * TRADES_PER_PAGE;
 
   if (sortBy === "popular") {
@@ -144,7 +147,10 @@ export async function getPaginatedTrades(page: number = 1, sortBy: SortOption = 
     });
 
     // Paginate
-    const paginatedTrades = tradesWithScores.slice(skip, skip + TRADES_PER_PAGE);
+    const paginatedTrades = tradesWithScores.slice(
+      skip,
+      skip + TRADES_PER_PAGE
+    );
     // Remove the _score field before returning
     const trades = paginatedTrades.map(({ _score, ...trade }) => trade);
 
@@ -189,7 +195,9 @@ export async function getPaginatedTrades(page: number = 1, sortBy: SortOption = 
   };
 }
 
-export type PaginatedTradesResult = Awaited<ReturnType<typeof getPaginatedTrades>>;
+export type PaginatedTradesResult = Awaited<
+  ReturnType<typeof getPaginatedTrades>
+>;
 
 // Export the trade type for use in components
 export type TradeWithAssets = Awaited<ReturnType<typeof getAllTrades>>[number];
