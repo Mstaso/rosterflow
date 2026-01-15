@@ -28,11 +28,12 @@ export default async function MyTradesPage() {
     redirect("/");
   }
 
-  const [initialAllTrades, initialUserTrades, initialUpvotedTrades] = await Promise.all([
-    getPaginatedTrades(1),
-    getPaginatedUserTrades(1),
-    getPaginatedUpvotedTrades(1),
-  ]);
+  const [initialAllTrades, initialUserTrades, initialUpvotedTrades] =
+    await Promise.all([
+      getPaginatedTrades(1),
+      getPaginatedUserTrades(1),
+      getPaginatedUpvotedTrades(1),
+    ]);
 
   return (
     <main className="bg-background text-foreground">
