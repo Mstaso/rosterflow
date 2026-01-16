@@ -217,6 +217,10 @@ export default function TradeMachineClient({
     });
   };
 
+  const handleClearAllAssets = () => {
+    setSelectedAssets([]);
+  };
+
   const handleGenerateTrade = async () => {
     setLoadingGeneratedTrades(true);
 
@@ -452,6 +456,7 @@ export default function TradeMachineClient({
                     )?.teamId || 0
                   )
                 }
+                onClearAll={handleClearAllAssets}
                 isOpen={assetsExpanded}
               />
             </div>
@@ -472,6 +477,7 @@ export default function TradeMachineClient({
                 )?.teamId || 0
               )
             }
+            onClearAll={handleClearAllAssets}
             isOpen={assetsExpanded}
           />
         </div>

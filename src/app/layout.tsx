@@ -6,7 +6,10 @@ import { Inter } from "next/font/google";
 import { Exo_2 } from "next/font/google";
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import { dark } from "@clerk/themes";
 import { WebsiteJsonLd, OrganizationJsonLd } from "~/components/seo/json-ld";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({ subsets: ["latin"] });
 const logo = Exo_2({
@@ -98,6 +101,38 @@ export default function RootLayout({
   return (
     <ClerkProvider
       publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+      appearance={{
+        baseTheme: dark,
+        variables: {
+          fontFamily: "Inter, system-ui, sans-serif",
+          colorBackground: "hsl(222.2 84% 4.9%)",
+          colorInputBackground: "hsl(217.2 32.6% 17.5%)",
+          colorPrimary: "hsl(243 75% 59%)",
+          colorText: "hsl(210 40% 98%)",
+          colorTextSecondary: "hsl(215 20.2% 65.1%)",
+          colorDanger: "hsl(0 62.8% 30.6%)",
+          borderRadius: "0.5rem",
+        },
+        elements: {
+          card: {
+            backgroundColor: "hsl(222.2 84% 4.9%)",
+            borderColor: "hsl(217.2 32.6% 17.5%)",
+          },
+          userButtonPopoverCard: {
+            backgroundColor: "hsl(222.2 84% 4.9%)",
+            borderColor: "hsl(217.2 32.6% 17.5%)",
+          },
+          userButtonPopoverActionButton: {
+            color: "hsl(210 40% 98%)",
+          },
+          userButtonPopoverActionButtonIcon: {
+            color: "hsl(215 20.2% 65.1%)",
+          },
+          userButtonPopoverFooter: {
+            display: "none",
+          },
+        },
+      }}
     >
       <html lang="en" suppressHydrationWarning>
         <head>
@@ -116,6 +151,8 @@ export default function RootLayout({
             <PostHogProvider>
               {children}
             </PostHogProvider>
+            <Analytics />
+            <SpeedInsights />
             <Toaster />
           </ThemeProvider>
         </body>

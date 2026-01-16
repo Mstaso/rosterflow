@@ -1,5 +1,4 @@
 import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
 import { Navbar } from "~/components/layout/navbar";
 import {
   getPaginatedTrades,
@@ -12,27 +11,40 @@ import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "My Trades - Saved NBA Trade Ideas",
+  title: "Community Trades - NBA Trade Ideas",
   description:
-    "View and manage your saved NBA trade ideas. Browse community trades, upvote your favorites, and edit your trade scenarios.",
+    "Browse community NBA trade ideas. View trade scenarios, upvote your favorites, and share your thoughts.",
   robots: {
-    index: false, // User-specific page, don't index
-    follow: false,
+    index: true,
+    follow: true,
   },
 };
 
 export default async function MyTradesPage() {
   const { userId } = await auth();
 
-  if (!userId) {
-    redirect("/");
-  }
-
+  // Fetch trades - user-specific data only if logged in
   const [initialAllTrades, initialUserTrades, initialUpvotedTrades] =
     await Promise.all([
       getPaginatedTrades(1),
-      getPaginatedUserTrades(1),
-      getPaginatedUpvotedTrades(1),
+      userId
+        ? getPaginatedUserTrades(1)
+        : Promise.resolve({
+            trades: [],
+            totalCount: 0,
+            totalPages: 0,
+            currentPage: 1,
+            hasMore: false,
+          }),
+      userId
+        ? getPaginatedUpvotedTrades(1)
+        : Promise.resolve({
+            trades: [],
+            totalCount: 0,
+            totalPages: 0,
+            currentPage: 1,
+            hasMore: false,
+          }),
     ]);
 
   return (
