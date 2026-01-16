@@ -126,6 +126,7 @@ model Trade {
   assets     TradeAsset[]
   selections UserSelections[]
   votes      TradeVote[]
+  comments   TradeComment[]
 
   @@index([userId])
 }
@@ -144,6 +145,23 @@ model TradeVote {
 
   // Each user can only vote once per trade
   @@unique([userId, tradeId])
+  @@index([userId])
+  @@index([tradeId])
+}
+
+// Comments on trades
+model TradeComment {
+  id        Int      @id @default(autoincrement())
+  userId    String // Clerk user ID who commented
+  userName  String // Display name of the user
+  content   String // Comment text content
+  tradeId   Int // Trade being commented on
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  trade Trade @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+
   @@index([userId])
   @@index([tradeId])
 }

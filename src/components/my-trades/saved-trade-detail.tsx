@@ -3,6 +3,8 @@
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
+import { Textarea } from "~/components/ui/textarea";
+import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,12 +28,26 @@ import {
   PencilIcon,
   ArrowBigUp,
   ArrowBigDown,
+  MessageCircleIcon,
+  SendIcon,
+  Loader2Icon,
 } from "lucide-react";
-import { deleteTrade, voteOnTrade } from "~/actions/trades";
+import { deleteTrade, voteOnTrade, createComment, deleteComment } from "~/actions/trades";
 import { useRouter } from "next/navigation";
+import { useUser, SignInButton } from "@clerk/nextjs";
 import Image from "next/image";
 import { useState } from "react";
 import { cn } from "~/lib/utils";
+
+type TradeComment = {
+  id: number;
+  userId: string;
+  userName: string;
+  content: string;
+  tradeId: number;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 type SavedTradeWithAssets = {
   id: number;
@@ -90,6 +106,7 @@ type SavedTradeWithAssets = {
     tradeId: number;
     value: number;
   }[];
+  comments?: TradeComment[];
 };
 
 type TradeAsset = SavedTradeWithAssets["assets"][0];
@@ -108,11 +125,18 @@ export function SavedTradeDetail({
   currentUserId,
 }: {
   trade: SavedTradeWithAssets;
-  currentUserId: string;
+  currentUserId: string | null;
 }) {
   const router = useRouter();
+  const { user } = useUser();
   const [isDeleting, setIsDeleting] = useState(false);
   const [isVoting, setIsVoting] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [deletingCommentId, setDeletingCommentId] = useState<number | null>(null);
+  const [showSignInPrompt, setShowSignInPrompt] = useState(false);
+  const [signInAction, setSignInAction] = useState<"vote" | "comment">("vote");
+  const isLoggedIn = !!currentUserId;
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -126,6 +150,12 @@ export function SavedTradeDetail({
   };
 
   const handleVote = async (value: 1 | -1) => {
+    if (!isLoggedIn) {
+      setSignInAction("vote");
+      setShowSignInPrompt(true);
+      return;
+    }
+    
     setIsVoting(true);
     try {
       await voteOnTrade(trade.id, value);
@@ -135,6 +165,71 @@ export function SavedTradeDetail({
     } finally {
       setIsVoting(false);
     }
+  };
+
+  const handleSubmitComment = async () => {
+    if (!isLoggedIn) {
+      setSignInAction("comment");
+      setShowSignInPrompt(true);
+      return;
+    }
+    
+    if (!commentText.trim() || !user) return;
+
+    setIsSubmittingComment(true);
+    try {
+      const userName = user.fullName || user.username || "Anonymous";
+      await createComment({
+        tradeId: trade.id,
+        content: commentText.trim(),
+        userName,
+      });
+      setCommentText("");
+      router.refresh();
+    } catch (error) {
+      console.error("Error submitting comment:", error);
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: number) => {
+    setDeletingCommentId(commentId);
+    try {
+      await deleteComment(commentId);
+      router.refresh();
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+    } finally {
+      setDeletingCommentId(null);
+    }
+  };
+
+  const formatCommentDate = (date: Date) => {
+    const now = new Date();
+    const commentDate = new Date(date);
+    const diffInMs = now.getTime() - commentDate.getTime();
+    const diffInMins = Math.floor(diffInMs / (1000 * 60));
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+    if (diffInMins < 1) return "just now";
+    if (diffInMins < 60) return `${diffInMins}m ago`;
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    if (diffInDays < 7) return `${diffInDays}d ago`;
+    return commentDate.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   const getVoteInfo = () => {
@@ -250,6 +345,31 @@ export function SavedTradeDetail({
 
   return (
     <div className="flex-grow">
+      {/* Sign In Prompt Dialog */}
+      <AlertDialog open={showSignInPrompt} onOpenChange={setShowSignInPrompt}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Sign in to {signInAction === "vote" ? "vote" : "comment"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              You need to be signed in to {signInAction === "vote" ? "vote on trades" : "leave comments"}. Create an account or sign in to participate.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <SignInButton mode="modal">
+              <Button
+                className="bg-indigoMain hover:bg-indigoMain/90"
+                onClick={() => setShowSignInPrompt(false)}
+              >
+                Sign In
+              </Button>
+            </SignInButton>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6">
         {/* Header */}
         <div className="mb-6">
@@ -642,6 +762,132 @@ export function SavedTradeDetail({
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        {/* Comments Section */}
+        <div className="mt-8">
+          <Card className="border-indigoMain bg-gradient-to-br from-background via-background/95 to-muted/80">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-2">
+                <MessageCircleIcon className="h-5 w-5 text-indigoMain" />
+                <h2 className="text-lg font-semibold">
+                  Comments {trade.comments && trade.comments.length > 0 && (
+                    <span className="text-muted-foreground font-normal">
+                      ({trade.comments.length})
+                    </span>
+                  )}
+                </h2>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Comment Input */}
+              <div className="space-y-3">
+                <Textarea
+                  placeholder="Share your thoughts on this trade..."
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  className="min-h-[100px] bg-slate-950 border-border focus:border-indigoMain resize-none"
+                  maxLength={1000}
+                />
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    {commentText.length}/1000 characters
+                  </span>
+                  <Button
+                    onClick={handleSubmitComment}
+                    disabled={isLoggedIn ? (!commentText.trim() || isSubmittingComment) : false}
+                    className="bg-indigoMain hover:bg-indigoMain/90"
+                  >
+                    {isSubmittingComment ? (
+                      <>
+                        <Loader2Icon className="h-4 w-4 mr-2 animate-spin" />
+                        Posting...
+                      </>
+                    ) : (
+                      <>
+                        <SendIcon className="h-4 w-4 mr-2" />
+                        Post Comment
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Comments List */}
+              {trade.comments && trade.comments.length > 0 ? (
+                <div className="space-y-4 pt-4 border-t border-border">
+                  {trade.comments.map((comment) => (
+                    <div
+                      key={comment.id}
+                      className="group flex gap-3 p-4 rounded-lg bg-slate-950/50 border border-border hover:border-indigoMain/50 transition-colors"
+                    >
+                      <Avatar className="h-10 w-10 flex-shrink-0">
+                        <AvatarFallback className="bg-indigoMain/20 text-indigoMain text-sm font-medium">
+                          {getInitials(comment.userName)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-sm">
+                              {comment.userName}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {formatCommentDate(comment.createdAt)}
+                            </span>
+                          </div>
+                          {comment.userId === currentUserId && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                                  disabled={deletingCommentId === comment.id}
+                                >
+                                  {deletingCommentId === comment.id ? (
+                                    <Loader2Icon className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <TrashIcon className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Comment</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete this comment? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDeleteComment(comment.id)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
+                        </div>
+                        <p className="text-sm text-foreground/90 whitespace-pre-wrap break-words">
+                          {comment.content}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground border-t border-border">
+                  <MessageCircleIcon className="h-10 w-10 mx-auto mb-3 opacity-50" />
+                  <p className="text-sm">No comments yet</p>
+                  <p className="text-xs mt-1">Be the first to share your thoughts!</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

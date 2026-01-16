@@ -303,6 +303,9 @@ export async function getTradeById(tradeId: number) {
         },
       },
       votes: true,
+      comments: {
+        orderBy: { createdAt: "desc" },
+      },
     },
   });
 
@@ -476,4 +479,79 @@ export async function getPaginatedUpvotedTrades(page: number = 1) {
     currentPage: page,
     hasMore: skip + trades.length < totalCount,
   };
+}
+
+// ============ COMMENT ACTIONS ============
+
+const commentSchema = z.object({
+  tradeId: z.number().int().positive(),
+  content: z.string().min(1).max(1000),
+  userName: z.string().min(1).max(100),
+});
+
+export type CreateCommentInput = z.infer<typeof commentSchema>;
+
+export async function createComment(input: CreateCommentInput) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    throw new Error("You must be logged in to comment");
+  }
+
+  const parseResult = commentSchema.safeParse(input);
+
+  if (!parseResult.success) {
+    throw new Error(
+      `Invalid comment data: ${JSON.stringify(parseResult.error.errors)}`
+    );
+  }
+
+  const { tradeId, content, userName } = parseResult.data;
+
+  const comment = await db.tradeComment.create({
+    data: {
+      userId,
+      userName,
+      content,
+      tradeId,
+    },
+  });
+
+  return comment;
+}
+
+export async function getTradeComments(tradeId: number) {
+  const comments = await db.tradeComment.findMany({
+    where: { tradeId },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return comments;
+}
+
+export async function deleteComment(commentId: number) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    throw new Error("You must be logged in to delete a comment");
+  }
+
+  // Verify the comment belongs to the user
+  const comment = await db.tradeComment.findUnique({
+    where: { id: commentId },
+  });
+
+  if (!comment) {
+    throw new Error("Comment not found");
+  }
+
+  if (comment.userId !== userId) {
+    throw new Error("You can only delete your own comments");
+  }
+
+  await db.tradeComment.delete({
+    where: { id: commentId },
+  });
+
+  return { success: true };
 }

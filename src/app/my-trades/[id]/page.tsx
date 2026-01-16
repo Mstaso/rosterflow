@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { redirect, notFound } from "next/navigation";
+import { notFound } from "next/navigation";
 import { Navbar } from "~/components/layout/navbar";
 import { getTradeById } from "~/actions/trades";
 import { SavedTradeDetail } from "~/components/my-trades/saved-trade-detail";
@@ -11,8 +11,8 @@ export const metadata: Metadata = {
   title: "Trade Details",
   description: "View detailed NBA trade analysis and breakdown.",
   robots: {
-    index: false, // User-specific page, don't index
-    follow: false,
+    index: true,
+    follow: true,
   },
 };
 
@@ -22,10 +22,6 @@ export default async function TradeDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { userId } = await auth();
-
-  if (!userId) {
-    redirect("/");
-  }
 
   const { id } = await params;
   const tradeId = parseInt(id, 10);

@@ -15,6 +15,7 @@ interface SelectedAssetsPanelProps {
   selectedAssets: SelectedAsset[];
   selectedTeams: Team[];
   onRemoveAsset: (assetId: number, assetType: "player" | "pick") => void;
+  onClearAll?: () => void;
   isOpen: boolean;
   onToggle: () => void;
 }
@@ -52,6 +53,7 @@ export function SelectedAssetsContent({
   selectedAssets,
   selectedTeams,
   onRemoveAsset,
+  onClearAll,
   isOpen,
 }: Omit<SelectedAssetsPanelProps, "onToggle">) {
   if (!isOpen || selectedAssets.length === 0) return null;
@@ -84,6 +86,23 @@ export function SelectedAssetsContent({
 
   return (
     <div className="border border-border rounded-lg bg-muted/20 p-4 space-y-4">
+      {/* Header with Clear All button */}
+      <div className="flex items-center justify-between pb-2 border-b border-border">
+        <span className="text-sm font-medium text-muted-foreground">
+          Selected Assets
+        </span>
+        {onClearAll && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs text-muted-foreground hover:text-red-500"
+            onClick={onClearAll}
+          >
+            <Trash2Icon className="h-3.5 w-3.5 mr-1" />
+            Clear All
+          </Button>
+        )}
+      </div>
       {Object.entries(assetsByTeam).map(([teamIdStr, assets]) => {
         const teamId = parseInt(teamIdStr);
         const team = selectedTeams.find((t) => t.id === teamId);
