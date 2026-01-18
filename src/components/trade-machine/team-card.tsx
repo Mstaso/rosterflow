@@ -99,10 +99,6 @@ export function TeamCard({
       setSelectedTeamIds((prev: number[]) =>
         prev.map((id: number) => (id === oldTeamId ? newTeam.id : id))
       );
-      // setSelectedAssets(
-      //   (prev: { id: string; type: "player" | "pick"; teamId: number }[]) =>
-      //     prev.filter((a) => a.teamId !== oldTeamId)
-      // );
       setSelectedAssets([]);
 
       setActiveTab?.(newTeam.id.toString());

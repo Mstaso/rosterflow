@@ -31,6 +31,8 @@ import {
   MessageCircleIcon,
   SendIcon,
   Loader2Icon,
+  ShareIcon,
+  CheckIcon,
 } from "lucide-react";
 import { deleteTrade, voteOnTrade, createComment, deleteComment } from "~/actions/trades";
 import { useRouter } from "next/navigation";
@@ -136,6 +138,7 @@ export function SavedTradeDetail({
   const [deletingCommentId, setDeletingCommentId] = useState<number | null>(null);
   const [showSignInPrompt, setShowSignInPrompt] = useState(false);
   const [signInAction, setSignInAction] = useState<"vote" | "comment">("vote");
+  const [shareStatus, setShareStatus] = useState<"idle" | "copied">("idle");
   const isLoggedIn = !!currentUserId;
 
   const handleDelete = async () => {
@@ -202,6 +205,40 @@ export function SavedTradeDetail({
       console.error("Error deleting comment:", error);
     } finally {
       setDeletingCommentId(null);
+    }
+  };
+
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/my-trades/${trade.id}`;
+    const shareData = {
+      title: trade.title,
+      text: trade.description || `Check out this NBA trade: ${trade.title}`,
+      url: shareUrl,
+    };
+
+    // Try native share API first (works on mobile and some desktop browsers)
+    if (navigator.share && navigator.canShare?.(shareData)) {
+      try {
+        await navigator.share(shareData);
+      } catch (error) {
+        // User cancelled or share failed - fall back to clipboard
+        if ((error as Error).name !== "AbortError") {
+          await copyToClipboard(shareUrl);
+        }
+      }
+    } else {
+      // Fall back to clipboard copy for desktop
+      await copyToClipboard(shareUrl);
+    }
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setShareStatus("copied");
+      setTimeout(() => setShareStatus("idle"), 2000);
+    } catch (error) {
+      console.error("Failed to copy to clipboard:", error);
     }
   };
 
@@ -472,48 +509,67 @@ export function SavedTradeDetail({
               </div>
             </div>
 
-            {isOwnTrade && (
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  className="w-full md:w-auto border-indigoMain relative z-50 flex items-center justify-center gap-2"
-                  onClick={handleEditTrade}
-                >
-                  <PencilIcon className="h-4 w-4 mr-2" />
-                  Edit Trade
-                </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
-                      disabled={isDeleting}
-                    >
-                      <TrashIcon className="h-4 w-4 mr-2" />
-                      Delete Trade
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Trade</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to delete "{trade.title}"? This
-                        action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={handleDelete}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="border-indigoMain"
+                onClick={handleShare}
+              >
+                {shareStatus === "copied" ? (
+                  <>
+                    <CheckIcon className="h-4 w-4 mr-2" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <ShareIcon className="h-4 w-4 mr-2" />
+                    Share
+                  </>
+                )}
+              </Button>
+              {isOwnTrade && (
+                <>
+                  <Button
+                    variant="outline"
+                    className="border-indigoMain"
+                    onClick={handleEditTrade}
+                  >
+                    <PencilIcon className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                        disabled={isDeleting}
                       >
+                        <TrashIcon className="h-4 w-4 mr-2" />
                         Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            )}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Trade</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete "{trade.title}"? This
+                          action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleDelete}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Description */}
