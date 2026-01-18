@@ -327,6 +327,7 @@ async function seedPlayers(teams: any[]) {
       ) {
         try {
           const playerData = {
+            espnId: player.id.toString(), // ESPN player ID
             firstName: player.firstName,
             lastName: player.lastName,
             fullName: player.fullName,
