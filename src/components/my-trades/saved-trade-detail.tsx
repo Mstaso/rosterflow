@@ -38,6 +38,8 @@ import { useUser, SignInButton } from "@clerk/nextjs";
 import Image from "next/image";
 import { useState } from "react";
 import { cn } from "~/lib/utils";
+import { PlayerStatsModal } from "~/components/player-stats-modal";
+import type { Player } from "~/types";
 
 type TradeComment = {
   id: number;
@@ -136,7 +138,21 @@ export function SavedTradeDetail({
   const [deletingCommentId, setDeletingCommentId] = useState<number | null>(null);
   const [showSignInPrompt, setShowSignInPrompt] = useState(false);
   const [signInAction, setSignInAction] = useState<"vote" | "comment">("vote");
+  const [selectedPlayer, setSelectedPlayer] = useState<{
+    player: SavedTradeWithAssets["assets"][0]["player"];
+    teamColor?: string;
+  } | null>(null);
+  const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
   const isLoggedIn = !!currentUserId;
+
+  const handleOpenPlayerStats = (
+    player: SavedTradeWithAssets["assets"][0]["player"],
+    teamColor?: string
+  ) => {
+    if (!player) return;
+    setSelectedPlayer({ player, teamColor });
+    setIsStatsModalOpen(true);
+  };
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -664,7 +680,13 @@ export function SavedTradeDetail({
                         {teamInfo.playersReceived.map((asset) => (
                           <div
                             key={asset.id}
-                            className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950"
+                            className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950 hover:border-indigoMain/50 cursor-pointer transition-colors"
+                            onClick={() =>
+                              handleOpenPlayerStats(
+                                asset.player,
+                                asset.team.color as string | undefined
+                              )
+                            }
                           >
                             <div className="flex items-center gap-3">
                               {asset.player?.headshot?.href && (
@@ -890,6 +912,43 @@ export function SavedTradeDetail({
           </Card>
         </div>
       </div>
+
+      {/* Player Stats Modal */}
+      <PlayerStatsModal
+        player={
+          selectedPlayer?.player
+            ? ({
+                id: selectedPlayer.player.id,
+                firstName: selectedPlayer.player.displayName.split(" ")[0] || "",
+                lastName: selectedPlayer.player.displayName.split(" ").slice(1).join(" ") || "",
+                fullName: selectedPlayer.player.fullName,
+                displayName: selectedPlayer.player.displayName,
+                shortName: selectedPlayer.player.displayName,
+                weight: 0,
+                displayWeight: "",
+                height: 0,
+                displayHeight: "",
+                age: 0,
+                dateOfBirth: "",
+                jersey: "",
+                position: selectedPlayer.player.position as any,
+                contract: selectedPlayer.player.contract as any,
+                headshot: selectedPlayer.player.headshot as any,
+                teamId: 0,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                espnId: (selectedPlayer.player as any).espnId,
+              } as Player)
+            : null
+        }
+        espnId={(selectedPlayer?.player as any)?.espnId}
+        isOpen={isStatsModalOpen}
+        onClose={() => {
+          setIsStatsModalOpen(false);
+          setSelectedPlayer(null);
+        }}
+        teamColor={selectedPlayer?.teamColor}
+      />
     </div>
   );
 }
