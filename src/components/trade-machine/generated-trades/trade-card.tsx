@@ -1,4 +1,4 @@
-import type { Team, TradeScenario, TradeInfo } from "~/types";
+import type { Team, TradeScenario, TradeInfo, EnrichedPick } from "~/types";
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
 import {
   UsersIcon,
@@ -23,6 +23,43 @@ export default function TradeCard({
   let isValidTrade = true;
   let salaryRationale = "";
 
+  // Helper function to map AI-generated pick to real draft pick
+  const mapPickToRealDraftPick = (
+    pick: { name?: string; from?: string },
+    fromTeam: Team | undefined
+  ): EnrichedPick => {
+    const enrichedPick: EnrichedPick = {
+      name: pick.name || "",
+      type: "pick",
+      from: pick.from || "",
+    };
+
+    if (!fromTeam?.draftPicks || !pick.name) {
+      return enrichedPick;
+    }
+
+    // Parse year and round from the pick name (e.g., "2025 1st Round Pick")
+    const pickName = pick.name;
+    const yearMatch = pickName.match(/(\d{4})/);
+    const roundMatch = pickName.match(/(\d)(?:st|nd|rd|th)?\s*[Rr]ound/i);
+
+    if (yearMatch?.[1] && roundMatch?.[1]) {
+      const year = parseInt(yearMatch[1]);
+      const round = parseInt(roundMatch[1]);
+
+      const realDraftPick = fromTeam.draftPicks.find(
+        (dp) => dp.year === year && dp.round === round
+      );
+
+      if (realDraftPick) {
+        enrichedPick.draftPick = realDraftPick;
+        enrichedPick.id = realDraftPick.id;
+      }
+    }
+
+    return enrichedPick;
+  };
+
   const TradesWithInfo: TradeInfo[] = trade.teams.map((tradeTeam) => {
     const findTeam = involvedTeams.find(
       (team) => team.displayName === tradeTeam.teamName
@@ -36,6 +73,15 @@ export default function TradeCard({
         (p) => p.fullName === player.name
       );
     });
+
+    // Map AI-generated picks to real draft picks
+    const enrichedPicks: EnrichedPick[] | undefined =
+      tradeTeam.receives?.picks?.map((pick) => {
+        const fromTeam = involvedTeams.find(
+          (team) => team.displayName === pick.from
+        );
+        return mapPickToRealDraftPick(pick, fromTeam);
+      });
 
     const findGivenPlayers = tradeTeam.gives?.players?.map((player) => {
       return findTeam?.players?.find((p) => p.fullName === player.name);
@@ -118,7 +164,7 @@ export default function TradeCard({
     return {
       team: findTeam,
       playersReceived: findReceivedPlayers,
-      picksReceived: tradeTeam.receives?.picks,
+      picksReceived: enrichedPicks,
       outGoingSalary,
       inComingSalary,
       capDifference,
@@ -408,24 +454,50 @@ export default function TradeCard({
                       </div>
                       <div className="h-auto">
                         <div className="space-y-3">
-                          {tradeInfo.picksReceived.map((pick, pickIndex) => (
-                            <div
-                              key={pickIndex}
-                              className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950"
-                            >
-                              <div className="flex flex-col gap-1">
-                                <div className="text-xs text-muted-foreground">
-                                  from {pick?.from}
-                                </div>
-                                <div className="font-medium text-sm">
-                                  {pick?.name}
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  Draft pick
+                          {tradeInfo.picksReceived.map((pick, pickIndex) => {
+                            const realPick = pick.draftPick;
+                            const roundSuffix =
+                              realPick?.round === 1
+                                ? "st"
+                                : realPick?.round === 2
+                                ? "nd"
+                                : "th";
+
+                            return (
+                              <div
+                                key={pickIndex}
+                                className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950"
+                              >
+                                <div className="flex flex-col gap-1">
+                                  <div className="text-xs text-muted-foreground">
+                                    from {pick?.from}
+                                  </div>
+                                  <div className="font-medium text-sm">
+                                    {realPick
+                                      ? `${realPick.year} ${realPick.round}${roundSuffix} Round Pick`
+                                      : pick?.name}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {realPick?.isProtected && (
+                                      <span className="text-amber-500 mr-2">
+                                        Protected
+                                      </span>
+                                    )}
+                                    {realPick?.isSwap && (
+                                      <span className="text-blue-400 mr-2">
+                                        Swap Rights
+                                      </span>
+                                    )}
+                                    {realPick?.description ? (
+                                      <span>{realPick.description}</span>
+                                    ) : (
+                                      <span>Draft pick</span>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     </div>

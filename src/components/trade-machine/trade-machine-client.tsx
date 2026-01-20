@@ -219,6 +219,9 @@ export default function TradeMachineClient({
 
   const handleClearAllAssets = () => {
     setSelectedAssets([]);
+    setSelectedTeams([]);
+    setSelectedTeamIds([]);
+    setActiveTab("");
   };
 
   const handleGenerateTrade = async () => {
@@ -625,7 +628,7 @@ export default function TradeMachineClient({
               <LightbulbIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No Teams Selected</h3>
               <p className="text-muted-foreground mb-4">
-                Add teams to start building your trade
+                Add teams to start building your trade.
               </p>
             </div>
           )}

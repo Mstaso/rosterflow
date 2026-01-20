@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
 import { Navbar } from "~/components/layout/navbar";
+import { Footer } from "~/components/layout/footer";
 import { getTradeById } from "~/actions/trades";
 import { SavedTradeDetail } from "~/components/my-trades/saved-trade-detail";
 import type { Metadata } from "next";
@@ -38,11 +39,13 @@ export default async function TradeDetailPage({
 
   return (
     <main className="bg-background text-foreground">
-      <div className="flex flex-col min-h-screen">
-        <Navbar />
-        <SavedTradeDetail trade={trade} currentUserId={userId} />
+      <div className="flex flex-col">
+        <div className="min-h-screen flex flex-col">
+          <Navbar />
+          <SavedTradeDetail trade={trade} currentUserId={userId} />
+        </div>
+        <Footer />
       </div>
     </main>
   );
 }
-

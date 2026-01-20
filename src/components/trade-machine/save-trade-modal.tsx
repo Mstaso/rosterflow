@@ -193,11 +193,11 @@ export default function SaveTradeModal({
           return;
         }
 
-        // Find matching draft pick ID from the sending team's draft picks
-        const draftPickId = findMatchingDraftPick(
-          pick.name,
-          fromTeam.team.draftPicks
-        );
+        // Use the enriched draft pick ID if available, otherwise fall back to matching by name
+        const draftPickId =
+          pick.id ||
+          pick.draftPick?.id ||
+          findMatchingDraftPick(pick.name, fromTeam.team.draftPicks);
 
         assets.push({
           type: "pick",

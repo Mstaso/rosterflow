@@ -34,12 +34,18 @@ import {
   ShareIcon,
   CheckIcon,
 } from "lucide-react";
-import { deleteTrade, voteOnTrade, createComment, deleteComment } from "~/actions/trades";
+import {
+  deleteTrade,
+  voteOnTrade,
+  createComment,
+  deleteComment,
+} from "~/actions/trades";
 import { useRouter } from "next/navigation";
 import { useUser, SignInButton } from "@clerk/nextjs";
 import Image from "next/image";
 import { useState } from "react";
 import { cn } from "~/lib/utils";
+import { getDisplayName } from "~/lib/username-generator";
 
 type TradeComment = {
   id: number;
@@ -135,7 +141,9 @@ export function SavedTradeDetail({
   const [isVoting, setIsVoting] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
-  const [deletingCommentId, setDeletingCommentId] = useState<number | null>(null);
+  const [deletingCommentId, setDeletingCommentId] = useState<number | null>(
+    null
+  );
   const [showSignInPrompt, setShowSignInPrompt] = useState(false);
   const [signInAction, setSignInAction] = useState<"vote" | "comment">("vote");
   const [shareStatus, setShareStatus] = useState<"idle" | "copied">("idle");
@@ -158,7 +166,7 @@ export function SavedTradeDetail({
       setShowSignInPrompt(true);
       return;
     }
-    
+
     setIsVoting(true);
     try {
       await voteOnTrade(trade.id, value);
@@ -176,12 +184,13 @@ export function SavedTradeDetail({
       setShowSignInPrompt(true);
       return;
     }
-    
+
     if (!commentText.trim() || !user) return;
 
     setIsSubmittingComment(true);
     try {
-      const userName = user.fullName || user.username || "Anonymous";
+      // Use Clerk username if set, otherwise generate NBA-themed username
+      const userName = getDisplayName(user.id, user.username);
       await createComment({
         tradeId: trade.id,
         content: commentText.trim(),
@@ -275,10 +284,10 @@ export function SavedTradeDetail({
     const downvotes = votes.filter((v) => v.value === -1).length;
     const score = upvotes - downvotes;
     const userVote = votes.find((v) => v.userId === currentUserId)?.value ?? 0;
-    return { score, userVote, upvotes, downvotes };
+    return { score, userVote };
   };
 
-  const { score, userVote, upvotes, downvotes } = getVoteInfo();
+  const { score, userVote } = getVoteInfo();
   const isOwnTrade = trade.userId === currentUserId;
 
   const formatDate = (date: Date) => {
@@ -390,7 +399,9 @@ export function SavedTradeDetail({
               Sign in to {signInAction === "vote" ? "vote" : "comment"}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              You need to be signed in to {signInAction === "vote" ? "vote on trades" : "leave comments"}. Create an account or sign in to participate.
+              You need to be signed in to{" "}
+              {signInAction === "vote" ? "vote on trades" : "leave comments"}.
+              Create an account or sign in to participate.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -435,10 +446,12 @@ export function SavedTradeDetail({
                   disabled={isVoting}
                   onClick={() => handleVote(1)}
                 >
-                  <ArrowBigUp className={cn(
-                    "h-6 w-6 transition-all duration-200",
-                    userVote === 1 && "fill-current"
-                  )} />
+                  <ArrowBigUp
+                    className={cn(
+                      "h-6 w-6 transition-all duration-200",
+                      userVote === 1 && "fill-current"
+                    )}
+                  />
                 </Button>
                 <span
                   className={cn(
@@ -462,10 +475,12 @@ export function SavedTradeDetail({
                   disabled={isVoting}
                   onClick={() => handleVote(-1)}
                 >
-                  <ArrowBigDown className={cn(
-                    "h-6 w-6 transition-all duration-200",
-                    userVote === -1 && "fill-current"
-                  )} />
+                  <ArrowBigDown
+                    className={cn(
+                      "h-6 w-6 transition-all duration-200",
+                      userVote === -1 && "fill-current"
+                    )}
+                  />
                 </Button>
               </div>
 
@@ -480,14 +495,8 @@ export function SavedTradeDetail({
                     <StarIcon className="h-4 w-4 text-yellow-500" />
                     {trade.rating}/10
                   </span>
-                  <span className="flex items-center gap-1 text-orange-500">
-                    <ArrowBigUp className="h-4 w-4" />
-                    {upvotes}
-                  </span>
-                  <span className="flex items-center gap-1 text-blue-500">
-                    <ArrowBigDown className="h-4 w-4" />
-                    {downvotes}
-                  </span>
+                </div>
+                <div className="flex items-center gap-1 mt-4">
                   {trade.salaryValid ? (
                     <Badge
                       variant="outline"
@@ -827,7 +836,8 @@ export function SavedTradeDetail({
               <div className="flex items-center gap-2">
                 <MessageCircleIcon className="h-5 w-5 text-indigoMain" />
                 <h2 className="text-lg font-semibold">
-                  Comments {trade.comments && trade.comments.length > 0 && (
+                  Comments{" "}
+                  {trade.comments && trade.comments.length > 0 && (
                     <span className="text-muted-foreground font-normal">
                       ({trade.comments.length})
                     </span>
@@ -851,7 +861,11 @@ export function SavedTradeDetail({
                   </span>
                   <Button
                     onClick={handleSubmitComment}
-                    disabled={isLoggedIn ? (!commentText.trim() || isSubmittingComment) : false}
+                    disabled={
+                      isLoggedIn
+                        ? !commentText.trim() || isSubmittingComment
+                        : false
+                    }
                     className="bg-indigoMain hover:bg-indigoMain/90"
                   >
                     {isSubmittingComment ? (
@@ -910,15 +924,20 @@ export function SavedTradeDetail({
                               </AlertDialogTrigger>
                               <AlertDialogContent>
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Comment</AlertDialogTitle>
+                                  <AlertDialogTitle>
+                                    Delete Comment
+                                  </AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    Are you sure you want to delete this comment? This action cannot be undone.
+                                    Are you sure you want to delete this
+                                    comment? This action cannot be undone.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                                   <AlertDialogAction
-                                    onClick={() => handleDeleteComment(comment.id)}
+                                    onClick={() =>
+                                      handleDeleteComment(comment.id)
+                                    }
                                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                   >
                                     Delete
@@ -939,7 +958,9 @@ export function SavedTradeDetail({
                 <div className="text-center py-8 text-muted-foreground border-t border-border">
                   <MessageCircleIcon className="h-10 w-10 mx-auto mb-3 opacity-50" />
                   <p className="text-sm">No comments yet</p>
-                  <p className="text-xs mt-1">Be the first to share your thoughts!</p>
+                  <p className="text-xs mt-1">
+                    Be the first to share your thoughts!
+                  </p>
                 </div>
               )}
             </CardContent>
