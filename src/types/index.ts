@@ -216,10 +216,15 @@ export type TradeScenario = {
   teams: TeamInTradeScenario[];
 };
 
+// Enriched pick type that combines AI-generated info with real draft pick data
+export type EnrichedPick = TradeAssetInScenario & {
+  draftPick?: DraftPick;
+};
+
 export type TradeInfo = {
   team: Team | undefined;
   playersReceived: (Player | undefined)[] | undefined;
-  picksReceived: TradeAssetInScenario[] | undefined;
+  picksReceived: EnrichedPick[] | undefined;
   outGoingSalary: number | undefined;
   inComingSalary: number | undefined;
   capDifference: number;

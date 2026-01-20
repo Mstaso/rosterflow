@@ -1,5 +1,6 @@
 import { getNBATeams } from "~/actions/nbaTeams";
 import { Navbar } from "~/components/layout/navbar";
+import { Footer } from "~/components/layout/footer";
 import TradeMachineClient from "~/components/trade-machine/trade-machine-client";
 import type { SelectedAsset } from "~/types";
 import type { Metadata } from "next";
@@ -45,13 +46,16 @@ export default async function TradeMachinePage({
 
   return (
     <main className="bg-background text-foreground">
-      <div className="flex flex-col min-h-screen">
-        <Navbar />
-        <TradeMachineClient
-          nbaTeams={nbaTeams || []}
-          initialTeamIds={initialTeamIds}
-          initialAssets={initialAssets}
-        />
+      <div className="flex flex-col">
+        <div className="min-h-screen flex flex-col">
+          <Navbar />
+          <TradeMachineClient
+            nbaTeams={nbaTeams || []}
+            initialTeamIds={initialTeamIds}
+            initialAssets={initialAssets}
+          />
+        </div>
+        <Footer />
       </div>
     </main>
   );

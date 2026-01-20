@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { Navbar } from "~/components/layout/navbar";
+import { Footer } from "~/components/layout/footer";
 import {
   getPaginatedTrades,
   getPaginatedUserTrades,
@@ -49,14 +50,17 @@ export default async function MyTradesPage() {
 
   return (
     <main className="bg-background text-foreground">
-      <div className="flex flex-col min-h-screen">
-        <Navbar />
-        <SavedTradesClient
-          initialAllTrades={initialAllTrades}
-          initialUserTrades={initialUserTrades}
-          initialUpvotedTrades={initialUpvotedTrades}
-          currentUserId={userId}
-        />
+      <div className="flex flex-col">
+        <div className="min-h-screen flex flex-col">
+          <Navbar />
+          <SavedTradesClient
+            initialAllTrades={initialAllTrades}
+            initialUserTrades={initialUserTrades}
+            initialUpvotedTrades={initialUpvotedTrades}
+            currentUserId={userId}
+          />
+        </div>
+        <Footer />
       </div>
     </main>
   );
