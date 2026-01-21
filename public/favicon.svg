@@ -1,36 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
-  <!-- Left hand -->
-  <path d="M6 12c0-2 2-4 4-4s4 2 4 4" 
-        stroke="hsl(243, 75%, 59%)" 
-        stroke-width="2.5" 
-        stroke-linecap="round" 
-        stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 32" fill="none">
+  <defs>
+    <linearGradient id="indigoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="hsl(243, 75%, 65%)" />
+      <stop offset="100%" stop-color="hsl(243, 75%, 53%)" />
+    </linearGradient>
+  </defs>
   
-  <!-- Right hand -->
-  <path d="M18 12c0-2-2-4-4-4s-4 2-4 4" 
-        stroke="hsl(243, 75%, 59%)" 
-        stroke-width="2.5" 
-        stroke-linecap="round" 
-        stroke-linejoin="round"/>
+  <!-- R letter - italic style, extra bold -->
+  <path d="M8 4 L3 28 L8.5 28 L9.8 19 L12 19 L15.5 28 L21.5 28 L17.5 18.5 C20 17 21.5 14.5 22 11 C22.5 6.5 19.5 4 14 4 L8 4 Z M10.5 8.5 L13 8.5 C16 8.5 17 10 16.7 12.5 C16.4 15 14.5 16 12 16 L10 16 L10.5 8.5 Z" 
+        fill="url(#indigoGradient)"/>
   
-  <!-- Handshake connection -->
-  <path d="M10 12h4" 
-        stroke="hsl(243, 75%, 59%)" 
-        stroke-width="2.5" 
-        stroke-linecap="round" 
-        stroke-linejoin="round"/>
-  
-  <!-- Left arm -->
-  <path d="M6 12l-3 3" 
-        stroke="hsl(243, 75%, 59%)" 
-        stroke-width="2.5" 
-        stroke-linecap="round" 
-        stroke-linejoin="round"/>
-  
-  <!-- Right arm -->
-  <path d="M18 12l3 3" 
-        stroke="hsl(243, 75%, 59%)" 
-        stroke-width="2.5" 
-        stroke-linecap="round" 
-        stroke-linejoin="round"/>
-</svg> 
+  <!-- F letter - italic style, extra bold, more space from R -->
+  <path d="M28 4 L23 28 L28.5 28 L29.8 19 L35 19 L35.5 14.5 L30.3 14.5 L31 8.5 L37 8.5 L37.5 4 L28 4 Z" 
+        fill="url(#indigoGradient)"/>
+</svg>
