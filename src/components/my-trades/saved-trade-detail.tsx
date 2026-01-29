@@ -520,8 +520,7 @@ export function SavedTradeDetail({
 
             <div className="flex gap-2">
               <Button
-                variant="outline"
-                className="border-indigoMain"
+                className="bg-indigoMain hover:bg-indigoMain/90 text-white"
                 onClick={handleShare}
               >
                 {shareStatus === "copied" ? (
@@ -540,7 +539,7 @@ export function SavedTradeDetail({
                 <>
                   <Button
                     variant="outline"
-                    className="border-indigoMain"
+                    className="border-white/50"
                     onClick={handleEditTrade}
                   >
                     <PencilIcon className="h-4 w-4 mr-2" />
@@ -590,7 +589,7 @@ export function SavedTradeDetail({
           {teamsInfo.map((teamInfo, index) => (
             <Card
               key={index}
-              className="flex flex-col h-auto overflow-hidden border-indigoMain bg-gradient-to-br from-background via-background/95 to-muted/80 md:flex-1"
+              className="flex flex-col h-auto overflow-hidden border-white/30 bg-gradient-to-br from-background via-background/95 to-muted/80 md:flex-1"
             >
               <CardHeader className="flex flex-row items-center justify-center space-y-0 pb-2 pt-4 px-4 bg-muted/60">
                 <div className="flex items-center gap-2">
@@ -866,7 +865,7 @@ export function SavedTradeDetail({
                         ? !commentText.trim() || isSubmittingComment
                         : false
                     }
-                    className="bg-indigoMain hover:bg-indigoMain/90"
+                    className="bg-indigoMain hover:bg-indigoMain/90 text-white"
                   >
                     {isSubmittingComment ? (
                       <>
