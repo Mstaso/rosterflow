@@ -1,11 +1,11 @@
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://rosterflow.com";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://rosterflows.com";
 
 export function WebsiteJsonLd() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "RosterFlow",
-    alternateName: "RosterFlow NBA Trade Machine",
+    name: "Roster Flows",
+    alternateName: "Roster Flows NBA Trade Machine",
     url: siteUrl,
     description:
       "Create realistic NBA trades with AI-powered analysis. Our trade machine validates salary cap compliance, analyzes trade value, and generates smart trade suggestions.",
@@ -45,13 +45,9 @@ export function OrganizationJsonLd() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "RosterFlow",
+    name: "Roster Flows",
     url: siteUrl,
     logo: `${siteUrl}/favicon.svg`,
-    sameAs: [
-      "https://twitter.com/rosterflow",
-      // Add other social profiles as needed
-    ],
   };
 
   return (

@@ -72,7 +72,7 @@ interface SaveTradeModalProps {
   selectedTeamIds?: number[];
 }
 
-export const TRADE_STORAGE_KEY = "rosterflow_pending_trade";
+export const TRADE_STORAGE_KEY = "rosterflows_pending_trade";
 
 export default function SaveTradeModal({
   isLoading = false,
