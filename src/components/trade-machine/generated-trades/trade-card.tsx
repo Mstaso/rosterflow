@@ -122,7 +122,7 @@ export default function TradeCard({
           "Cannot take on more salary"
         );
         isValidTrade = false;
-        salaryRationale = `Invalid: ${findTeam.displayName} is over/would cross second apron and cannot take on additional salary`;
+        salaryRationale = `Warning: Invalid: ${findTeam.displayName} is over/would cross second apron and cannot take on additional salary`;
       }
       // Check 2: First Apron - Must match within 110% + $100K
       // Applies if team is already over first apron OR trade would put them over
@@ -142,7 +142,7 @@ export default function TradeCard({
             `Incoming: ${inComingSalary}, Max allowed: ${maxAllowedFirstApron}`
           );
           isValidTrade = false;
-          salaryRationale = `Invalid: ${findTeam.displayName} exceeds 110% + $100K salary matching rule for first apron teams`;
+          salaryRationale = `Warning: Invalid: ${findTeam.displayName} exceeds 110% + $100K salary matching rule for first apron teams`;
         }
         // Check 3: Over cap but under aprons - Must match within 125% + $100K
         else if (capSpace < 0 && firstApronSpace >= 0) {
@@ -155,7 +155,7 @@ export default function TradeCard({
               `Incoming: ${inComingSalary}, Max allowed: ${maxAllowedOverCap}`
             );
             isValidTrade = false;
-            salaryRationale = `Invalid: ${findTeam.displayName} exceeds 125% + $100K salary matching rule for over-cap teams`;
+            salaryRationale = `Warning: Invalid: ${findTeam.displayName} exceeds 125% + $100K salary matching rule for over-cap teams`;
           }
         }
       }
@@ -206,7 +206,7 @@ export default function TradeCard({
           Edit Trade
         </Button>
       </div>
-      {isValidTrade ? (
+      {isValidTrade && (
         <div
           className="flex items-center gap-2 py-3 px-4 mb-4 rounded-md border border-green-500/50 bg-green-500/10 text-green-500
           justify-center w-full md:w-fit md:mx-0 md:justify-start"
@@ -216,18 +216,8 @@ export default function TradeCard({
             Valid trade - Salary rules satisfied
           </div>
         </div>
-      ) : (
-        <div
-          className="flex items-center gap-2 py-3 px-4 mb-4 rounded-md border border-destructive/50 bg-destructive/10 text-destructive
-          justify-center w-full md:w-fit md:mx-0 md:justify-start"
-        >
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          <div className="text-sm font-medium">
-            {salaryRationale || "Invalid trade"}
-          </div>
-        </div>
       )}
-      <div className="flex flex-col md:flex-row gap-4 justify-center">
+      <div className="flex flex-col md:flex-row gap-4 justify-center mb-4">
         {TradesWithInfo.map((tradeInfo, index) => (
           <Card
             key={index}
@@ -526,6 +516,17 @@ export default function TradeCard({
           </Card>
         ))}
       </div>
+      {!isValidTrade && (
+        <div
+          className="flex items-center gap-2 py-3 px-4 rounded-md border border-orange-500/50 bg-orange-500/10 text-orange-500
+          justify-center w-full md:w-fit md:mx-0 md:justify-start"
+        >
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <div className="text-sm font-medium">
+            {salaryRationale || "Invalid trade"}
+          </div>
+        </div>
+      )}
     </>
   );
 }
