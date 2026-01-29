@@ -128,7 +128,7 @@ export async function fetchESPNData<T>(url: string): Promise<T> {
   const response = await fetch(url, {
     headers: {
       Accept: "application/json",
-      "User-Agent": "Mozilla/5.0 (compatible; RosterFlow/1.0)",
+      "User-Agent": "Mozilla/5.0 (compatible; RosterFlows/1.0)",
     },
   });
 

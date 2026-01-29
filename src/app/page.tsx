@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   description:
     "Build realistic NBA trades with our AI-powered trade machine. Select teams, add players and draft picks, check salary cap compliance, and let AI generate smart trade suggestions.",
   openGraph: {
-    title: "NBA Trade Machine - Create & Simulate Trades | RosterFlow",
+    title: "NBA Trade Machine - Create & Simulate Trades | Roster Flows",
     description:
       "Build realistic NBA trades with our AI-powered trade machine. Select teams, add players and draft picks, and let AI generate smart trade suggestions.",
   },

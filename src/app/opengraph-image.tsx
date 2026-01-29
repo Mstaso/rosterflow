@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
 
-export const alt = "RosterFlow - AI-Powered NBA Trade Machine";
+export const alt = "Roster Flows - AI-Powered NBA Trade Machine";
 export const size = {
   width: 1200,
   height: 630,
@@ -86,7 +86,7 @@ export default async function Image() {
                 fontStyle: "italic",
               }}
             >
-              RosterFlow
+              Roster Flows
             </span>
           </div>
 

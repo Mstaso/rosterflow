@@ -150,7 +150,7 @@ export function Footer() {
         <div className="mt-12 pt-8 border-t border-gray-800">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-muted-foreground">
-              © {currentYear} RosterFlow. All rights reserved.
+              © {currentYear} Roster Flows. All rights reserved.
             </p>
             <p className="text-xs text-muted-foreground/60">
               Not affiliated with the NBA or any NBA team. All team names,
