@@ -26,7 +26,6 @@ import {
   FlameIcon,
 } from "lucide-react";
 import {
-  deleteTrade,
   voteOnTrade,
   getPaginatedTrades,
   getPaginatedUserTrades,
@@ -54,7 +53,6 @@ export function SavedTradesClient({
   currentUserId,
 }: SavedTradesClientProps) {
   const router = useRouter();
-  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<string>("all-trades");
   const [votingId, setVotingId] = useState<number | null>(null);
   const [showSignInPrompt, setShowSignInPrompt] = useState(false);
@@ -70,18 +68,6 @@ export function SavedTradesClient({
 
   const [isPending, startTransition] = useTransition();
   const [sortBy, setSortBy] = useState<"recent" | "popular">("recent");
-
-  const handleDelete = async (tradeId: number) => {
-    setDeletingId(tradeId);
-    try {
-      await deleteTrade(tradeId);
-      router.refresh();
-    } catch (error) {
-      console.error("Error deleting trade:", error);
-    } finally {
-      setDeletingId(null);
-    }
-  };
 
   const handleVote = async (
     tradeId: number,
@@ -179,9 +165,7 @@ export function SavedTradesClient({
             currentUserId={currentUserId}
             showOwnership={showOwnership}
             isVoting={votingId === trade.id}
-            isDeleting={deletingId === trade.id}
             onVote={handleVote}
-            onDelete={handleDelete}
             onClick={() => router.push(`/my-trades/${trade.id}`)}
           />
         ))}
