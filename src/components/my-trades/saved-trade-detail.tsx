@@ -508,7 +508,7 @@ export function SavedTradeDetail({
                   ) : (
                     <Badge
                       variant="outline"
-                      className="text-red-500 border-red-500"
+                      className="text-orange-500 border-orange-500"
                     >
                       <XCircleIcon className="h-3.5 w-3.5 mr-1" />
                       Salary Invalid

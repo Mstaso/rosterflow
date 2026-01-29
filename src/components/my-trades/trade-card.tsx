@@ -176,7 +176,7 @@ export function TradeCard({
                       Valid
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1 text-red-500">
+                    <span className="flex items-center gap-1 text-orange-500">
                       <XCircleIcon className="h-3 w-3" />
                       Invalid
                     </span>

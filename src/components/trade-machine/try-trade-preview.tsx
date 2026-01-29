@@ -131,7 +131,7 @@ export default function TryTradePreview({
       if ((isOverSecondApron || wouldCrossSecondApron) && capDifference > 0) {
         return {
           isValid: false,
-          message: `Invalid: ${team.displayName} is over/would cross second apron and cannot take on additional salary`,
+          message: `Waring Invalid: ${team.displayName} is over/would cross second apron and cannot take on additional salary`,
         };
       }
 
@@ -148,7 +148,7 @@ export default function TryTradePreview({
       ) {
         return {
           isValid: false,
-          message: `Invalid: ${team.displayName} exceeds 110% + $100K salary matching rule for first apron teams`,
+          message: `Warning: Invalid: ${team.displayName} exceeds 110% + $100K salary matching rule for first apron teams`,
         };
       }
 
@@ -159,7 +159,7 @@ export default function TryTradePreview({
         if (incomingSalary > maxAllowedOverCap) {
           return {
             isValid: false,
-            message: `Invalid: ${team.displayName} exceeds 125% + $100K salary matching rule for over-cap teams`,
+            message: `Warning: Invalid: ${team.displayName} exceeds 125% + $100K salary matching rule for over-cap teams`,
           };
         }
       }
@@ -245,7 +245,7 @@ export default function TryTradePreview({
           </Button>
         </div>
 
-        {isValid ? (
+        {isValid && (
           <div
             className="flex items-center gap-2 py-3 px-4 mb-4 rounded-md border border-green-500/50 bg-green-500/10 text-green-500
           justify-center w-full md:w-fit md:mx-0 md:justify-start"
@@ -255,17 +255,9 @@ export default function TryTradePreview({
               Valid trade - Salary rules satisfied
             </div>
           </div>
-        ) : (
-          <div
-            className="flex items-center gap-2 py-3 px-4 mb-4 rounded-md border border-destructive/50 bg-destructive/10 text-destructive
-          justify-center w-full md:w-fit md:mx-0 md:justify-start"
-          >
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <div className="text-sm font-medium">{message}</div>
-          </div>
         )}
 
-        <div className="flex flex-col md:flex-row gap-4 justify-center">
+        <div className="flex flex-col md:flex-row gap-4 justify-center mb-4">
           {tradeInfo.map((info, index) => (
             <Card
               key={index}
@@ -521,6 +513,15 @@ export default function TryTradePreview({
             </Card>
           ))}
         </div>
+        {!isValid && (
+          <div
+            className="flex items-center gap-2 py-3 px-4 rounded-md border border-orange-500/50 bg-orange-500/10 text-orange-500
+          justify-center w-full md:w-fit md:mx-0 md:justify-start"
+          >
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <div className="text-sm font-medium">{message}</div>
+          </div>
+        )}
       </div>
     </div>
   );
