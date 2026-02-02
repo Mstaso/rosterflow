@@ -36,6 +36,7 @@ import { useUser, SignInButton } from "@clerk/nextjs";
 import { SaveIcon } from "lucide-react";
 import { toast } from "sonner";
 import type { TradeInfo } from "~/types";
+import { usePostHog } from "posthog-js/react";
 
 const saveTradeSchema = z.object({
   title: z
@@ -45,7 +46,6 @@ const saveTradeSchema = z.object({
   rating: z.number().min(0).max(10),
   description: z
     .string()
-    .min(1, "Description is required")
     .max(500, "Description must be less than 500 characters"),
 });
 
@@ -84,6 +84,7 @@ export default function SaveTradeModal({
   const [open, setOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
+  const posthog = usePostHog();
 
   const form = useForm<SaveTradeFormData>({
     resolver: zodResolver(saveTradeSchema),
@@ -218,11 +219,20 @@ export default function SaveTradeModal({
 
       await saveTradeAction({
         title: data.title,
-        description: data.description,
+        description: data.description || "",
         rating: data.rating,
         salaryValid: isValidTrade,
         assets: tradeAssets,
       });
+
+      // Track trade saved event
+      posthog?.capture("trade_saved", {
+        teams_count: tradeInfo.length,
+        teams: tradeInfo.map((t) => t.team?.displayName).filter(Boolean),
+        is_valid_trade: isValidTrade,
+        rating: data.rating,
+      });
+
       setOpen(false);
       form.reset();
 
@@ -263,7 +273,7 @@ export default function SaveTradeModal({
                 Save Trade
               </DialogTitle>
               <DialogDescription className="text-xs sm:text-sm">
-                Add a title, rating, and description to save this trade.
+                Add a title and rating to save this trade.
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
@@ -323,7 +333,7 @@ export default function SaveTradeModal({
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description *</FormLabel>
+                      <FormLabel>Description (optional)</FormLabel>
                       <FormControl>
                         <Textarea
                           placeholder="Describe the trade reasoning, benefits, etc..."
