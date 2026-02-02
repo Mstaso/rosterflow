@@ -126,6 +126,7 @@ export type Team = {
 
 export type Player = {
   id: number;
+  espnId?: number;
   firstName: string;
   lastName: string;
   fullName: string;

@@ -74,13 +74,7 @@ const footerLinks = [
       { name: "View Trades", href: "/my-trades" },
     ],
   },
-  {
-    title: "Legal",
-    links: [
-      { name: "Privacy Policy", href: "#" },
-      { name: "Terms of Service", href: "#" },
-    ],
-  },
+
 ];
 
 export function Footer() {

@@ -1,5 +1,5 @@
 "use client";
-import type { Team } from "~/types";
+import type { Team, Player } from "~/types";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
@@ -9,12 +9,11 @@ import {
   RepeatIcon,
   UsersIcon,
   FileTextIcon,
-  MoreVertical,
   Loader2,
   Trash2Icon,
-  X,
   Plus,
   Minus,
+  BarChart3Icon,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -26,6 +25,7 @@ import {
 import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
+import { PlayerStatsModal } from "~/components/player-stats-modal";
 
 interface TeamCardProps {
   team: Team;
@@ -74,13 +74,20 @@ export function TeamCard({
   setActiveTab,
 }: TeamCardProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
+
+  const handleOpenPlayerStats = (player: Player) => {
+    setSelectedPlayer(player);
+    setIsStatsModalOpen(true);
+  };
+
   const availableTeamsForChange = allTeams.filter(
     (t) => t.id === team.id || !selectedTeamIdsInMachine.includes(t.id)
   );
   const otherSelectedTeams = allTeams.filter(
     (t) => t.id !== team.id && selectedTeamIdsInMachine.includes(t.id)
   );
-console.log("been hit teams", team.players)
 
   const handleChangeTeam = async (oldTeamId: number, newTeam: Team) => {
     try {
@@ -232,8 +239,9 @@ console.log("been hit teams", team.players)
                         className={`group relative flex items-center justify-between p-2.5 rounded-md border-2 ${
                           isSelected
                             ? "bg-muted/90 border-white"
-                            : "border-border bg-slate-950"
+                            : "border-border bg-slate-950 hover:border-indigoMain/50"
                         } transition-colors cursor-pointer`}
+                        onClick={() => handleOpenPlayerStats(player)}
                       >
                         <div className="flex items-center gap-3">
                           {player.headshot && (
@@ -275,6 +283,7 @@ console.log("been hit teams", team.players)
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                            onClick={(e) => e.stopPropagation()}
                           >
                             {isSelected ? (
                               <Minus className="h-4 w-4" />
@@ -291,6 +300,14 @@ console.log("been hit teams", team.players)
                       </div>
 
                       <DropdownMenuContent align="end" className="w-[200px]">
+                        <DropdownMenuItem
+                          onClick={() => handleOpenPlayerStats(player)}
+                          className="flex items-center gap-2"
+                        >
+                          <BarChart3Icon className="h-4 w-4 text-indigoMain" />
+                          View Stats
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         {isSelected ? (
                           <DropdownMenuItem
                             onClick={() => {
@@ -471,6 +488,19 @@ console.log("been hit teams", team.players)
           </TabsContent>
         </Tabs>
       </CardContent>
+
+      {/* Player Stats Modal */}
+      <PlayerStatsModal
+        player={selectedPlayer}
+        espnId={selectedPlayer?.espnId}
+        isOpen={isStatsModalOpen}
+        onClose={() => {
+          setIsStatsModalOpen(false);
+          setSelectedPlayer(null);
+        }}
+        teamColor={team.color}
+        teamAltColor={team.alternateColor}
+      />
     </Card>
   );
 }

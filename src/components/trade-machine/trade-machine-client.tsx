@@ -584,7 +584,9 @@ export default function TradeMachineClient({
 
               {/* Desktop Grid */}
               <div
-                className="hidden md:grid gap-4 md:gap-6"
+                className={`hidden md:grid gap-4 md:gap-6 ${
+                  selectedTeams.length > 3 ? "overflow-x-auto pb-4" : ""
+                }`}
                 style={{
                   gridTemplateColumns:
                     selectedTeams.length === 1
@@ -593,9 +595,7 @@ export default function TradeMachineClient({
                       ? "repeat(2, 1fr)"
                       : selectedTeams.length === 3
                       ? "repeat(3, 1fr)"
-                      : selectedTeams.length === 4
-                      ? "repeat(4, 1fr)"
-                      : "repeat(5, 1fr)",
+                      : `repeat(${selectedTeams.length}, minmax(320px, 1fr))`,
                 }}
               >
                 {selectedTeams.map((team) => (
