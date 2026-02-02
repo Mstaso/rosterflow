@@ -80,6 +80,7 @@ export function TeamCard({
   const otherSelectedTeams = allTeams.filter(
     (t) => t.id !== team.id && selectedTeamIdsInMachine.includes(t.id)
   );
+console.log("been hit teams", team.players)
 
   const handleChangeTeam = async (oldTeamId: number, newTeam: Team) => {
     try {

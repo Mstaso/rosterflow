@@ -18,6 +18,7 @@ import {
 } from "./selected-assets-panel";
 import TryTradePreview from "./try-trade-preview";
 import { TRADE_STORAGE_KEY } from "./save-trade-modal";
+import { usePostHog } from "posthog-js/react";
 
 const MAX_TEAMS = 5;
 
@@ -32,6 +33,7 @@ export default function TradeMachineClient({
   initialTeamIds = [],
   initialAssets = [],
 }: TradeMachineClientProps) {
+  const posthog = usePostHog();
   const [selectedTeams, setSelectedTeams] = useState<Team[]>([]);
   const [selectedAssets, setSelectedAssets] = useState<SelectedAsset[]>([]);
   const [showTeamSelector, setShowTeamSelector] = useState(false);
@@ -226,6 +228,14 @@ export default function TradeMachineClient({
 
   const handleGenerateTrade = async () => {
     setLoadingGeneratedTrades(true);
+
+    // Track generate trade event
+    posthog?.capture("trade_generated", {
+      teams_count: selectedTeams.length,
+      teams: selectedTeams.map((t) => t.displayName),
+      assets_count: selectedAssets.length,
+      
+    });
 
     let randomTeamsForMockTrades: Team[] = [];
 
@@ -422,7 +432,14 @@ export default function TradeMachineClient({
             )}
             <Button
               disabled={!isTryTradeEnabled}
-              onClick={() => setShowTryTradePreview(true)}
+              onClick={() => {
+                posthog?.capture("trade_tried", {
+                  teams_count: selectedTeams.length,
+                  teams: selectedTeams.map((t) => t.displayName),
+                  assets_count: selectedAssets.length,
+                });
+                setShowTryTradePreview(true);
+              }}
               className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-600 text-primary-white hover:bg-emerald-700
                          disabled:bg-muted disabled:text-muted-foreground/70 disabled:border disabled:border-muted-foreground/30 disabled:cursor-not-allowed
                          transition-all duration-150 ease-in-out"
