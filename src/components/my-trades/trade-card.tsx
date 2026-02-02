@@ -4,18 +4,6 @@ import { Card, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "~/components/ui/alert-dialog";
-import {
-  TrashIcon,
   CheckCircleIcon,
   XCircleIcon,
   ArrowRightIcon,
@@ -65,9 +53,7 @@ interface TradeCardProps {
   currentUserId: string | null;
   showOwnership?: boolean;
   isVoting: boolean;
-  isDeleting: boolean;
   onVote: (tradeId: number, value: 1 | -1, e: React.MouseEvent) => void;
-  onDelete: (tradeId: number) => void;
   onClick: () => void;
 }
 
@@ -76,9 +62,7 @@ export function TradeCard({
   currentUserId,
   showOwnership = false,
   isVoting,
-  isDeleting,
   onVote,
-  onDelete,
   onClick,
 }: TradeCardProps) {
   const movements = groupAssetsByMovement(trade.assets);
@@ -176,46 +160,13 @@ export function TradeCard({
                       Valid
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1 text-red-500">
+                    <span className="flex items-center gap-1 text-orange-500">
                       <XCircleIcon className="h-3 w-3" />
                       Invalid
                     </span>
                   )}
                 </div>
               </div>
-              {isOwnTrade && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-muted-foreground hover:text-destructive"
-                      disabled={isDeleting}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <TrashIcon className="h-4 w-4" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Trade</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to delete "{trade.title}"? This
-                        action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => onDelete(trade.id)}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
             </div>
 
             <p className="hidden sm:block text-sm text-muted-foreground mt-3 mb-4 line-clamp-2">

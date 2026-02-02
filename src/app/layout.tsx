@@ -19,13 +19,13 @@ const logo = Exo_2({
   variable: "--font-logo",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://rosterflow.com";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://rosterflows.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "RosterFlow - AI-Powered NBA Trade Machine & Simulator",
-    template: "%s | RosterFlow",
+    default: "Roster Flows - AI-Powered NBA Trade Machine & Simulator",
+    template: "%s | Roster Flows",
   },
   description:
     "Create realistic NBA trades with AI-powered analysis. Our trade machine validates salary cap compliance, analyzes trade value, and generates smart trade suggestions. Build your perfect NBA roster today.",
@@ -43,9 +43,9 @@ export const metadata: Metadata = {
     "basketball trade calculator",
     "NBA player trades",
   ],
-  authors: [{ name: "RosterFlow" }],
-  creator: "RosterFlow",
-  publisher: "RosterFlow",
+  authors: [{ name: "RosterFlows" }],
+  creator: "RosterFlows", 
+  publisher: "RosterFlows",
   robots: {
     index: true,
     follow: true,
@@ -66,8 +66,8 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: siteUrl,
-    siteName: "RosterFlow",
-    title: "RosterFlow - AI-Powered NBA Trade Machine & Simulator",
+    siteName: "Roster Flows",
+    title: "Roster Flows - AI-Powered NBA Trade Machine & Simulator",
     description:
       "Create realistic NBA trades with AI-powered analysis. Validate salary cap compliance, analyze trade value, and generate smart trade suggestions.",
     images: [
@@ -75,17 +75,9 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "RosterFlow - AI-Powered NBA Trade Machine",
-      },
+        alt: "Roster Flows - AI-Powered NBA Trade Machine",
+      },  
     ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "RosterFlow - AI-Powered NBA Trade Machine & Simulator",
-    description:
-      "Create realistic NBA trades with AI-powered analysis. Validate salary cap compliance and generate smart trade suggestions.",
-    images: ["/og-image.png"],
-    creator: "@rosterflow",
   },
   alternates: {
     canonical: siteUrl,

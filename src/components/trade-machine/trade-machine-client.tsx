@@ -18,6 +18,7 @@ import {
 } from "./selected-assets-panel";
 import TryTradePreview from "./try-trade-preview";
 import { TRADE_STORAGE_KEY } from "./save-trade-modal";
+import { usePostHog } from "posthog-js/react";
 
 const MAX_TEAMS = 5;
 
@@ -32,6 +33,7 @@ export default function TradeMachineClient({
   initialTeamIds = [],
   initialAssets = [],
 }: TradeMachineClientProps) {
+  const posthog = usePostHog();
   const [selectedTeams, setSelectedTeams] = useState<Team[]>([]);
   const [selectedAssets, setSelectedAssets] = useState<SelectedAsset[]>([]);
   const [showTeamSelector, setShowTeamSelector] = useState(false);
@@ -219,10 +221,21 @@ export default function TradeMachineClient({
 
   const handleClearAllAssets = () => {
     setSelectedAssets([]);
+    setSelectedTeams([]);
+    setSelectedTeamIds([]);
+    setActiveTab("");
   };
 
   const handleGenerateTrade = async () => {
     setLoadingGeneratedTrades(true);
+
+    // Track generate trade event
+    posthog?.capture("trade_generated", {
+      teams_count: selectedTeams.length,
+      teams: selectedTeams.map((t) => t.displayName),
+      assets_count: selectedAssets.length,
+      
+    });
 
     let randomTeamsForMockTrades: Team[] = [];
 
@@ -419,7 +432,14 @@ export default function TradeMachineClient({
             )}
             <Button
               disabled={!isTryTradeEnabled}
-              onClick={() => setShowTryTradePreview(true)}
+              onClick={() => {
+                posthog?.capture("trade_tried", {
+                  teams_count: selectedTeams.length,
+                  teams: selectedTeams.map((t) => t.displayName),
+                  assets_count: selectedAssets.length,
+                });
+                setShowTryTradePreview(true);
+              }}
               className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-600 text-primary-white hover:bg-emerald-700
                          disabled:bg-muted disabled:text-muted-foreground/70 disabled:border disabled:border-muted-foreground/30 disabled:cursor-not-allowed
                          transition-all duration-150 ease-in-out"
@@ -564,7 +584,9 @@ export default function TradeMachineClient({
 
               {/* Desktop Grid */}
               <div
-                className="hidden md:grid gap-4 md:gap-6"
+                className={`hidden md:grid gap-4 md:gap-6 ${
+                  selectedTeams.length > 3 ? "overflow-x-auto pb-4" : ""
+                }`}
                 style={{
                   gridTemplateColumns:
                     selectedTeams.length === 1
@@ -573,9 +595,7 @@ export default function TradeMachineClient({
                       ? "repeat(2, 1fr)"
                       : selectedTeams.length === 3
                       ? "repeat(3, 1fr)"
-                      : selectedTeams.length === 4
-                      ? "repeat(4, 1fr)"
-                      : "repeat(5, 1fr)",
+                      : `repeat(${selectedTeams.length}, minmax(320px, 1fr))`,
                 }}
               >
                 {selectedTeams.map((team) => (
@@ -625,7 +645,7 @@ export default function TradeMachineClient({
               <LightbulbIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No Teams Selected</h3>
               <p className="text-muted-foreground mb-4">
-                Add teams to start building your trade
+                Add teams to start building your trade.
               </p>
             </div>
           )}

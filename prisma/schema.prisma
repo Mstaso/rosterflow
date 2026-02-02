@@ -52,6 +52,7 @@ model Team {
 // Players on team rosters
 model Player {
   id            Int    @id @default(autoincrement())
+  espnId        String @unique // ESPN player ID
   firstName     String
   lastName      String
   fullName      String
@@ -117,7 +118,7 @@ model Trade {
   userId      String? // Clerk user ID who created this trade (nullable for existing trades)
   rating      Int // 0 - 10 
   title       String // title of trade
-  description String // description or reasoning of trade 
+  description String? // description or reasoning of trade (optional)
   salaryValid Boolean // if salary matching of trade is valid
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

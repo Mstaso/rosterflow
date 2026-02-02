@@ -36,7 +36,7 @@ export function SelectedAssetsTrigger({
     >
       <PackageIcon className="h-4 w-4 text-indigoMain" strokeWidth={1.5} />
       <span>
-        {selectedAssets.length} Asset
+        {selectedAssets.length} Player/Pick
         {selectedAssets.length === 1 ? "" : "s"} Selected
       </span>
       {isOpen ? (
@@ -89,7 +89,7 @@ export function SelectedAssetsContent({
       {/* Header with Clear All button */}
       <div className="flex items-center justify-between pb-2 border-b border-border">
         <span className="text-sm font-medium text-muted-foreground">
-          Selected Assets
+          Selected Players/Picks
         </span>
         {onClearAll && (
           <Button
@@ -123,7 +123,7 @@ export function SelectedAssetsContent({
               )}
               <span className="text-sm font-medium">{team.displayName}</span>
               <span className="text-xs text-muted-foreground">
-                ({assets.length} asset{assets.length !== 1 ? "s" : ""})
+                ({assets.length} player/pick{assets.length !== 1 ? "s" : ""})
               </span>
             </div>
 

@@ -17,9 +17,17 @@ interface PlayerStatsModalProps {
   teamAltColor?: string;
 }
 
-type StatItem = {
-  label: string;
-  value: string;
+type SeasonStats = {
+  season: string;
+  teamSlug?: string;
+  stats: string[];
+};
+
+type PerGameStats = {
+  labels: string[];
+  seasons: SeasonStats[];
+  careerTotals: string[];
+  currentSeasonYear?: string;
 };
 
 export function PlayerStatsModal({
@@ -30,20 +38,17 @@ export function PlayerStatsModal({
   teamColor,
   teamAltColor,
 }: PlayerStatsModalProps) {
-  const [stats, setStats] = useState<StatItem[]>([]);
+  const [perGameStats, setPerGameStats] = useState<PerGameStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [athleteData, setAthleteData] = useState<any>(null);
 
   // Determine team colors with fallbacks
-  const primaryColor = teamColor || athleteData?.team?.color || "6366f1";
-  const secondaryColor = teamAltColor || athleteData?.team?.alternateColor || "1e1b4b";
+  const primaryColor = teamColor || "6366f1";
+  const secondaryColor = teamAltColor || "1e1b4b";
 
   useEffect(() => {
     if (!isOpen) {
-      // Reset state when closed
-      setStats([]);
-      setAthleteData(null);
+      setPerGameStats(null);
       setError(null);
       return;
     }
@@ -58,9 +63,8 @@ export function PlayerStatsModal({
       setError(null);
 
       try {
-        // Use our API route to avoid CORS
         const response = await fetch(`/api/espn/athlete/${espnId}`);
-
+   
         if (!response.ok) {
           throw new Error("Failed to fetch player data");
         }
@@ -72,71 +76,46 @@ export function PlayerStatsModal({
         }
 
         const data = result.data;
-        setAthleteData(data.athlete);
-
-        // Parse stats from the response
-        const parsedStats: StatItem[] = [];
         
-        // Check for statistics array at root level
-        if (data.statistics && Array.isArray(data.statistics)) {
-          for (const seasonStats of data.statistics) {
-            if (seasonStats?.splits?.categories) {
-              for (const category of seasonStats.splits.categories) {
-                if (category.stats) {
-                  for (const stat of category.stats) {
-                    if (stat.displayValue !== undefined && stat.abbreviation) {
-                      if (!parsedStats.some(s => s.label === stat.abbreviation)) {
-                        parsedStats.push({
-                          label: stat.abbreviation,
-                          value: String(stat.displayValue),
-                        });
-                      }
-                    }
-                  }
+        // Find the "averages" category (Per Game stats)
+        if (data.categories && Array.isArray(data.categories)) {
+          const averagesCategory = data.categories.find(
+            (cat: any) => cat.sortKey === "averages"
+          );
+          
+          if (averagesCategory) {
+            // Use labels array if available, otherwise fall back to displayNames
+            const labels: string[] = averagesCategory.labels || averagesCategory.displayNames || [];
+            
+            // Parse all seasons
+            const seasons: SeasonStats[] = [];
+            if (averagesCategory.statistics && Array.isArray(averagesCategory.statistics)) {
+              for (const seasonData of averagesCategory.statistics) {
+                if (seasonData?.stats && Array.isArray(seasonData.stats)) {
+                  seasons.push({
+                    season: seasonData.season?.displayName || "",
+                    teamSlug: seasonData.teamSlug || "",
+                    stats: seasonData.stats,
+                  });
                 }
               }
             }
+            
+            // Get career totals
+            const careerTotals: string[] = averagesCategory.totals || [];
+            
+            // Get current season year (last season)
+            const lastSeason = seasons[seasons.length - 1];
+            const currentSeasonYear = lastSeason?.season || "";
+            
+            setPerGameStats({
+              labels,
+              seasons,
+              careerTotals,
+              currentSeasonYear,
+            });
           }
         }
-
-        // Check for stats on athlete object
-        if (data.athlete?.statistics && Array.isArray(data.athlete.statistics)) {
-          for (const statGroup of data.athlete.statistics) {
-            if (statGroup.splits?.categories) {
-              for (const category of statGroup.splits.categories) {
-                if (category.stats) {
-                  for (const stat of category.stats) {
-                    if (stat.displayValue !== undefined && stat.abbreviation) {
-                      if (!parsedStats.some(s => s.label === stat.abbreviation)) {
-                        parsedStats.push({
-                          label: stat.abbreviation,
-                          value: String(stat.displayValue),
-                        });
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-
-        // Check for displayStats (simpler format)
-        if (data.athlete?.displayStats && Array.isArray(data.athlete.displayStats)) {
-          for (const stat of data.athlete.displayStats) {
-            if (stat.displayValue !== undefined && stat.abbreviation) {
-              if (!parsedStats.some(s => s.label === stat.abbreviation)) {
-                parsedStats.push({
-                  label: stat.abbreviation,
-                  value: String(stat.displayValue),
-                });
-              }
-            }
-          }
-        }
-
-        console.log("Parsed stats:", parsedStats); // Debug log
-        setStats(parsedStats);
       } catch (err) {
         console.error("Error fetching player stats:", err);
         setError("Unable to load stats");
@@ -148,13 +127,22 @@ export function PlayerStatsModal({
     fetchPlayerStats();
   }, [isOpen, espnId]);
 
-  // Key stats we want to highlight at the top
-  const keyStatLabels = ["PTS", "REB", "AST", "STL", "BLK", "FG%", "3P%", "FT%"];
-  const keyStats = keyStatLabels
-    .map(label => stats.find(s => s.label === label))
-    .filter((s): s is StatItem => s !== undefined);
+  // Get key stats for the header (current season)
+  const getStatValue = (label: string) => {
+    if (!perGameStats || perGameStats.seasons.length === 0) return null;
+    const index = perGameStats.labels.indexOf(label);
+    if (index === -1) return null;
+    const currentSeason = perGameStats.seasons[perGameStats.seasons.length - 1];
+    if (!currentSeason) return null;
+    return currentSeason.stats[index] || null;
+  };
 
-  const otherStats = stats.filter(s => !keyStatLabels.includes(s.label));
+  const keyStats = [
+    { label: "PTS", value: getStatValue("PTS") },
+    { label: "REB", value: getStatValue("REB") },
+    { label: "AST", value: getStatValue("AST") },
+    { label: "FG%", value: getStatValue("FG%") },
+  ].filter(s => s.value !== null);
 
   // Don't render anything if not open
   if (!isOpen) return null;
@@ -163,12 +151,12 @@ export function PlayerStatsModal({
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 z-50 bg-black/80 animate-in fade-in-0"
+        className="fixed inset-0 z-[100] bg-black/80 animate-in fade-in-0"
         onClick={onClose}
       />
       
       {/* Modal */}
-      <div className="fixed left-[50%] top-[50%] z-50 w-full max-w-md translate-x-[-50%] translate-y-[-50%] animate-in fade-in-0 zoom-in-95">
+      <div className="fixed left-[50%] top-[50%] z-[101] w-full max-w-2xl translate-x-[-50%] translate-y-[-50%] animate-in fade-in-0 zoom-in-95 px-4">
         <div className="bg-background border border-border rounded-lg shadow-lg overflow-hidden">
           {/* Header with team colors */}
           <div
@@ -193,10 +181,10 @@ export function PlayerStatsModal({
               <div className="flex items-center gap-4">
                 {/* Player headshot */}
                 <div className="relative flex-shrink-0">
-                  {(athleteData?.headshot?.href || player?.headshot?.href) ? (
+                  {player?.headshot?.href ? (
                     <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-white/30 bg-white/10 shadow-lg">
                       <Image
-                        src={athleteData?.headshot?.href || player?.headshot?.href || ""}
+                        src={player.headshot.href}
                         alt={player?.displayName || "Player"}
                         width={80}
                         height={80}
@@ -212,100 +200,138 @@ export function PlayerStatsModal({
                   )}
                   {/* Jersey number badge */}
                   <div className="absolute -bottom-1 -right-1 bg-white text-black font-bold text-xs w-7 h-7 rounded-full flex items-center justify-center shadow-md">
-                    #{player?.jersey || athleteData?.jersey || "?"}
+                    #{player?.jersey || "?"}
                   </div>
                 </div>
 
                 {/* Player info */}
                 <div className="flex-1 min-w-0 text-white">
                   <h2 className="text-xl font-bold truncate">
-                    {player?.displayName || athleteData?.displayName}
+                    {player?.displayName}
                   </h2>
                   <div className="flex items-center gap-2 mt-1 text-sm text-white/80">
                     <Badge className="bg-white/20 text-white border-0 text-xs px-2 py-0">
-                      {player?.position?.abbreviation || athleteData?.position?.abbreviation}
+                      {player?.position?.abbreviation}
                     </Badge>
-                    <span>{player?.displayHeight || athleteData?.displayHeight}</span>
+                    <span>{player?.displayHeight}</span>
                     <span className="text-white/40">·</span>
-                    <span>{player?.displayWeight || athleteData?.displayWeight}</span>
+                    <span>{player?.displayWeight}</span>
                   </div>
-                  {athleteData?.team?.displayName && (
-                    <div className="flex items-center gap-2 mt-1.5">
-                      {athleteData.team.logos?.[0]?.href && (
-                        <Image
-                          src={athleteData.team.logos[0].href}
-                          alt={athleteData.team.displayName}
-                          width={18}
-                          height={18}
-                          className="object-contain"
-                        />
-                      )}
-                      <span className="text-sm text-white/80">{athleteData.team.displayName}</span>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
           </div>
 
+          {/* Current Season Stats Banner - ESPN style */}
+          {perGameStats && keyStats.length > 0 && (
+            <div className="px-4 py-3 bg-background">
+              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                {perGameStats.currentSeasonYear} Regular Season Stats
+              </div>
+              <div className="flex justify-between items-end">
+                {keyStats.map(({ label, value }) => (
+                  <div key={label} className="text-center flex-1">
+                    <div className="text-[10px] text-muted-foreground uppercase mb-0.5">{label}</div>
+                    <div className="text-2xl font-bold text-foreground">{value}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Stats section */}
-          <div className="p-5 max-h-[50vh] overflow-y-auto">
+          <div className="max-h-[50vh] overflow-y-auto">
             {isLoading ? (
-              <div className="space-y-3">
-                <div className="grid grid-cols-4 gap-2">
-                  {[...Array(8)].map((_, i) => (
-                    <Skeleton key={i} className="h-16 rounded-lg" />
-                  ))}
-                </div>
+              <div className="p-4 space-y-3">
+                <Skeleton className="h-8 w-32" />
+                <Skeleton className="h-48 w-full" />
               </div>
             ) : error || !espnId ? (
-              <div className="text-center py-6 text-muted-foreground">
+              <div className="text-center py-8 text-muted-foreground">
                 <p className="text-sm">{error || "Stats not available"}</p>
               </div>
-            ) : stats.length === 0 ? (
-              <div className="text-center py-6 text-muted-foreground">
-                <p className="text-sm">No stats available for this season</p>
+            ) : !perGameStats || perGameStats.seasons.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p className="text-sm">No stats available</p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {/* Key stats - larger display */}
-                {keyStats.length > 0 && (
-                  <div className="grid grid-cols-4 gap-2">
-                    {keyStats.map(({ label, value }) => (
-                      <div
-                        key={label}
-                        className="text-center p-3 rounded-lg bg-muted/50"
-                      >
-                        <div className="text-lg font-bold">{value}</div>
-                        <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{label}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Other stats - compact list */}
-                {otherStats.length > 0 && (
-                  <div>
-                    <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                      More Stats
-                    </h4>
-                    <div className="grid grid-cols-3 gap-x-4 gap-y-1.5">
-                      {otherStats.slice(0, 15).map(({ label, value }) => (
-                        <div key={label} className="flex justify-between text-sm py-1">
-                          <span className="text-muted-foreground">{label}</span>
-                          <span className="font-medium">{value}</span>
-                        </div>
-                      ))}
+              <div>
+                {/* Per Game Stats Table */}
+                <div className="p-4">
+                  <h3 className="text-sm font-semibold text-foreground mb-3">
+                    Per Game Stats
+                  </h3>
+                  
+                  <div className="border border-border rounded-lg overflow-hidden">
+                    <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
+                      <table className="w-full text-sm">
+                        <thead className="sticky top-0 z-10">
+                          <tr className="bg-muted border-b border-border">
+                            <th className="px-3 py-2 text-left text-xs font-semibold text-muted-foreground sticky left-0 bg-muted">
+                              Season
+                            </th>
+                            {perGameStats.labels.map((label, i) => (
+                              <th 
+                                key={i} 
+                                className="px-2 py-2 text-xs font-semibold text-muted-foreground text-center whitespace-nowrap bg-muted"
+                              >
+                                {label}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {/* Show seasons in reverse order (most recent first) */}
+                          {[...perGameStats.seasons].reverse().map((season, idx) => (
+                            <tr 
+                              key={idx} 
+                              className={`border-b border-border last:border-b-0 ${
+                                idx === 0 ? "bg-muted font-medium" : "hover:bg-muted/20"
+                              }`}
+                            >
+                              <td className={`px-3 py-2 text-xs whitespace-nowrap sticky left-0 ${
+                                idx === 0 ? "bg-muted" : "bg-background"
+                              }`}>
+                                {season.season}
+                              </td>
+                              {season.stats.map((value, i) => (
+                                <td 
+                                  key={i} 
+                                  className="px-2 py-2 text-center whitespace-nowrap"
+                                >
+                                  {value}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                          {/* Career Totals Row */}
+                          {perGameStats.careerTotals.length > 0 && (
+                            <tr className="bg-muted font-semibold border-t-2 border-border">
+                              <td className="px-3 py-2 text-xs whitespace-nowrap sticky left-0 bg-muted">
+                                Career
+                              </td>
+                              {perGameStats.careerTotals.map((value, i) => (
+                                <td 
+                                  key={i} 
+                                  className="px-2 py-2 text-center whitespace-nowrap"
+                                >
+                                  {value}
+                                </td>
+                              ))}
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
-                )}
+                </div>
 
                 {/* Contract info if available */}
                 {player?.contract && (
-                  <div className="pt-3 border-t border-border">
-                    <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                  <div className="p-4 border-t border-border">
+                    <h3 className="text-sm font-semibold text-foreground mb-3">
                       Contract
-                    </h4>
+                    </h3>
                     <div className="flex gap-6 text-sm">
                       <div>
                         <span className="text-muted-foreground">Salary: </span>

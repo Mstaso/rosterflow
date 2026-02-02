@@ -16,9 +16,9 @@ export async function GET(
       );
     }
 
-    // Fetch from ESPN API
+    // Fetch stats from ESPN API
     const response = await fetch(
-      `https://site.web.api.espn.com/apis/common/v3/sports/basketball/nba/athletes/${id}/overview`,
+      `https://site.web.api.espn.com/apis/common/v3/sports/basketball/nba/athletes/${id}/stats`,
       {
         headers: {
           Accept: "application/json",

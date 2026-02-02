@@ -14,7 +14,7 @@ const tradeAssetSchema = z.object({
 
 const saveTradeSchema = z.object({
   title: z.string().min(1).max(100),
-  description: z.string().min(1).max(500),
+  description: z.string().max(500),
   rating: z.number().min(0).max(10),
   salaryValid: z.boolean(),
   assets: z.array(tradeAssetSchema),
@@ -40,7 +40,7 @@ export async function saveTradeAction(input: SaveTradeInput) {
   const trade = await db.trade.create({
     data: {
       title,
-      description,
+      description: description || null,
       rating,
       salaryValid,
       userId: userId ?? null, // Associate with current user if logged in

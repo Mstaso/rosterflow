@@ -63,8 +63,8 @@ async function fetchTeams() {
     const response = await fetch(url, {
       headers: {
         Accept: "application/json",
-        "User-Agent": "Mozilla/5.0 (compatible; RosterFlow/1.0)",
-      },
+        "User-Agent": "Mozilla/5.0 (compatible; RosterFlows/1.0)",
+      },  
     });
 
     if (!response.ok) {
@@ -106,7 +106,7 @@ async function fetchTeamRecord(teamId: string) {
     const response = await fetch(url, {
       headers: {
         Accept: "application/json",
-        "User-Agent": "Mozilla/5.0 (compatible; RosterFlow/1.0)",
+        "User-Agent": "Mozilla/5.0 (compatible; RosterFlows/1.0)",
       },
     });
 
@@ -128,7 +128,7 @@ async function fetchTeamRoster(teamId: string) {
     const response = await fetch(url, {
       headers: {
         Accept: "application/json",
-        "User-Agent": "Mozilla/5.0 (compatible; RosterFlow/1.0)",
+        "User-Agent": "Mozilla/5.0 (compatible; RosterFlows/1.0)",
       },
     });
 
