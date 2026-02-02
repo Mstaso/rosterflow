@@ -30,6 +30,16 @@ type PerGameStats = {
   currentSeasonYear?: string;
 };
 
+type AthleteInfo = {
+  displayHeight?: string;
+  displayWeight?: string;
+  jersey?: string;
+  headshot?: string;
+  position?: string;
+  teamColor?: string;
+  teamAltColor?: string;
+};
+
 export function PlayerStatsModal({
   player,
   espnId,
@@ -39,16 +49,18 @@ export function PlayerStatsModal({
   teamAltColor,
 }: PlayerStatsModalProps) {
   const [perGameStats, setPerGameStats] = useState<PerGameStats | null>(null);
+  const [athleteInfo, setAthleteInfo] = useState<AthleteInfo | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Determine team colors with fallbacks
-  const primaryColor = teamColor || "6366f1";
-  const secondaryColor = teamAltColor || "1e1b4b";
+  // Determine team colors with fallbacks (props > fetched > defaults)
+  const primaryColor = teamColor || athleteInfo?.teamColor || "6366f1";
+  const secondaryColor = teamAltColor || athleteInfo?.teamAltColor || "1e1b4b";
 
   useEffect(() => {
     if (!isOpen) {
       setPerGameStats(null);
+      setAthleteInfo(null);
       setError(null);
       return;
     }
@@ -58,73 +70,85 @@ export function PlayerStatsModal({
       return;
     }
 
-    const fetchPlayerStats = async () => {
+    const fetchPlayerData = async () => {
       setIsLoading(true);
       setError(null);
 
       try {
-        const response = await fetch(`/api/espn/athlete/${espnId}`);
+        // Fetch both stats and athlete info in parallel
+        const [statsResponse, athleteResponse] = await Promise.all([
+          fetch(`/api/espn/athlete/${espnId}`),
+          fetch(`https://site.api.espn.com/apis/common/v3/sports/basketball/nba/athletes/${espnId}`),
+        ]);
    
-        if (!response.ok) {
-          throw new Error("Failed to fetch player data");
-        }
-
-        const result = await response.json();
-        
-        if (!result.success) {
-          throw new Error(result.error || "Failed to fetch data");
-        }
-
-        const data = result.data;
-        
-        // Find the "averages" category (Per Game stats)
-        if (data.categories && Array.isArray(data.categories)) {
-          const averagesCategory = data.categories.find(
-            (cat: any) => cat.sortKey === "averages"
-          );
+        // Process stats
+        if (statsResponse.ok) {
+          const result = await statsResponse.json();
           
-          if (averagesCategory) {
-            // Use labels array if available, otherwise fall back to displayNames
-            const labels: string[] = averagesCategory.labels || averagesCategory.displayNames || [];
+          if (result.success && result.data?.categories) {
+            const averagesCategory = result.data.categories.find(
+              (cat: any) => cat.sortKey === "averages"
+            );
             
-            // Parse all seasons
-            const seasons: SeasonStats[] = [];
-            if (averagesCategory.statistics && Array.isArray(averagesCategory.statistics)) {
-              for (const seasonData of averagesCategory.statistics) {
-                if (seasonData?.stats && Array.isArray(seasonData.stats)) {
-                  seasons.push({
-                    season: seasonData.season?.displayName || "",
-                    teamSlug: seasonData.teamSlug || "",
-                    stats: seasonData.stats,
-                  });
+            if (averagesCategory) {
+              const labels: string[] = averagesCategory.labels || averagesCategory.displayNames || [];
+              
+              const seasons: SeasonStats[] = [];
+              if (averagesCategory.statistics && Array.isArray(averagesCategory.statistics)) {
+                for (const seasonData of averagesCategory.statistics) {
+                  if (seasonData?.stats && Array.isArray(seasonData.stats)) {
+                    seasons.push({
+                      season: seasonData.season?.displayName || "",
+                      teamSlug: seasonData.teamSlug || "",
+                      stats: seasonData.stats,
+                    });
+                  }
                 }
               }
+              
+              const careerTotals: string[] = averagesCategory.totals || [];
+              const lastSeason = seasons[seasons.length - 1];
+              const currentSeasonYear = lastSeason?.season || "";
+              
+              setPerGameStats({
+                labels,
+                seasons,
+                careerTotals,
+                currentSeasonYear,
+              });
             }
+          }
+        }
+
+        // Process athlete info (height, weight, jersey, team colors)
+        if (athleteResponse.ok) {
+          const athleteData = await athleteResponse.json();
+          const athlete = athleteData.athlete;
+          
+          if (athlete) {
+            // Try to get team colors from athlete's team
+            const athleteTeam = athlete.team;
             
-            // Get career totals
-            const careerTotals: string[] = averagesCategory.totals || [];
-            
-            // Get current season year (last season)
-            const lastSeason = seasons[seasons.length - 1];
-            const currentSeasonYear = lastSeason?.season || "";
-            
-            setPerGameStats({
-              labels,
-              seasons,
-              careerTotals,
-              currentSeasonYear,
+            setAthleteInfo({
+              displayHeight: athlete.displayHeight || "",
+              displayWeight: athlete.displayWeight || "",
+              jersey: athlete.jersey || "",
+              headshot: athlete.headshot?.href || "",
+              position: athlete.position?.abbreviation || "",
+              teamColor: athleteTeam?.color || "",
+              teamAltColor: athleteTeam?.alternateColor || "",
             });
           }
         }
       } catch (err) {
-        console.error("Error fetching player stats:", err);
+        console.error("Error fetching player data:", err);
         setError("Unable to load stats");
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchPlayerStats();
+    fetchPlayerData();
   }, [isOpen, espnId]);
 
   // Get key stats for the header (current season)
@@ -181,10 +205,10 @@ export function PlayerStatsModal({
               <div className="flex items-center gap-4">
                 {/* Player headshot */}
                 <div className="relative flex-shrink-0">
-                  {player?.headshot?.href ? (
+                  {(athleteInfo?.headshot || player?.headshot?.href) ? (
                     <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-white/30 bg-white/10 shadow-lg">
                       <Image
-                        src={player.headshot.href}
+                        src={athleteInfo?.headshot || player?.headshot?.href || ""}
                         alt={player?.displayName || "Player"}
                         width={80}
                         height={80}
@@ -199,9 +223,11 @@ export function PlayerStatsModal({
                     </div>
                   )}
                   {/* Jersey number badge */}
-                  <div className="absolute -bottom-1 -right-1 bg-white text-black font-bold text-xs w-7 h-7 rounded-full flex items-center justify-center shadow-md">
-                    #{player?.jersey || "?"}
-                  </div>
+                  {(athleteInfo?.jersey || player?.jersey) && (
+                    <div className="absolute -bottom-1 -right-1 bg-white text-black font-bold text-xs w-7 h-7 rounded-full flex items-center justify-center shadow-md">
+                      #{athleteInfo?.jersey || player?.jersey}
+                    </div>
+                  )}
                 </div>
 
                 {/* Player info */}
@@ -211,11 +237,17 @@ export function PlayerStatsModal({
                   </h2>
                   <div className="flex items-center gap-2 mt-1 text-sm text-white/80">
                     <Badge className="bg-white/20 text-white border-0 text-xs px-2 py-0">
-                      {player?.position?.abbreviation}
+                      {athleteInfo?.position || player?.position?.abbreviation}
                     </Badge>
-                    <span>{player?.displayHeight}</span>
-                    <span className="text-white/40">·</span>
-                    <span>{player?.displayWeight}</span>
+                    {(athleteInfo?.displayHeight || player?.displayHeight) && (
+                      <span>{athleteInfo?.displayHeight || player?.displayHeight}</span>
+                    )}
+                    {(athleteInfo?.displayHeight || player?.displayHeight) && (athleteInfo?.displayWeight || player?.displayWeight) && (
+                      <span className="text-white/40">·</span>
+                    )}
+                    {(athleteInfo?.displayWeight || player?.displayWeight) && (
+                      <span>{athleteInfo?.displayWeight || player?.displayWeight}</span>
+                    )}
                   </div>
                 </div>
               </div>

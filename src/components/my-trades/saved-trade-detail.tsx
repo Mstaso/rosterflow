@@ -151,6 +151,7 @@ export function SavedTradeDetail({
   const [selectedPlayer, setSelectedPlayer] = useState<{
     player: SavedTradeWithAssets["assets"][0]["player"];
     teamColor?: string;
+    teamAltColor?: string;
   } | null>(null);
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
   const [shareStatus, setShareStatus] = useState<"idle" | "copied">("idle");
@@ -158,10 +159,11 @@ export function SavedTradeDetail({
 
   const handleOpenPlayerStats = (
     player: SavedTradeWithAssets["assets"][0]["player"],
-    teamColor?: string
+    teamColor?: string,
+    teamAltColor?: string
   ) => {
     if (!player) return;
-    setSelectedPlayer({ player, teamColor });
+    setSelectedPlayer({ player, teamColor, teamAltColor });
     setIsStatsModalOpen(true);
   };
 
@@ -565,7 +567,7 @@ export function SavedTradeDetail({
                     <AlertDialogTrigger asChild>
                       <Button
                         variant="outline"
-                        className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                        className="text-red-500 border-red-500 hover:bg-red-500 hover:text-white"
                         disabled={isDeleting}
                       >
                         <TrashIcon className="h-4 w-4 mr-2" />
@@ -1024,6 +1026,7 @@ export function SavedTradeDetail({
           setSelectedPlayer(null);
         }}
         teamColor={selectedPlayer?.teamColor}
+        teamAltColor={selectedPlayer?.teamAltColor}
       />
     </div>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   ArrowLeft,
   UsersIcon,
@@ -7,12 +8,14 @@ import {
   AlertCircle,
   CheckCircle,
   PencilIcon,
+  BarChart3Icon,
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
 import Image from "next/image";
 import type { SelectedAsset, Team, Player, DraftPick } from "~/types";
 import SaveTradeModal from "./save-trade-modal";
+import { PlayerStatsModal } from "~/components/player-stats-modal";
 
 interface TryTradePreviewProps {
   selectedTeams: Team[];
@@ -36,6 +39,22 @@ export default function TryTradePreview({
   selectedAssets,
   onBack,
 }: TryTradePreviewProps) {
+  const [selectedPlayer, setSelectedPlayer] = useState<{
+    player: Player;
+    teamColor?: string;
+    teamAltColor?: string;
+  } | null>(null);
+  const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
+
+  const handleOpenPlayerStats = (
+    player: Player,
+    teamColor?: string,
+    teamAltColor?: string
+  ) => {
+    setSelectedPlayer({ player, teamColor, teamAltColor });
+    setIsStatsModalOpen(true);
+  };
+
   // Build trade info for each team
   const buildTradeInfo = (): TeamTradeInfo[] => {
     return selectedTeams.map((team) => {
@@ -407,7 +426,14 @@ export default function TryTradePreview({
                           return (
                             <div
                               key={playerIndex}
-                              className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950"
+                              className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950 hover:border-indigoMain/50 cursor-pointer transition-colors"
+                              onClick={() =>
+                                handleOpenPlayerStats(
+                                  player,
+                                  fromTeam?.color,
+                                  fromTeam?.alternateColor
+                                )
+                              }
                             >
                               <div className="flex items-center gap-3">
                                 {player.headshot && (
@@ -452,6 +478,21 @@ export default function TryTradePreview({
                                   )}
                                 </div>
                               </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-indigoMain"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenPlayerStats(
+                                    player,
+                                    fromTeam?.color,
+                                    fromTeam?.alternateColor
+                                  );
+                                }}
+                              >
+                                <BarChart3Icon className="h-4 w-4" />
+                              </Button>
                             </div>
                           );
                         })}
@@ -523,6 +564,19 @@ export default function TryTradePreview({
           </div>
         )}
       </div>
+
+      {/* Player Stats Modal */}
+      <PlayerStatsModal
+        player={selectedPlayer?.player || null}
+        espnId={selectedPlayer?.player?.espnId}
+        isOpen={isStatsModalOpen}
+        onClose={() => {
+          setIsStatsModalOpen(false);
+          setSelectedPlayer(null);
+        }}
+        teamColor={selectedPlayer?.teamColor}
+        teamAltColor={selectedPlayer?.teamAltColor}
+      />
     </div>
   );
 }

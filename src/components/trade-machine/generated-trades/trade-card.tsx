@@ -1,4 +1,7 @@
-import type { Team, TradeScenario, TradeInfo, EnrichedPick } from "~/types";
+"use client";
+
+import { useState } from "react";
+import type { Team, TradeScenario, TradeInfo, EnrichedPick, Player } from "~/types";
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
 import {
   UsersIcon,
@@ -6,10 +9,12 @@ import {
   AlertCircle,
   CheckCircle,
   PencilIcon,
+  BarChart3Icon,
 } from "lucide-react";
 import Image from "next/image";
 import SaveTradeModal from "../save-trade-modal";
 import { Button } from "~/components/ui/button";
+import { PlayerStatsModal } from "~/components/player-stats-modal";
 
 export default function TradeCard({
   trade,
@@ -20,6 +25,22 @@ export default function TradeCard({
   involvedTeams: Team[];
   onEditTrade: (tradeToEdit: TradeInfo[], involvedTeams: Team[]) => void;
 }) {
+  const [selectedPlayer, setSelectedPlayer] = useState<{
+    player: Player;
+    teamColor?: string;
+    teamAltColor?: string;
+  } | null>(null);
+  const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
+
+  const handleOpenPlayerStats = (
+    player: Player,
+    teamColor?: string,
+    teamAltColor?: string
+  ) => {
+    setSelectedPlayer({ player, teamColor, teamAltColor });
+    setIsStatsModalOpen(true);
+  };
+
   let isValidTrade = true;
   let salaryRationale = "";
 
@@ -383,51 +404,82 @@ export default function TradeCard({
                       <div className="h-auto">
                         <div className="space-y-3">
                           {tradeInfo.playersReceived.map(
-                            (player, playerIndex) => (
-                              <div
-                                key={playerIndex}
-                                className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950"
-                              >
-                                <div className="flex items-center gap-3">
-                                  {player?.headshot && (
-                                    <div className="bg-white/20 p-1 rounded-full">
-                                      <Image
-                                        src={player.headshot.href}
-                                        alt={player.displayName}
-                                        width={96}
-                                        height={96}
-                                        className="rounded-full object-cover w-12 h-12"
-                                      />
-                                    </div>
-                                  )}
-                                  <div>
-                                    <div className="font-medium text-sm">
-                                      {player?.displayName}{" "}
-                                      <span className="text-xs text-muted-foreground">
-                                        (
-                                        {player?.position?.abbreviation ||
-                                          "Unknown"}
-                                        )
-                                      </span>
-                                    </div>
-                                    <div className="text-xs text-muted-foreground">
-                                      {player?.contract
-                                        ? `Salary: $${(
-                                            player.contract.salary / 1000000
-                                          ).toFixed(1)}M`
-                                        : "No contract"}
-                                      {" | "}
-                                      {player?.contract?.yearsRemaining}
-                                      {` ${
-                                        player?.contract?.yearsRemaining === 1
-                                          ? "yr"
-                                          : "yrs"
-                                      }`}
+                            (player, playerIndex) => {
+                              // Find which team this player came from
+                              const fromTeam = involvedTeams.find((t) =>
+                                t.players?.some((p) => p.id === player?.id)
+                              );
+
+                              return (
+                                <div
+                                  key={playerIndex}
+                                  className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950 hover:border-indigoMain/50 cursor-pointer transition-colors"
+                                  onClick={() =>
+                                    player &&
+                                    handleOpenPlayerStats(
+                                      player,
+                                      fromTeam?.color,
+                                      fromTeam?.alternateColor
+                                    )
+                                  }
+                                >
+                                  <div className="flex items-center gap-3">
+                                    {player?.headshot && (
+                                      <div className="bg-white/20 p-1 rounded-full">
+                                        <Image
+                                          src={player.headshot.href}
+                                          alt={player.displayName}
+                                          width={96}
+                                          height={96}
+                                          className="rounded-full object-cover w-12 h-12"
+                                        />
+                                      </div>
+                                    )}
+                                    <div>
+                                      <div className="font-medium text-sm">
+                                        {player?.displayName}{" "}
+                                        <span className="text-xs text-muted-foreground">
+                                          (
+                                          {player?.position?.abbreviation ||
+                                            "Unknown"}
+                                          )
+                                        </span>
+                                      </div>
+                                      <div className="text-xs text-muted-foreground">
+                                        {player?.contract
+                                          ? `Salary: $${(
+                                              player.contract.salary / 1000000
+                                            ).toFixed(1)}M`
+                                          : "No contract"}
+                                        {" | "}
+                                        {player?.contract?.yearsRemaining}
+                                        {` ${
+                                          player?.contract?.yearsRemaining === 1
+                                            ? "yr"
+                                            : "yrs"
+                                        }`}
+                                      </div>
                                     </div>
                                   </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-muted-foreground hover:text-indigoMain"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      player &&
+                                        handleOpenPlayerStats(
+                                          player,
+                                          fromTeam?.color,
+                                          fromTeam?.alternateColor
+                                        );
+                                    }}
+                                  >
+                                    <BarChart3Icon className="h-4 w-4" />
+                                  </Button>
                                 </div>
-                              </div>
-                            )
+                              );
+                            }
                           )}
                         </div>
                       </div>
@@ -527,6 +579,19 @@ export default function TradeCard({
           </div>
         </div>
       )}
+
+      {/* Player Stats Modal */}
+      <PlayerStatsModal
+        player={selectedPlayer?.player || null}
+        espnId={selectedPlayer?.player?.espnId}
+        isOpen={isStatsModalOpen}
+        onClose={() => {
+          setIsStatsModalOpen(false);
+          setSelectedPlayer(null);
+        }}
+        teamColor={selectedPlayer?.teamColor}
+        teamAltColor={selectedPlayer?.teamAltColor}
+      />
     </>
   );
 }
