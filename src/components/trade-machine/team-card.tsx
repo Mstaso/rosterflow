@@ -240,8 +240,7 @@ export function TeamCard({
                           isSelected
                             ? "bg-muted/90 border-white"
                             : "border-border bg-slate-950 hover:border-indigoMain/50"
-                        } transition-colors cursor-pointer`}
-                        onClick={() => handleOpenPlayerStats(player)}
+                        } transition-colors`}
                       >
                         <div className="flex items-center gap-3">
                           {player.headshot && (
@@ -283,7 +282,6 @@ export function TeamCard({
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                            onClick={(e) => e.stopPropagation()}
                           >
                             {isSelected ? (
                               <Minus className="h-4 w-4" />
