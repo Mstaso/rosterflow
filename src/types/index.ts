@@ -162,6 +162,7 @@ export type DraftPick = {
   isProtected: boolean;
   isSwap: boolean;
   description?: string;
+  estimatedValue?: number;
   team?: Team;
   createdAt: Date;
   updatedAt: Date;

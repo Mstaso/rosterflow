@@ -338,22 +338,24 @@ export default function TradeMachineClient({
         if (originalTeam?.id) {
           teamIdsSet.add(originalTeam.id);
 
-          // Find the draft pick ID from the original team's draft picks
-          const draftPick = originalTeam.draftPicks?.find((dp) => {
-            // Match by year and round from the pick name (e.g., "2025 1st Round Pick")
-            const pickName = pick.name || "";
-            const yearMatch = pickName.match(/(\d{4})/);
-            const roundMatch = pickName.match(
-              /(\d)(?:st|nd|rd|th)?\s*[Rr]ound/i
-            );
+          // Find the draft pick ID — use enriched ID first, then parse name
+          const draftPick = pick.id
+            ? originalTeam.draftPicks?.find((dp) => dp.id === pick.id)
+            : originalTeam.draftPicks?.find((dp) => {
+                const pickName = pick.name || "";
+                const yearMatch = pickName.match(/(\d{4})/);
+                // Match "R1", "R2" or "1st Round", "2nd Round", "1 Round" etc.
+                const roundMatch =
+                  pickName.match(/R(\d)/i) ||
+                  pickName.match(/(\d)(?:st|nd|rd|th)?\s*[Rr]ound/i);
 
-            if (yearMatch?.[1] && roundMatch?.[1]) {
-              const year = parseInt(yearMatch[1]);
-              const round = parseInt(roundMatch[1]);
-              return dp.year === year && dp.round === round;
-            }
-            return false;
-          });
+                if (yearMatch?.[1] && roundMatch?.[1]) {
+                  const year = parseInt(yearMatch[1]);
+                  const round = parseInt(roundMatch[1]);
+                  return dp.year === year && dp.round === round;
+                }
+                return false;
+              });
 
           if (draftPick?.id) {
             newSelectedAssets.push({

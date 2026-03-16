@@ -108,16 +108,15 @@ export default function SaveTradeModal({
     }
   };
 
-  // Parse pick name to extract year and round (e.g., "2025 1st Round Pick" -> { year: 2025, round: 1 })
+  // Parse pick name to extract year and round (e.g., "2025 1st Round Pick" or "2026 R1")
   const parsePickName = (
     pickName: string
   ): { year: number; round: number } | null => {
-    // Match patterns like:
-    // "2025 1st Round Pick", "2026 2nd Round" (with ordinal suffix)
-    // "2029 1 Round Pick", "2029 2 Round Pick" (without ordinal suffix)
     const yearMatch = pickName.match(/(\d{4})/);
-    // Match either "1st", "2nd", etc. OR just "1", "2" followed by "round"
-    const roundMatch = pickName.match(/(\d+)(?:st|nd|rd|th)?\s*round/i);
+    // Match "R1", "R2" or "1st Round", "2nd Round", "1 Round" etc.
+    const roundMatch =
+      pickName.match(/R(\d)/i) ||
+      pickName.match(/(\d+)(?:st|nd|rd|th)?\s*round/i);
 
     const yearStr = yearMatch?.[1];
     const roundStr = roundMatch?.[1];
