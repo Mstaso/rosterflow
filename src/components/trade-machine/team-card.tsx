@@ -59,7 +59,29 @@ interface TeamCardProps {
   setActiveTab?: (value: string) => void;
 }
 
-const formatCurrency = (value: number) => `${value.toLocaleString()}`;
+const formatM = (value: number) => {
+  const millions = value / 1_000_000;
+  const prefix = millions < 0 ? "-" : "";
+  return `${prefix}$${Math.abs(millions).toFixed(1)}M`;
+};
+
+type CapTier = "UNDER_CAP" | "OVER_CAP" | "FIRST_APRON" | "SECOND_APRON";
+
+function getCapTier(team: Team): { tier: CapTier; label: string; color: string } {
+  if ((team.secondApronSpace || 0) < 0)
+    return { tier: "SECOND_APRON", label: "2nd Apron", color: "text-red-400 bg-red-500/15 border-red-500/30" };
+  if ((team.firstApronSpace || 0) < 0)
+    return { tier: "FIRST_APRON", label: "1st Apron", color: "text-orange-400 bg-orange-500/15 border-orange-500/30" };
+  if ((team.capSpace || 0) < 0)
+    return { tier: "OVER_CAP", label: "Over Cap", color: "text-yellow-400 bg-yellow-500/15 border-yellow-500/30" };
+  return { tier: "UNDER_CAP", label: "Under Cap", color: "text-green-400 bg-green-500/15 border-green-500/30" };
+}
+
+function capValueColor(value: number): string {
+  if (value > 0) return "text-green-400";
+  if (value < 0) return "text-red-400";
+  return "text-foreground";
+}
 
 export function TeamCard({
   team,
@@ -187,40 +209,56 @@ export function TeamCard({
         </Button>
       </CardHeader>
       <CardContent className="px-4 pb-4 flex-grow flex flex-col bg-muted/60 border-indigoMain">
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground mb-3">
-          <div>
-            Total Cap:{" "}
-            <span className="font-medium text-foreground">
-              {formatCurrency(team.totalCapAllocation || 0)}
-            </span>
-          </div>
-          <div>
-            Cap Space:{" "}
-            <span className="font-medium text-foreground">
-              {formatCurrency(team.capSpace || 0)}
-            </span>
-          </div>
-          <div>
-            1st Apron:{" "}
-            <span className="font-medium text-foreground">
-              {formatCurrency(team.firstApronSpace || 0)}
-            </span>
-          </div>
-          <div>
-            2nd Apron:{" "}
-            <span className="font-medium text-foreground">
-              {formatCurrency(team.secondApronSpace || 0)}
-            </span>
-          </div>
-        </div>
+        {/* Cap Status */}
+        {(() => {
+          const cap = getCapTier(team);
+          return (
+            <div className="mb-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className={`text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded border ${cap.color}`}>
+                  {cap.label}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  Total: {formatM(team.totalCapAllocation || 0)}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="rounded-md bg-slate-950 border border-border px-2 py-1.5">
+                  <div className="text-[10px] text-muted-foreground mb-0.5">Cap Space</div>
+                  <div className={`text-xs font-semibold ${capValueColor(team.capSpace || 0)}`}>
+                    {formatM(team.capSpace || 0)}
+                  </div>
+                </div>
+                <div className="rounded-md bg-slate-950 border border-border px-2 py-1.5">
+                  <div className="text-[10px] text-muted-foreground mb-0.5">1st Apron</div>
+                  <div className={`text-xs font-semibold ${capValueColor(team.firstApronSpace || 0)}`}>
+                    {formatM(team.firstApronSpace || 0)}
+                  </div>
+                </div>
+                <div className="rounded-md bg-slate-950 border border-border px-2 py-1.5">
+                  <div className="text-[10px] text-muted-foreground mb-0.5">2nd Apron</div>
+                  <div className={`text-xs font-semibold ${capValueColor(team.secondApronSpace || 0)}`}>
+                    {formatM(team.secondApronSpace || 0)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         <Tabs defaultValue="players" className="flex-grow flex flex-col">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="players">
+            <TabsTrigger
+              value="players"
+              className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border-border data-[state=active]:shadow-none"
+            >
               <UsersIcon className="w-4 h-4 mr-1.5" strokeWidth={1.5} />
               Players
             </TabsTrigger>
-            <TabsTrigger value="picks">
+            <TabsTrigger
+              value="picks"
+              className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border-border data-[state=active]:shadow-none"
+            >
               <FileTextIcon className="w-4 h-4 mr-1.5" strokeWidth={1.5} />
               Picks
             </TabsTrigger>

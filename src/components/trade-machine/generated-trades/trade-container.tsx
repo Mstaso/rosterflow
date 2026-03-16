@@ -1,20 +1,28 @@
+"use client";
+
 import { ArrowLeft } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "~/components/ui/tabs";
 import type { Team, TradeInfo, TradeScenario } from "~/types";
 import TradeCard from "./trade-card";
+import TradeCardSkeleton from "./trade-card-skeleton";
 
 export default function TradeContainer({
   tradesData,
   involvedTeams,
   onBack,
   onEditTrade,
+  isStreaming = false,
 }: {
   tradesData: TradeScenario[];
   involvedTeams: Team[];
   onBack: () => void;
   onEditTrade: (tradeToEdit: TradeInfo[], involvedTeams: Team[]) => void;
+  isStreaming?: boolean;
 }) {
+  const hasTrades = tradesData.length > 0;
+  const tabCount = tradesData.length + (isStreaming ? 1 : 0);
+
   return (
     <div className="flex-grow">
       <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6">
@@ -29,30 +37,49 @@ export default function TradeContainer({
           </Button>
         </div>
 
-        <Tabs defaultValue="trade-0" className="w-full">
-          <TabsList
-            className="grid w-full"
-            style={{
-              gridTemplateColumns: `repeat(${tradesData.length}, 1fr)`,
-            }}
-          >
-            {tradesData.map((trade, index) => (
-              <TabsTrigger key={index} value={`trade-${index}`} className="p-2">
-                Trade {index + 1}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+        {hasTrades ? (
+          <Tabs defaultValue="trade-0" className="w-full">
+            <TabsList
+              className="grid w-full h-auto"
+              style={{
+                gridTemplateColumns: `repeat(${tabCount}, 1fr)`,
+              }}
+            >
+              {tradesData.map((_trade, index) => (
+                <TabsTrigger key={index} value={`trade-${index}`}>
+                  Trade {index + 1}
+                </TabsTrigger>
+              ))}
+              {isStreaming && (
+                <TabsTrigger
+                  value="trade-loading"
+                  className="border-dashed border-indigoMain/30 bg-indigoMain/5"
+                  disabled
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="relative flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigoMain opacity-75" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-indigoMain" />
+                    </span>
+                    Generating...
+                  </span>
+                </TabsTrigger>
+              )}
+            </TabsList>
 
-          {tradesData.map((trade, index) => (
-            <TabsContent key={index} value={`trade-${index}`} className="mt-6">
-              <TradeCard
-                trade={trade}
-                involvedTeams={involvedTeams}
-                onEditTrade={onEditTrade}
-              />
-            </TabsContent>
-          ))}
-        </Tabs>
+            {tradesData.map((trade, index) => (
+              <TabsContent key={index} value={`trade-${index}`} className="mt-6">
+                <TradeCard
+                  trade={trade}
+                  involvedTeams={involvedTeams}
+                  onEditTrade={onEditTrade}
+                />
+              </TabsContent>
+            ))}
+          </Tabs>
+        ) : isStreaming ? (
+          <TradeCardSkeleton />
+        ) : null}
       </div>
     </div>
   );

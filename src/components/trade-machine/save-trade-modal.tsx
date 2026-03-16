@@ -258,9 +258,8 @@ export default function SaveTradeModal({
         <Dialog open={open} onOpenChange={setOpen}>
           <Button
             onClick={handleOpen}
-            className="w-full sm:w-auto bg-indigoMain text-primary-white hover:bg-indigoMain/70
-              disabled:bg-muted disabled:text-muted-foreground/70 disabled:border disabled:border-muted-foreground/30 disabled:cursor-not-allowed
-              transition-all duration-150 ease-in-out"
+            variant="indigo"
+            className="w-full sm:w-auto"
           >
             <SaveIcon className="mr-2 h-5 w-5" strokeWidth={1.5} />
             Save Trade

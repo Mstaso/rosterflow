@@ -189,7 +189,7 @@ export function SavedTradesClient({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <SignInButton mode="modal">
               <Button
-                className="bg-indigoMain hover:bg-indigoMain/90"
+                variant="indigo"
                 onClick={() => setShowSignInPrompt(false)}
               >
                 Sign In

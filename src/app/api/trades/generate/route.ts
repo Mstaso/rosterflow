@@ -4,7 +4,6 @@ import { env } from "~/env";
 import type { SelectedAsset, Team } from "~/types";
 import {
   getAssetsByTeam,
-  getCapContext,
   getDestinationInfo,
   getRosterContext,
   getSalaryMatchingContext,
@@ -123,7 +122,8 @@ Respond with ONLY a JSON array. Each scenario:
   }
 ]`;
 
-    const completion = await openai.chat.completions.create({
+    // Stream the response using SSE
+    const stream = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
@@ -137,57 +137,164 @@ Respond with ONLY a JSON array. Each scenario:
         },
       ],
       temperature: 0.7,
-      response_format: { type: "json_object" },
       max_tokens: 4000,
+      stream: true,
     });
 
-    const responseContent = completion.choices[0]?.message?.content;
+    const encoder = new TextEncoder();
 
-    if (!responseContent) {
-      throw new Error("No response from OpenAI");
-    }
+    const readableStream = new ReadableStream({
+      async start(controller) {
+        // Send teamsAddedToTrade as the first event so the client has them
+        controller.enqueue(
+          encoder.encode(
+            `data: ${JSON.stringify({ type: "meta", teamsAddedToTrade })}\n\n`
+          )
+        );
 
-    let cleanedContent = responseContent.trim();
+        let accumulated = "";
+        let tradeIndex = 0;
 
-    // Remove markdown code blocks if present
-    if (cleanedContent.startsWith("```json")) {
-      cleanedContent = cleanedContent
-        .replace(/^```json\s*/, "")
-        .replace(/\s*```$/, "");
-    } else if (cleanedContent.startsWith("```")) {
-      cleanedContent = cleanedContent
-        .replace(/^```\s*/, "")
-        .replace(/\s*```$/, "");
-    }
+        // State machine for tracking position in JSON
+        let inString = false;
+        let escapeNext = false;
+        let arrayFound = false;
+        let braceDepth = 0;
+        let currentTradeStart = -1;
+        let scanPos = 0; // Where we left off scanning
 
-    try {
-      const parsedResponse = JSON.parse(cleanedContent);
+        try {
+          for await (const chunk of stream) {
+            const content = chunk.choices[0]?.delta?.content;
+            if (!content) continue;
 
-      // Handle both array format and {trades: [...]} format from json_object mode
-      const trades = Array.isArray(parsedResponse)
-        ? parsedResponse
-        : parsedResponse.trades || parsedResponse.scenarios || [];
+            accumulated += content;
 
-      return NextResponse.json({
-        success: true,
-        data: {
-          trades,
-          selectedAssets: selectedAssets,
-          teamsAddedToTrade: teamsAddedToTrade,
-          prompt: prompt,
-        },
-        source: "OpenAI GPT-4o-mini",
-      });
-    } catch (parseError) {
-      console.error("JSON parse failed:", parseError);
-      console.error("Raw response:", cleanedContent.substring(0, 500));
+            // Scan new characters from where we left off
+            while (scanPos < accumulated.length) {
+              const char = accumulated[scanPos];
 
-      throw new Error(
-        `Invalid JSON response from OpenAI: ${
-          parseError instanceof Error ? parseError.message : "Unknown error"
-        }`
-      );
-    }
+              if (escapeNext) {
+                escapeNext = false;
+                scanPos++;
+                continue;
+              }
+
+              if (inString) {
+                if (char === "\\") {
+                  escapeNext = true;
+                } else if (char === '"') {
+                  inString = false;
+                }
+                scanPos++;
+                continue;
+              }
+
+              // Not in a string
+              if (char === '"') {
+                inString = true;
+                scanPos++;
+                continue;
+              }
+
+              if (char === "[" && !arrayFound) {
+                arrayFound = true;
+                scanPos++;
+                continue;
+              }
+
+              if (!arrayFound) {
+                scanPos++;
+                continue;
+              }
+
+              if (char === "{") {
+                if (braceDepth === 0) {
+                  currentTradeStart = scanPos;
+                }
+                braceDepth++;
+              } else if (char === "}") {
+                braceDepth--;
+                if (braceDepth === 0 && currentTradeStart >= 0) {
+                  const tradeJson = accumulated.substring(
+                    currentTradeStart,
+                    scanPos + 1
+                  );
+                  currentTradeStart = -1;
+
+                  try {
+                    const trade = JSON.parse(tradeJson);
+                    controller.enqueue(
+                      encoder.encode(
+                        `data: ${JSON.stringify({ type: "trade", trade, index: tradeIndex })}\n\n`
+                      )
+                    );
+                    tradeIndex++;
+                  } catch (e) {
+                    console.error(
+                      "Failed to parse trade chunk:",
+                      (e as Error).message
+                    );
+                  }
+                }
+              }
+
+              scanPos++;
+            }
+          }
+
+          // If no trades were parsed from streaming, try parsing the full response
+          if (tradeIndex === 0 && accumulated.length > 0) {
+            console.log("No trades parsed incrementally, trying full parse...");
+            try {
+              let cleaned = accumulated.trim();
+              if (cleaned.startsWith("```json")) {
+                cleaned = cleaned.replace(/^```json\s*/, "").replace(/\s*```$/, "");
+              } else if (cleaned.startsWith("```")) {
+                cleaned = cleaned.replace(/^```\s*/, "").replace(/\s*```$/, "");
+              }
+              const parsed = JSON.parse(cleaned);
+              const trades = Array.isArray(parsed)
+                ? parsed
+                : parsed.trades || parsed.scenarios || [];
+              for (const trade of trades) {
+                controller.enqueue(
+                  encoder.encode(
+                    `data: ${JSON.stringify({ type: "trade", trade, index: tradeIndex })}\n\n`
+                  )
+                );
+                tradeIndex++;
+              }
+            } catch (e) {
+              console.error("Full parse also failed:", (e as Error).message);
+              console.error("Accumulated:", accumulated.substring(0, 500));
+            }
+          }
+
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({ type: "done", totalTrades: tradeIndex })}\n\n`
+            )
+          );
+        } catch (error) {
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({ type: "error", error: error instanceof Error ? error.message : "Stream failed" })}\n\n`
+            )
+          );
+        } finally {
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(readableStream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    });
   } catch (error) {
     console.error("Error generating trades with OpenAI:", error);
     return NextResponse.json(
