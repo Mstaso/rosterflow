@@ -59,57 +59,55 @@ type TradeComment = {
   updatedAt: Date;
 };
 
+type TradeTeamSnapshot = {
+  id: number;
+  tradeId: number;
+  teamId: number;
+  teamDisplayName: string;
+  teamAbbreviation: string;
+  teamLogo: any;
+  totalCapAllocation: number;
+  capSpace: number;
+  firstApronSpace: number;
+  secondApronSpace: number;
+};
+
+type TradeAsset = {
+  id: number;
+  type: string;
+  tradeId: number;
+  tradeTeamId: number;
+  targetTradeTeamId: number;
+  playerId: number | null;
+  draftPickId: number | null;
+  playerName: string | null;
+  playerHeadshot: any;
+  playerPosition: string | null;
+  playerSalary: number | null;
+  playerContractYears: number | null;
+  playerEspnId: string | null;
+  pickYear: number | null;
+  pickRound: number | null;
+  pickIsProtected: boolean | null;
+  pickIsSwap: boolean | null;
+  pickDescription: string | null;
+  tradeTeam: TradeTeamSnapshot;
+  targetTradeTeam: TradeTeamSnapshot;
+  player: any;
+  draftPick: any;
+};
+
 type SavedTradeWithAssets = {
   id: number;
   userId: string | null;
   title: string;
-  description: string;
+  description: string | null;
   rating: number;
   salaryValid: boolean;
   createdAt: Date;
   updatedAt: Date;
-  assets: {
-    id: number;
-    type: string;
-    teamId: number;
-    targetTeamId: number;
-    playerId: number | null;
-    draftPickId: number | null;
-    player: {
-      id: number;
-      displayName: string;
-      fullName: string;
-      headshot: any;
-      position: any;
-      contract: any;
-    } | null;
-    draftPick: {
-      id: number;
-      year: number;
-      round: number;
-      description: string | null;
-    } | null;
-    team: {
-      id: number;
-      displayName: string;
-      abbreviation: string;
-      logos: any;
-      totalCapAllocation: number;
-      capSpace: number;
-      firstApronSpace: number;
-      secondApronSpace: number;
-    };
-    targetTeam: {
-      id: number;
-      displayName: string;
-      abbreviation: string;
-      logos: any;
-      totalCapAllocation: number;
-      capSpace: number;
-      firstApronSpace: number;
-      secondApronSpace: number;
-    };
-  }[];
+  tradeTeams: TradeTeamSnapshot[];
+  assets: TradeAsset[];
   votes?: {
     id: number;
     userId: string;
@@ -119,10 +117,8 @@ type SavedTradeWithAssets = {
   comments?: TradeComment[];
 };
 
-type TradeAsset = SavedTradeWithAssets["assets"][0];
-
 type TeamTradeInfo = {
-  team: TradeAsset["targetTeam"];
+  tradeTeam: TradeTeamSnapshot;
   playersReceived: TradeAsset[];
   picksReceived: TradeAsset[];
   outgoingSalary: number;
@@ -149,21 +145,15 @@ export function SavedTradeDetail({
   const [showSignInPrompt, setShowSignInPrompt] = useState(false);
   const [signInAction, setSignInAction] = useState<"vote" | "comment">("vote");
   const [selectedPlayer, setSelectedPlayer] = useState<{
-    player: SavedTradeWithAssets["assets"][0]["player"];
-    teamColor?: string;
-    teamAltColor?: string;
+    asset: TradeAsset;
   } | null>(null);
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
   const [shareStatus, setShareStatus] = useState<"idle" | "copied">("idle");
   const isLoggedIn = !!currentUserId;
 
-  const handleOpenPlayerStats = (
-    player: SavedTradeWithAssets["assets"][0]["player"],
-    teamColor?: string,
-    teamAltColor?: string
-  ) => {
-    if (!player) return;
-    setSelectedPlayer({ player, teamColor, teamAltColor });
+  const handleOpenPlayerStats = (asset: TradeAsset) => {
+    if (!asset.playerName) return;
+    setSelectedPlayer({ asset });
     setIsStatsModalOpen(true);
   };
 
@@ -207,7 +197,6 @@ export function SavedTradeDetail({
 
     setIsSubmittingComment(true);
     try {
-      // Use Clerk username if set, otherwise generate NBA-themed username
       const userName = getDisplayName(user.id, user.username);
       await createComment({
         tradeId: trade.id,
@@ -243,18 +232,15 @@ export function SavedTradeDetail({
       url: shareUrl,
     };
 
-    // Try native share API first (works on mobile and some desktop browsers)
     if (navigator.share && navigator.canShare?.(shareData)) {
       try {
         await navigator.share(shareData);
       } catch (error) {
-        // User cancelled or share failed - fall back to clipboard
         if ((error as Error).name !== "AbortError") {
           await copyToClipboard(shareUrl);
         }
       }
     } else {
-      // Fall back to clipboard copy for desktop
       await copyToClipboard(shareUrl);
     }
   };
@@ -316,16 +302,20 @@ export function SavedTradeDetail({
     });
   };
 
-  // Group assets by target team to show what each team receives
+  // Build a map from tradeTeamId -> TradeTeamSnapshot
+  const tradeTeamMap = new Map<number, TradeTeamSnapshot>();
+  trade.tradeTeams.forEach((tt) => tradeTeamMap.set(tt.id, tt));
+
+  // Group assets by target tradeTeam to show what each team receives
   const groupAssetsByTargetTeam = (): TeamTradeInfo[] => {
     const teamMap = new Map<number, TeamTradeInfo>();
 
     trade.assets.forEach((asset) => {
-      const targetTeamId = asset.targetTeamId;
+      const targetTradeTeamId = asset.targetTradeTeamId;
 
-      if (!teamMap.has(targetTeamId)) {
-        teamMap.set(targetTeamId, {
-          team: asset.targetTeam,
+      if (!teamMap.has(targetTradeTeamId)) {
+        teamMap.set(targetTradeTeamId, {
+          tradeTeam: asset.targetTradeTeam,
           playersReceived: [],
           picksReceived: [],
           outgoingSalary: 0,
@@ -334,22 +324,24 @@ export function SavedTradeDetail({
         });
       }
 
-      const teamInfo = teamMap.get(targetTeamId)!;
+      const teamInfo = teamMap.get(targetTradeTeamId)!;
 
-      if (asset.type === "player" && asset.player) {
+      if (asset.type === "player" && asset.playerName) {
         teamInfo.playersReceived.push(asset);
-        teamInfo.incomingSalary += asset.player.contract?.salary || 0;
-      } else if (asset.type === "pick" && asset.draftPick) {
+        teamInfo.incomingSalary += asset.playerSalary || 0;
+      } else if (asset.type === "pick") {
         teamInfo.picksReceived.push(asset);
       }
     });
 
     // Calculate outgoing salary for each team
     trade.assets.forEach((asset) => {
-      const fromTeamId = asset.teamId;
-      if (teamMap.has(fromTeamId) && asset.type === "player" && asset.player) {
-        const teamInfo = teamMap.get(fromTeamId)!;
-        teamInfo.outgoingSalary += asset.player.contract?.salary || 0;
+      const sourceTradeTeamId = asset.tradeTeamId;
+      // Find the target team entry that matches this source team
+      // (outgoing = assets where this team is the source)
+      if (teamMap.has(sourceTradeTeamId) && asset.type === "player") {
+        const teamInfo = teamMap.get(sourceTradeTeamId)!;
+        teamInfo.outgoingSalary += asset.playerSalary || 0;
       }
     });
 
@@ -384,22 +376,21 @@ export function SavedTradeDetail({
 
   // Build URL params to edit trade in trade machine
   const handleEditTrade = () => {
-    // Get unique team IDs involved in the trade
+    // Get unique team IDs involved in the trade (use live teamIds from tradeTeams)
     const teamIds = new Set<number>();
     trade.assets.forEach((asset) => {
-      teamIds.add(asset.teamId);
-      teamIds.add(asset.targetTeamId);
+      teamIds.add(asset.tradeTeam.teamId);
+      teamIds.add(asset.targetTradeTeam.teamId);
     });
 
-    // Build selected assets array
+    // Build selected assets array using live IDs
     const selectedAssets = trade.assets.map((asset) => ({
       id: asset.type === "player" ? asset.playerId : asset.draftPickId,
       type: asset.type,
-      teamId: asset.teamId,
-      targetTeamId: asset.targetTeamId,
+      teamId: asset.tradeTeam.teamId,
+      targetTeamId: asset.targetTradeTeam.teamId,
     }));
 
-    // Encode the data as URL params
     const params = new URLSearchParams();
     params.set("teamIds", Array.from(teamIds).join(","));
     params.set("assets", JSON.stringify(selectedAssets));
@@ -611,17 +602,19 @@ export function SavedTradeDetail({
             >
               <CardHeader className="flex flex-row items-center justify-center space-y-0 pb-2 pt-4 px-4 bg-muted/60">
                 <div className="flex items-center gap-2">
-                  {teamInfo.team.logos?.[0]?.href && (
+                  {(teamInfo.tradeTeam.teamLogo as { href?: string })?.href && (
                     <Image
-                      src={teamInfo.team.logos[0].href}
-                      alt={teamInfo.team.displayName}
+                      src={
+                        (teamInfo.tradeTeam.teamLogo as { href: string }).href
+                      }
+                      alt={teamInfo.tradeTeam.teamDisplayName}
                       width={32}
                       height={32}
                       className="object-contain"
                     />
                   )}
                   <span className="text-lg font-semibold">
-                    {teamInfo.team.displayName}
+                    {teamInfo.tradeTeam.teamDisplayName}
                   </span>
                 </div>
               </CardHeader>
@@ -678,9 +671,9 @@ export function SavedTradeDetail({
                         </td>
                         <td className="px-2 py-1 font-medium w-1/2 text-right">
                           $
-                          {teamInfo.team.totalCapAllocation
+                          {teamInfo.tradeTeam.totalCapAllocation
                             ? (
-                                teamInfo.team.totalCapAllocation / 1000000
+                                teamInfo.tradeTeam.totalCapAllocation / 1000000
                               ).toFixed(1)
                             : "0.0"}
                           M
@@ -694,7 +687,7 @@ export function SavedTradeDetail({
                           $
                           {(
                             calculateUpdatedTaxValue(
-                              teamInfo.team.capSpace || 0,
+                              teamInfo.tradeTeam.capSpace || 0,
                               teamInfo.capDifference
                             ) / 1000000
                           ).toFixed(1)}
@@ -709,7 +702,7 @@ export function SavedTradeDetail({
                           $
                           {(
                             calculateUpdatedTaxValue(
-                              teamInfo.team.firstApronSpace || 0,
+                              teamInfo.tradeTeam.firstApronSpace || 0,
                               teamInfo.capDifference
                             ) / 1000000
                           ).toFixed(1)}
@@ -724,7 +717,7 @@ export function SavedTradeDetail({
                           $
                           {(
                             calculateUpdatedTaxValue(
-                              teamInfo.team.secondApronSpace || 0,
+                              teamInfo.tradeTeam.secondApronSpace || 0,
                               teamInfo.capDifference
                             ) / 1000000
                           ).toFixed(1)}
@@ -747,19 +740,21 @@ export function SavedTradeDetail({
                           <div
                             key={asset.id}
                             className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950 hover:border-indigoMain/50 cursor-pointer transition-colors"
-                            onClick={() =>
-                              handleOpenPlayerStats(
-                                asset.player,
-                                asset.team.logos[0].color as string | undefined
-                              )
-                            }
+                            onClick={() => handleOpenPlayerStats(asset)}
                           >
                             <div className="flex items-center gap-3">
-                              {asset.player?.headshot?.href && (
+                              {(asset.playerHeadshot as { href?: string })
+                                ?.href && (
                                 <div className="bg-white/20 p-1 rounded-full">
                                   <Image
-                                    src={asset.player.headshot.href}
-                                    alt={asset.player.displayName}
+                                    src={
+                                      (
+                                        asset.playerHeadshot as {
+                                          href: string;
+                                        }
+                                      ).href
+                                    }
+                                    alt={asset.playerName || ""}
                                     width={96}
                                     height={96}
                                     className="rounded-full object-cover w-12 h-12"
@@ -768,27 +763,23 @@ export function SavedTradeDetail({
                               )}
                               <div>
                                 <div className="font-medium text-sm">
-                                  {asset.player?.displayName}{" "}
+                                  {asset.playerName}{" "}
                                   <span className="text-xs text-muted-foreground">
-                                    (
-                                    {asset.player?.position?.abbreviation ||
-                                      "Unknown"}
-                                    )
+                                    ({asset.playerPosition || "Unknown"})
                                   </span>
                                 </div>
                                 <div className="text-xs text-muted-foreground">
-                                  {asset.player?.contract
+                                  {asset.playerSalary
                                     ? `Salary: $${(
-                                        asset.player.contract.salary / 1000000
+                                        asset.playerSalary / 1000000
                                       ).toFixed(1)}M`
                                     : "No contract"}
-                                  {asset.player?.contract?.yearsRemaining && (
+                                  {asset.playerContractYears && (
                                     <>
                                       {" | "}
-                                      {asset.player.contract.yearsRemaining}
+                                      {asset.playerContractYears}
                                       {` ${
-                                        asset.player.contract.yearsRemaining ===
-                                        1
+                                        asset.playerContractYears === 1
                                           ? "yr"
                                           : "yrs"
                                       }`}
@@ -796,7 +787,7 @@ export function SavedTradeDetail({
                                   )}
                                 </div>
                                 <div className="text-xs text-muted-foreground mt-1">
-                                  from {asset.team.abbreviation}
+                                  from {asset.tradeTeam.teamAbbreviation}
                                 </div>
                               </div>
                             </div>
@@ -821,15 +812,14 @@ export function SavedTradeDetail({
                           >
                             <div className="flex flex-col gap-1">
                               <div className="text-xs text-muted-foreground">
-                                from {asset.team.abbreviation}
+                                from {asset.tradeTeam.teamAbbreviation}
                               </div>
                               <div className="font-medium text-sm">
-                                {asset.draftPick?.year} Round{" "}
-                                {asset.draftPick?.round} Pick
+                                {asset.pickYear} Round {asset.pickRound} Pick
                               </div>
-                              {asset.draftPick?.description && (
+                              {asset.pickDescription && (
                                 <div className="text-xs text-muted-foreground">
-                                  {asset.draftPick.description}
+                                  {asset.pickDescription}
                                 </div>
                               )}
                             </div>
@@ -994,14 +984,15 @@ export function SavedTradeDetail({
       {/* Player Stats Modal */}
       <PlayerStatsModal
         player={
-          selectedPlayer?.player
+          selectedPlayer?.asset.playerName
             ? ({
-                id: selectedPlayer.player.id,
-                firstName: selectedPlayer.player.displayName.split(" ")[0] || "",
-                lastName: selectedPlayer.player.displayName.split(" ").slice(1).join(" ") || "",
-                fullName: selectedPlayer.player.fullName,
-                displayName: selectedPlayer.player.displayName,
-                shortName: selectedPlayer.player.displayName,
+                id: selectedPlayer.asset.playerId || 0,
+                firstName: selectedPlayer.asset.playerName.split(" ")[0] || "",
+                lastName:
+                  selectedPlayer.asset.playerName.split(" ").slice(1).join(" ") || "",
+                fullName: selectedPlayer.asset.playerName,
+                displayName: selectedPlayer.asset.playerName,
+                shortName: selectedPlayer.asset.playerName,
                 weight: 0,
                 displayWeight: "",
                 height: 0,
@@ -1009,24 +1000,45 @@ export function SavedTradeDetail({
                 age: 0,
                 dateOfBirth: "",
                 jersey: "",
-                position: selectedPlayer.player.position as any,
-                contract: selectedPlayer.player.contract as any,
-                headshot: selectedPlayer.player.headshot as any,
-                teamId: 0,
+                position: {
+                  abbreviation: selectedPlayer.asset.playerPosition || "",
+                  displayName: "",
+                  name: "",
+                  type: "",
+                },
+                contract: selectedPlayer.asset.playerSalary
+                  ? {
+                      salary: selectedPlayer.asset.playerSalary,
+                      yearsRemaining:
+                        selectedPlayer.asset.playerContractYears || 0,
+                      years: 0,
+                      type: "",
+                      status: "",
+                    }
+                  : undefined,
+                headshot: (selectedPlayer.asset.playerHeadshot as {
+                  href?: string;
+                  alt?: string;
+                }) || undefined,
+                teamId: selectedPlayer.asset.tradeTeam.teamId,
                 createdAt: new Date(),
                 updatedAt: new Date(),
-                espnId: (selectedPlayer.player as any).espnId,
+                espnId: selectedPlayer.asset.playerEspnId
+                  ? Number(selectedPlayer.asset.playerEspnId)
+                  : undefined,
               } as Player)
             : null
         }
-        espnId={(selectedPlayer?.player as any)?.espnId}
+        espnId={
+          selectedPlayer?.asset.playerEspnId
+            ? Number(selectedPlayer.asset.playerEspnId)
+            : undefined
+        }
         isOpen={isStatsModalOpen}
         onClose={() => {
           setIsStatsModalOpen(false);
           setSelectedPlayer(null);
         }}
-        teamColor={selectedPlayer?.teamColor}
-        teamAltColor={selectedPlayer?.teamAltColor}
       />
     </div>
   );

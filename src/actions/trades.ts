@@ -22,6 +22,27 @@ const saveTradeSchema = z.object({
 
 export type SaveTradeInput = z.infer<typeof saveTradeSchema>;
 
+// Standard include for trade queries
+const tradeInclude = {
+  tradeTeams: true,
+  assets: {
+    include: {
+      tradeTeam: true,
+      targetTradeTeam: true,
+      player: true,
+      draftPick: true,
+    },
+  },
+  votes: true,
+} as const;
+
+const tradeIncludeWithComments = {
+  ...tradeInclude,
+  comments: {
+    orderBy: { createdAt: "desc" as const },
+  },
+} as const;
+
 export async function saveTradeAction(input: SaveTradeInput) {
   const { userId } = await auth();
 
@@ -36,27 +57,125 @@ export async function saveTradeAction(input: SaveTradeInput) {
 
   const { title, description, rating, salaryValid, assets } = parseResult.data;
 
-  // Create the trade with its assets in a transaction
-  const trade = await db.trade.create({
-    data: {
-      title,
-      description: description || null,
-      rating,
-      salaryValid,
-      userId: userId ?? null, // Associate with current user if logged in
-      assets: {
-        create: assets.map((asset) => ({
-          type: asset.type,
-          teamId: asset.teamId,
-          targetTeamId: asset.targetTeamId,
-          playerId: asset.playerId ?? null,
-          draftPickId: asset.draftPickId ?? null,
-        })),
+  // Collect unique team IDs from all assets
+  const teamIds = new Set<number>();
+  assets.forEach((a) => {
+    teamIds.add(a.teamId);
+    teamIds.add(a.targetTeamId);
+  });
+
+  // Fetch teams, players, and draft picks
+  const [teams, players, draftPicks] = await Promise.all([
+    db.team.findMany({
+      where: { id: { in: Array.from(teamIds) } },
+    }),
+    db.player.findMany({
+      where: {
+        id: {
+          in: assets
+            .filter((a) => a.type === "player" && a.playerId)
+            .map((a) => a.playerId!),
+        },
       },
-    },
-    include: {
-      assets: true,
-    },
+    }),
+    db.draftPick.findMany({
+      where: {
+        id: {
+          in: assets
+            .filter((a) => a.type === "pick" && a.draftPickId)
+            .map((a) => a.draftPickId!),
+        },
+      },
+    }),
+  ]);
+
+  const teamMap = new Map(teams.map((t) => [t.id, t]));
+  const playerMap = new Map(players.map((p) => [p.id, p]));
+  const pickMap = new Map(draftPicks.map((p) => [p.id, p]));
+
+  // Create trade with snapshots in a transaction
+  const trade = await db.$transaction(async (tx) => {
+    // Create the Trade
+    const newTrade = await tx.trade.create({
+      data: {
+        title,
+        description: description || null,
+        rating,
+        salaryValid,
+        userId: userId ?? null,
+      },
+    });
+
+    // Create TradeTeam records for each team
+    const tradeTeamMap = new Map<number, number>(); // teamId -> tradeTeamId
+    for (const teamId of teamIds) {
+      const team = teamMap.get(teamId);
+      if (!team) continue;
+      const logos = team.logos as { href: string; alt: string }[];
+      const tradeTeam = await tx.tradeTeam.create({
+        data: {
+          tradeId: newTrade.id,
+          teamId: team.id,
+          teamDisplayName: team.displayName,
+          teamAbbreviation: team.abbreviation,
+          teamLogo: logos?.[0] ?? {},
+          totalCapAllocation: team.totalCapAllocation,
+          capSpace: team.capSpace,
+          firstApronSpace: team.firstApronSpace,
+          secondApronSpace: team.secondApronSpace,
+        },
+      });
+      tradeTeamMap.set(teamId, tradeTeam.id);
+    }
+
+    // Create TradeAsset records with snapshot fields
+    for (const asset of assets) {
+      const tradeTeamId = tradeTeamMap.get(asset.teamId)!;
+      const targetTradeTeamId = tradeTeamMap.get(asset.targetTeamId)!;
+
+      if (asset.type === "player" && asset.playerId) {
+        const player = playerMap.get(asset.playerId);
+        const contract = player?.contract as { salary?: number; yearsRemaining?: number } | null;
+        const position = player?.position as { abbreviation?: string } | null;
+        const headshot = player?.headshot as { href?: string; alt?: string } | null;
+        await tx.tradeAsset.create({
+          data: {
+            type: "player",
+            tradeId: newTrade.id,
+            tradeTeamId,
+            targetTradeTeamId,
+            playerId: asset.playerId,
+            playerName: player?.displayName ?? null,
+            playerHeadshot: headshot ?? undefined,
+            playerPosition: position?.abbreviation ?? null,
+            playerSalary: contract?.salary ?? null,
+            playerContractYears: contract?.yearsRemaining ?? null,
+            playerEspnId: player?.espnId ?? null,
+          },
+        });
+      } else if (asset.type === "pick" && asset.draftPickId) {
+        const pick = pickMap.get(asset.draftPickId);
+        await tx.tradeAsset.create({
+          data: {
+            type: "pick",
+            tradeId: newTrade.id,
+            tradeTeamId,
+            targetTradeTeamId,
+            draftPickId: asset.draftPickId,
+            pickYear: pick?.year ?? null,
+            pickRound: pick?.round ?? null,
+            pickIsProtected: pick?.isProtected ?? null,
+            pickIsSwap: pick?.isSwap ?? null,
+            pickDescription: pick?.description ?? null,
+          },
+        });
+      }
+    }
+
+    return tx.trade.findUniqueOrThrow({
+      where: { id: newTrade.id },
+      include: tradeInclude,
+    });
   });
 
   return trade;
@@ -70,17 +189,7 @@ export async function getSavedTrades(options?: { userOnly?: boolean }) {
     orderBy: {
       createdAt: "desc",
     },
-    include: {
-      assets: {
-        include: {
-          player: true,
-          draftPick: true,
-          team: true,
-          targetTeam: true,
-        },
-      },
-      votes: true,
-    },
+    include: tradeInclude,
   });
 
   return trades;
@@ -91,17 +200,7 @@ export async function getAllTrades() {
     orderBy: {
       createdAt: "desc",
     },
-    include: {
-      assets: {
-        include: {
-          player: true,
-          draftPick: true,
-          team: true,
-          targetTeam: true,
-        },
-      },
-      votes: true,
-    },
+    include: tradeInclude,
   });
 
   return trades;
@@ -118,40 +217,24 @@ export async function getPaginatedTrades(
   const skip = (page - 1) * TRADES_PER_PAGE;
 
   if (sortBy === "popular") {
-    // For popular sorting, we need to calculate vote scores
-    // First get all trades with votes, then sort by score
     const allTrades = await db.trade.findMany({
-      include: {
-        assets: {
-          include: {
-            player: true,
-            draftPick: true,
-            team: true,
-            targetTeam: true,
-          },
-        },
-        votes: true,
-      },
+      include: tradeInclude,
     });
 
-    // Calculate score for each trade and sort
     const tradesWithScores = allTrades.map((trade) => {
       const score = trade.votes.reduce((acc, vote) => acc + vote.value, 0);
       return { ...trade, _score: score };
     });
 
-    // Sort by score (descending), then by date (descending) for ties
     tradesWithScores.sort((a, b) => {
       if (b._score !== a._score) return b._score - a._score;
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 
-    // Paginate
     const paginatedTrades = tradesWithScores.slice(
       skip,
       skip + TRADES_PER_PAGE
     );
-    // Remove the _score field before returning
     const trades = paginatedTrades.map(({ _score, ...trade }) => trade);
 
     return {
@@ -169,17 +252,7 @@ export async function getPaginatedTrades(
       orderBy: {
         createdAt: "desc",
       },
-      include: {
-        assets: {
-          include: {
-            player: true,
-            draftPick: true,
-            team: true,
-            targetTeam: true,
-          },
-        },
-        votes: true,
-      },
+      include: tradeInclude,
       skip,
       take: TRADES_PER_PAGE,
     }),
@@ -214,17 +287,7 @@ export async function getUserTrades() {
     orderBy: {
       createdAt: "desc",
     },
-    include: {
-      assets: {
-        include: {
-          player: true,
-          draftPick: true,
-          team: true,
-          targetTeam: true,
-        },
-      },
-      votes: true,
-    },
+    include: tradeInclude,
   });
 
   return trades;
@@ -251,17 +314,7 @@ export async function getPaginatedUserTrades(page: number = 1) {
       orderBy: {
         createdAt: "desc",
       },
-      include: {
-        assets: {
-          include: {
-            player: true,
-            draftPick: true,
-            team: true,
-            targetTeam: true,
-          },
-        },
-        votes: true,
-      },
+      include: tradeInclude,
       skip,
       take: TRADES_PER_PAGE,
     }),
@@ -278,11 +331,6 @@ export async function getPaginatedUserTrades(page: number = 1) {
 }
 
 export async function deleteTrade(tradeId: number) {
-  // Delete associated assets first, then the trade
-  await db.tradeAsset.deleteMany({
-    where: { tradeId },
-  });
-
   await db.trade.delete({
     where: { id: tradeId },
   });
@@ -293,20 +341,7 @@ export async function deleteTrade(tradeId: number) {
 export async function getTradeById(tradeId: number) {
   const trade = await db.trade.findUnique({
     where: { id: tradeId },
-    include: {
-      assets: {
-        include: {
-          player: true,
-          draftPick: true,
-          team: true,
-          targetTeam: true,
-        },
-      },
-      votes: true,
-      comments: {
-        orderBy: { createdAt: "desc" },
-      },
-    },
+    include: tradeIncludeWithComments,
   });
 
   return trade;
@@ -383,7 +418,6 @@ export async function getUserUpvotedTrades() {
     return [] as Awaited<ReturnType<typeof getAllTrades>>;
   }
 
-  // Get all trades the user has upvoted
   const upvotedTradeIds = await db.tradeVote.findMany({
     where: {
       userId,
@@ -403,17 +437,7 @@ export async function getUserUpvotedTrades() {
     orderBy: {
       createdAt: "desc",
     },
-    include: {
-      assets: {
-        include: {
-          player: true,
-          draftPick: true,
-          team: true,
-          targetTeam: true,
-        },
-      },
-      votes: true,
-    },
+    include: tradeInclude,
   });
 
   return trades;
@@ -434,7 +458,6 @@ export async function getPaginatedUpvotedTrades(page: number = 1) {
 
   const skip = (page - 1) * TRADES_PER_PAGE;
 
-  // Get all upvoted trade IDs for this user
   const upvotedTradeIds = await db.tradeVote.findMany({
     where: {
       userId,
@@ -457,17 +480,7 @@ export async function getPaginatedUpvotedTrades(page: number = 1) {
     orderBy: {
       createdAt: "desc",
     },
-    include: {
-      assets: {
-        include: {
-          player: true,
-          draftPick: true,
-          team: true,
-          targetTeam: true,
-        },
-      },
-      votes: true,
-    },
+    include: tradeInclude,
     skip,
     take: TRADES_PER_PAGE,
   });
@@ -536,7 +549,6 @@ export async function deleteComment(commentId: number) {
     throw new Error("You must be logged in to delete a comment");
   }
 
-  // Verify the comment belongs to the user
   const comment = await db.tradeComment.findUnique({
     where: { id: commentId },
   });

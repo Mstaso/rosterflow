@@ -2,13 +2,16 @@ import { PrismaClient } from "@prisma/client";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import OpenAI from "openai";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const prisma = new PrismaClient({
-  log: ["query", "info", "warn", "error"],
+  log: ["info", "warn", "error"],
 });
+
+const openai = new OpenAI();
 
 // NBA Conference and Division mappings
 const NBA_DIVISIONS = {
@@ -20,7 +23,7 @@ const NBA_DIVISIONS = {
   Southwest: "Western",
 };
 
-// ESPN Team ID to Division mapping (you may need to adjust these)
+// ESPN Team ID to Division mapping
 const TEAM_DIVISIONS: Record<string, string> = {
   "1": "Southeast", // Atlanta Hawks
   "2": "Atlantic", // Boston Celtics
@@ -52,40 +55,6 @@ const TEAM_DIVISIONS: Record<string, string> = {
   "28": "Atlantic", // Toronto Raptors
   "29": "Northwest", // Utah Jazz
   "30": "Southeast", // Washington Wizards
-};
-
-// Map team slugs to ESPN team IDs
-const teamIdMap: Record<string, string> = {
-  atl: "1", // Atlanta Hawks
-  bos: "2", // Boston Celtics
-  bkn: "3", // Brooklyn Nets
-  cha: "4", // Charlotte Hornets
-  chi: "5", // Chicago Bulls
-  cle: "6", // Cleveland Cavaliers
-  dal: "7", // Dallas Mavericks
-  den: "8", // Denver Nuggets
-  det: "9", // Detroit Pistons
-  gs: "10", // Golden State Warriors
-  hou: "11", // Houston Rockets
-  ind: "12", // Indiana Pacers
-  lac: "13", // LA Clippers
-  lal: "14", // LA Lakers
-  mem: "15", // Memphis Grizzlies
-  mia: "16", // Miami Heat
-  mil: "17", // Milwaukee Bucks
-  min: "18", // Minnesota Timberwolves
-  no: "19", // New Orleans Pelicans
-  ny: "20", // New York Knicks
-  okc: "21", // Oklahoma City Thunder
-  orl: "22", // Orlando Magic
-  phi: "23", // Philadelphia 76ers
-  phx: "24", // Phoenix Suns
-  por: "25", // Portland Trail Blazers
-  sac: "26", // Sacramento Kings
-  sa: "27", // San Antonio Spurs
-  tor: "28", // Toronto Raptors
-  uta: "29", // Utah Jazz
-  wsh: "30", // Washington Wizards
 };
 
 // Read and transform the JSON data to match the expected format
@@ -131,7 +100,6 @@ async function fetchTeams() {
 
     const data = await response.json();
 
-    // Transform the data to include only essential team info
     const teams =
       data.sports[0]?.leagues[0]?.teams?.map((teamData: any) => ({
         id: teamData.team.id,
@@ -152,27 +120,6 @@ async function fetchTeams() {
       })) || [];
 
     return teams;
-
-    // return [
-    //   {
-    //     id: data.sports[0]?.leagues[0]?.teams[0].team.id,
-    //     abbreviation: data.sports[0]?.leagues[0]?.teams[0].team.abbreviation,
-    //     displayName: data.sports[0]?.leagues[0]?.teams[0].team.displayName,
-    //     shortDisplayName:
-    //       data.sports[0]?.leagues[0]?.teams[0].team.shortDisplayName,
-    //     name: data.sports[0]?.leagues[0]?.teams[0].team.name,
-    //     location: data.sports[0]?.leagues[0]?.teams[0].team.location,
-    //     color: data.sports[0]?.leagues[0]?.teams[0].team.color,
-    //     alternateColor:
-    //       data.sports[0]?.leagues[0]?.teams[0].team.alternateColor,
-    //     isActive: data.sports[0]?.leagues[0]?.teams[0].team.isActive,
-    //     logos: data.sports[0]?.leagues[0]?.teams[0].team.logos,
-    //     record: data.sports[0]?.leagues[0]?.teams[0].team.record,
-    //     slug: data.sports[0]?.leagues[0]?.teams[0].team.slug,
-    //     nickname: data.sports[0]?.leagues[0]?.teams[0].team.nickname,
-    //     links: data.sports[0]?.leagues[0]?.teams[0].team.links,
-    //   },
-    // ];
   } catch (error) {
     console.error("Error fetching teams:", error);
     throw error;
@@ -197,7 +144,7 @@ async function fetchTeamRecord(teamId: string) {
       : "41-41";
   } catch (error) {
     console.error(`Error fetching record for team ${teamId}:`, error);
-    return []; // Return empty array instead of throwing
+    return [];
   }
 }
 
@@ -220,7 +167,6 @@ async function fetchTeamRoster(teamId: string) {
     }
 
     const data = await response.json();
-    console.log("API Response:", JSON.stringify(data, null, 2));
 
     if (!data.athletes) {
       console.warn(`No athletes found in roster data for team ${teamId}`);
@@ -241,7 +187,6 @@ async function seedTeams() {
   console.log("🏀 Seeding NBA teams...");
 
   const espnTeams = await fetchTeams();
-  const sortedTeams = espnTeams.sort((a: any, b: any) => a.id - b.id);
   console.log(`Found ${espnTeams.length} teams from ESPN API`);
 
   const teams = [];
@@ -276,14 +221,12 @@ async function seedTeams() {
       links: espnTeam.links,
     };
 
-    console.log("Creating team:", teamData);
-
     const team = await prisma.team.create({
       data: teamData,
     });
 
-    teams.push(team);
-    console.log(`✅ ${team.abbreviation} - ${team.name}`);
+    teams.push({ ...team, espnTeamId: espnTeam.id });
+    console.log(`✅ ${team.abbreviation} - ${team.name} (ESPN ID: ${espnTeam.id})`);
   }
 
   console.log(`🎉 Successfully seeded ${teams.length} teams\n`);
@@ -293,17 +236,9 @@ async function seedTeams() {
 async function seedPlayers(teams: any[]) {
   console.log("👥 Seeding NBA players...");
 
-  for (const [index, team] of teams.entries()) {
-    // const espnTeamId = teamIdMap[team.slug];
-    // if (!espnTeamId) {
-    //   console.warn(
-    //     `No ESPN team ID found for ${team.name} (slug: ${team.slug})`
-    //   );
-    //   continue;
-    // }
-    const IdToString = (index + 1).toString();
-    const roster: any = await fetchTeamRoster(IdToString);
-    console.log(`Found ${roster.athletes.length} players for ${team.name}`);
+  for (const team of teams) {
+    const roster: any = await fetchTeamRoster(team.espnTeamId);
+    console.log(`Found ${roster.athletes.length} players for ${team.name} (ESPN ID: ${team.espnTeamId})`);
 
     const findTeam = await prisma.team.findUnique({
       where: {
@@ -311,7 +246,6 @@ async function seedPlayers(teams: any[]) {
       },
     });
 
-    console.log("findTeam", findTeam);
     if (!findTeam) {
       console.warn(
         `Could not find team in database for ${team.name} (slug: ${team.slug})`
@@ -327,7 +261,7 @@ async function seedPlayers(teams: any[]) {
       ) {
         try {
           const playerData = {
-            espnId: player.id.toString(), // ESPN player ID
+            espnId: player.id.toString(),
             firstName: player.firstName,
             lastName: player.lastName,
             fullName: player.fullName,
@@ -351,13 +285,10 @@ async function seedPlayers(teams: any[]) {
             teamId: findTeam.id,
           };
 
-          console.log(
-            `Creating player: ${playerData.displayName} for team: ${team.name}`
-          );
           await prisma.player.create({
             data: playerData,
           });
-          console.log(`Successfully created player: ${playerData.displayName}`);
+          console.log(`  ✅ ${playerData.displayName}`);
         } catch (error) {
           console.error(`Failed to add player ${player.displayName}:`, error);
         }
@@ -366,12 +297,113 @@ async function seedPlayers(teams: any[]) {
   }
 }
 
-async function seedDraftPicks(
-  teams: { id: number; name: string; location: string }[]
-) {
-  console.log("Seeding draft picks...");
+interface RawDraftPick {
+  team: string;
+  year: string;
+  round: number;
+  description: string;
+}
 
-  // Read the draft picks data
+interface EnrichedPick {
+  year: number;
+  round: number;
+  originalDescription: string;
+  description: string;
+  estimatedValue: number;
+  isProtected: boolean;
+}
+
+async function enrichPicksWithLLM(
+  teamName: string,
+  record: string,
+  picks: RawDraftPick[]
+): Promise<EnrichedPick[]> {
+  const picksForPrompt = picks.map((p) => ({
+    year: parseInt(p.year),
+    round: p.round,
+    description: p.description,
+  }));
+
+  const prompt = `You are an NBA draft pick evaluator. Given the following draft picks owned by the ${teamName} (current record: ${record}), do two things for each pick:
+
+1. **Simplify the description** into a short, consistent format. Examples:
+   - "Own" → "Own pick"
+   - "From Brooklyn (via Phoenix)" → "Via BKN (through PHX)"
+   - Complex protection language → summarize the key protection simply, e.g. "Via MIA - top 10 protected through 2027, becomes 2 2nds"
+   - Keep it under 80 characters when possible
+
+2. **Estimate a value from 1-100** based on:
+   - Round (1st round picks are more valuable than 2nd round)
+   - Year (closer years are generally more valuable / more certain)
+   - Team quality (bad teams = higher picks = more valuable)
+   - Protections (protected picks are less valuable to the receiving team)
+   - "Own pick" for a bad team is very valuable (top 5 potential), "Own pick" for a great team is less valuable
+   - Swap rights are generally less valuable than outright picks
+   - Use the team's current record to inform how good/bad the team is
+
+Here are the picks:
+${JSON.stringify(picksForPrompt, null, 2)}
+
+Respond with ONLY a JSON array (no markdown, no explanation) where each element has:
+- "year": number
+- "round": number
+- "description": string (simplified)
+- "estimatedValue": number (1-100)
+- "isProtected": boolean`;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      temperature: 0.3,
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are an NBA analytics assistant. Always respond with valid JSON. Wrap your array in an object with a 'picks' key.",
+        },
+        { role: "user", content: prompt },
+      ],
+    });
+
+    const content = response.choices[0]?.message?.content;
+    if (!content) throw new Error("Empty response from GPT");
+
+    const parsed = JSON.parse(content);
+    const enrichedPicks: EnrichedPick[] = (parsed.picks || parsed).map(
+      (p: any, i: number) => ({
+        year: p.year || parseInt(picks[i].year),
+        round: p.round || picks[i].round,
+        originalDescription: picks[i].description,
+        description: p.description || picks[i].description,
+        estimatedValue: Math.min(100, Math.max(1, p.estimatedValue || 50)),
+        isProtected:
+          p.isProtected ??
+          picks[i].description.toLowerCase().includes("protected"),
+      })
+    );
+
+    return enrichedPicks;
+  } catch (error) {
+    console.error(`  ⚠️ LLM enrichment failed for ${teamName}, using defaults`);
+    console.error(error);
+    // Fallback: return picks with default values
+    return picks.map((p) => ({
+      year: parseInt(p.year),
+      round: p.round,
+      originalDescription: p.description,
+      description: p.description,
+      estimatedValue: p.round === 1 ? 55 : 25,
+      isProtected: p.description.toLowerCase().includes("protected"),
+    }));
+  }
+}
+
+async function seedDraftPicks(
+  teams: { id: number; name: string; location: string; record: any }[]
+) {
+  console.log("📝 Seeding draft picks with LLM enrichment...");
+
   const draftPicksData = JSON.parse(
     fs.readFileSync(
       path.join(__dirname, "seeddata", "nba_draft_picks.json"),
@@ -379,58 +411,94 @@ async function seedDraftPicks(
     )
   );
 
-  // Create a map of team names to team IDs
+  // Create a map of team display names to team DB records
   const teamMap = new Map(
-    teams.map((team) => [`${team.location} ${team.name}`, team.id])
+    teams.map((team) => [`${team.location} ${team.name}`, team])
   );
 
-  // Track created picks for deduplication
-  const createdPicks = new Set<string>();
+  // Phase 1: Enrich all picks with LLM (no DB writes yet)
+  console.log("\n📡 Phase 1: Enriching picks with LLM...");
+  const allPicksToInsert: {
+    teamId: number;
+    teamName: string;
+    pick: EnrichedPick;
+  }[] = [];
 
-  // Process each team's picks
   for (const [teamName, picks] of Object.entries(draftPicksData)) {
-    const teamId = teamMap.get(teamName);
-    if (!teamId) {
-      console.warn(`Team not found: ${teamName}`);
+    const team = teamMap.get(teamName);
+    if (!team) {
+      console.warn(`  ⚠️ Team not found: ${teamName}`);
       continue;
     }
 
-    for (const pick of picks as any[]) {
-      // Create a unique key for this pick
-      const pickKey = `${pick.year}-${pick.round}-${teamId}`;
+    const rawPicks = picks as RawDraftPick[];
+    if (rawPicks.length === 0) continue;
 
-      // Skip if we've already created this pick
-      if (createdPicks.has(pickKey)) {
-        continue;
-      }
+    const record =
+      typeof team.record === "string" ? team.record : JSON.stringify(team.record);
 
-      // Create the draft pick
+    console.log(`  🏀 ${teamName} (${record}) - ${rawPicks.length} picks`);
+
+    const enrichedPicks = await enrichPicksWithLLM(teamName, record, rawPicks);
+
+    for (const pick of enrichedPicks) {
+      allPicksToInsert.push({ teamId: team.id, teamName, pick });
+    }
+  }
+
+  console.log(`\n✅ Enriched ${allPicksToInsert.length} picks total`);
+
+  // Phase 2: Insert all picks into DB in quick succession
+  console.log("\n💾 Phase 2: Writing picks to database...");
+  const createdPicks = new Set<string>();
+  let totalPicks = 0;
+
+  for (const { teamId, teamName, pick } of allPicksToInsert) {
+    const pickKey = `${pick.year}-${pick.round}-${teamId}`;
+
+    if (createdPicks.has(pickKey)) {
+      continue;
+    }
+
+    try {
       await prisma.draftPick.create({
         data: {
-          year: parseInt(pick.year),
+          year: pick.year,
           round: pick.round,
-          teamId: teamId,
-          isSwap: pick.swap,
-          isProtected:
-            !pick.swap && pick.description.toLowerCase().includes("protected"),
+          teamId,
+          isSwap: false,
+          isProtected: pick.isProtected,
           description: pick.description,
+          estimatedValue: pick.estimatedValue,
         },
       });
 
       createdPicks.add(pickKey);
+      totalPicks++;
+      console.log(
+        `  ✅ ${teamName}: ${pick.year} R${pick.round} (value: ${pick.estimatedValue}) - ${pick.description}`
+      );
+    } catch (error) {
+      console.error(
+        `  ❌ Failed to insert ${teamName}: ${pick.year} R${pick.round}:`,
+        error
+      );
     }
   }
 
-  console.log("Draft picks seeded successfully!");
+  console.log(`\n🎉 Seeded ${totalPicks} draft picks with estimated values!`);
 }
 
 async function main() {
   console.log("🚀 Starting NBA database seed...\n");
 
   try {
-    // Clear existing data (optional - remove if you want to keep existing data)
+    // Clear existing data
     console.log("🧹 Cleaning existing data...");
     await prisma.tradeAsset.deleteMany();
+    await prisma.tradeTeam.deleteMany();
+    await prisma.tradeVote.deleteMany();
+    await prisma.tradeComment.deleteMany();
     await prisma.trade.deleteMany();
     await prisma.player.deleteMany();
     await prisma.draftPick.deleteMany();
@@ -446,7 +514,7 @@ async function main() {
     // Seed draft picks
     await seedDraftPicks(teams);
 
-    console.log("🎉 Database seeding completed successfully!");
+    console.log("\n🎉 Database seeding completed successfully!");
     console.log("\n📊 Summary:");
     console.log(`- Teams: ${teams.length}`);
     const playerCount = await prisma.player.count();
