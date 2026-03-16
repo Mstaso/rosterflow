@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { env } from "~/env";
-import type { Player, SelectedAsset, Team } from "~/types";
+import type { SelectedAsset, Team } from "~/types";
 import {
   getAssetsByTeam,
   getCapContext,
   getDestinationInfo,
   getRosterContext,
+  getSalaryMatchingContext,
   setupAdditionalTeamsForTrade,
 } from "~/lib/server-utils";
 
 export const dynamic = "force-dynamic";
 
-// Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: env.OPENAI_API_KEY,
 });
@@ -56,7 +56,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // need to send this back to client side so they can have rosters and picks for the teams added to the trade
     let teamsAddedToTrade: any[] = [];
 
     if (additionalTeams) {
@@ -67,170 +66,70 @@ export async function POST(request: NextRequest) {
       teamsAddedToTrade = teamWithRosterAndPicks;
     }
 
-    // Build roster and cap context from the teams data passed in the request
-    let rosterContext = getRosterContext(involvedTeams);
+    const rosterContext = getRosterContext(involvedTeams);
+    const assetsDescription = getAssetsByTeam(selectedAssets, involvedTeams);
+    const salaryMatchingContext = getSalaryMatchingContext(
+      selectedAssets,
+      involvedTeams
+    );
 
-    // get Salary Cap Information
-    let capContext = getCapContext(involvedTeams);
-
-    // Build assets summary for the prompt
-    let assetsDescription = getAssetsByTeam(selectedAssets, involvedTeams);
-
-    // Add destination information if specified
     const hasDestinations = selectedAssets.some(
       (asset: any) => asset.targetTeamId
     );
     let destinationInfo = "";
-
-    // TDOO: this can be improved by using the getAssetsByTeam function to get the destination info
     if (hasDestinations) {
       destinationInfo = getDestinationInfo(selectedAssets, involvedTeams);
     }
 
-    // Build the prompt with selected assets information
-    const prompt = `You are an expert NBA trade analyst. Generate 1-4 realistic 2025-26 season trade scenarios taking in cosideration of provided teams rosters, draft picks and salary cap positions.
+    const prompt = `Generate 3-4 realistic 2025-26 NBA trade scenarios using the data below.
 
-**SELECTED ASSETS TO TRADE (THESE MUST BE INCLUDED IN ALL TRADE SCENARIOS):**
+SELECTED ASSETS (must appear in every scenario):
 ${assetsDescription}${destinationInfo}
 
-**TEAM SALARY CAP POSITIONS:**
-${capContext}
+${salaryMatchingContext}
 
-**CRITICAL SALARY CAP RULES - MUST FOLLOW THESE EXACTLY:**
-
-**Teams Over Salary Cap (but under aprons):**
-- Must match salaries within 125% + $100K for incoming players
-- Can aggregate multiple players in trades
-
-**First Apron - CRITICAL RESTRICTIONS:**
-- If team is currently under first apron but a potential trade would put them over, all of the first apron restrictions apply
-- Must match salaries within 110% + $100K for incoming players
-
-**Second Apron - SEVERE RESTRICTIONS:**
-- If team is currently under second apron but a potential trade would put them over, all of the second apron restrictions apply
-- CANNOT trade players together (no salary aggregation)
-- CANNOT use any trade exceptions
-- CANNOT receive more money than sent out
-- Draft pick penalties: Future first-round picks frozen
-- CANNOT use mid-level exception
-
-**ADDITIONAL PLAYERS AND/OR DRAFT PICKS FROM THE AVAILABLE ROSTERS TO MAKE THE TRADE VALID FOR SALARY CAP RULES AND MORE REALISTIC:**
+ROSTERS & PICKS (players with salary ≥$2M, pick value 1-100 scale):
 ${rosterContext}
 
-**MANDATORY REQUIREMENTS:**
-1. **MUST INCLUDE ALL SELECTED ASSETS** - Every trade scenario must include the assets listed in "SELECTED ASSETS TO TRADE" above
-2. **TRADE BALANCE IS CRITICAL** - Every player/pick received by one team MUST be given by another team. No assets can appear in "receives" without appearing in "gives" from another team.
-3. **ONLY USE PLAYERS FROM PROVIDED ROSTERS** - You can ONLY use players that are explicitly listed in the "AVAILABLE PLAYERS FOR TRADES" section above. DO NOT make up players or use players that are not in the provided rosters.
-4. **VERIFY PLAYER TEAMS** - Before including any player in a trade, verify they are actually on the team you're listing them as being from. Each player must appear in the roster of the team you claim they're from.
-5. Each trade can involve 2-5 teams
-6. Create realistic trades teams would actually consider given their cap constraints${
-      hasDestinations
-        ? "\n9. Try to respect the destination preferences when possible"
-        : ""
-    }
+SALARY MATCHING INSTRUCTIONS:
+- Each team's section above shows their cap tier, the formula for matching, and pre-computed bounds for the selected assets
+- If you add more outgoing players from a team, recalculate the matching window using the formula provided
+- Add up total outgoing salary, then apply the formula to get the valid incoming range
+- Make sure each team's total incoming salary falls within their valid range
+- SECOND APRON teams: one-for-one only (cannot combine multiple players' salaries)
 
-**TRADE STRUCTURE RULES:**
-- Every asset in a "receives" array must appear in exactly one "gives" array from another team
-- Every asset in a "gives" array must appear in exactly one "receives" array from another team
-- No assets can be created or destroyed in trades
-- All trades must be balanced (what goes out must come in somewhere else)
+OTHER RULES:
+- Every asset received must be given by another team (balanced trades)
+- Only use players listed above
+- 2-5 teams per trade${hasDestinations ? "\n- Respect destination preferences when possible" : ""}
+- Pick [val:X] indicates estimated value (1-100). Use this to assess trade fairness — higher value picks are worth more.
 
-**Required JSON format (Array of trade scenarios):**
+Respond with ONLY a JSON array. Each scenario:
 [
   {
     "teams": [
       {
-        "teamName": "Team A",
+        "teamName": "Team Name",
         "gives": {
-          "players": [
-            {
-              "name": "Player 1",
-              "type": "player"
-            }
-          ],
-          "picks": [
-            {
-              "name": "2025 1st Round Pick",
-              "type": "pick"
-            }
-          ]
+          "players": [{"name": "Player Name", "type": "player"}],
+          "picks": [{"name": "2026 R1", "type": "pick"}]
         },
         "receives": {
-          "players": [
-            {
-              "name": "Player 2",
-              "type": "player",
-              "from": "Team B"
-            }
-          ],
-          "picks": [
-            {
-              "name": "2025 1st Round Pick",
-              "type": "pick",
-              "from": "Team B"
-            }
-          ]
-        }
-      },
-      {
-        "teamName": "Team B",
-        "gives": {
-          "players": [
-            {
-              "name": "Player 2",
-              "type": "player"
-            }
-          ],
-          "picks": [
-            {
-              "name": "2025 1st Round Pick",
-              "type": "pick"
-            }
-          ]
-        },
-        "receives": {
-          "players": [
-            {
-              "name": "Player 1",
-              "type": "player",
-              "from": "Team A"
-            }
-          ],
-          "picks": [
-            {
-              "name": "2025 1st Round Pick",
-              "type": "pick",
-              "from": "Team A"
-            }
-          ]
+          "players": [{"name": "Player Name", "type": "player", "from": "Other Team"}],
+          "picks": [{"name": "2026 R1", "type": "pick", "from": "Other Team"}]
         }
       }
-    ],
+    ]
   }
-]
+]`;
 
-**CRITICAL: Generate valid JSON only. Do not include dollar signs in player names. Ensure all quotes are properly escaped and the JSON is syntactically correct.**
-
-**JSON VALIDATION CHECKLIST:**
-- Start with [ and end with ]
-- All property names must be in double quotes
-- All string values must be in double quotes
-- Escape any quotes within strings with backslash
-- No trailing commas before closing brackets/braces
-- No dollar signs ($) in player names
-- Each team object must have teamId, teamName, gives, and receives arrays
-- Each asset must have id, name, and type properties
-
-Generate 3-4 different trade scenarios in this format. RESPOND WITH ONLY THE JSON ARRAY - NO EXPLANATIONS OR MARKDOWN.`;
-
-    // Consider using "gpt-4-turbo" for better quality and similar speed/cost to "gpt-4o-mini"
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
           content:
-            "You are an expert NBA analyst who specializes in realistic trade scenarios. You MUST follow the salary cap rules exactly as specified and ONLY use players listed in the provided rosters. CRITICAL: You can ONLY use players that are explicitly provided in the roster data. DO NOT make up players or use players that are not in the provided rosters. Always respond with valid JSON array only. Each trade scenario should involve 2-5 teams and show exactly what each team gives and receives. Pay special attention to First and Second Apron restrictions - these are critical and must be followed precisely. IMPORTANT: Generate only valid JSON - do not include dollar signs ($) in player names, use (XX.XM) format instead. Ensure all quotes are properly escaped. RESPOND WITH ONLY THE JSON ARRAY - NO EXPLANATIONS, NO MARKDOWN, NO CODE BLOCKS.",
+            "You are an expert NBA trade analyst. Generate realistic trade scenarios using only the provided roster data. Respond with valid JSON only — no markdown, no explanations.",
         },
         {
           role: "user",
@@ -238,7 +137,8 @@ Generate 3-4 different trade scenarios in this format. RESPOND WITH ONLY THE JSO
         },
       ],
       temperature: 0.7,
-      max_tokens: 2000,
+      response_format: { type: "json_object" },
+      max_tokens: 4000,
     });
 
     const responseContent = completion.choices[0]?.message?.content;
@@ -247,7 +147,6 @@ Generate 3-4 different trade scenarios in this format. RESPOND WITH ONLY THE JSO
       throw new Error("No response from OpenAI");
     }
 
-    // Clean the response content to extract just the JSON
     let cleanedContent = responseContent.trim();
 
     // Remove markdown code blocks if present
@@ -261,158 +160,27 @@ Generate 3-4 different trade scenarios in this format. RESPOND WITH ONLY THE JSO
         .replace(/\s*```$/, "");
     }
 
-    // Try to parse the cleaned JSON
     try {
       const parsedResponse = JSON.parse(cleanedContent);
 
-      // Validate that all players in trades actually exist on their claimed teams
-      // const validationErrors = validateTradePlayers(
-      //   parsedResponse,
-      //   involvedTeams
-      // );
-      // if (validationErrors.length > 0) {
-      //   console.warn("Trade validation errors found:", validationErrors);
-      //   // You could choose to filter out invalid trades or return them with warnings
-      // }
+      // Handle both array format and {trades: [...]} format from json_object mode
+      const trades = Array.isArray(parsedResponse)
+        ? parsedResponse
+        : parsedResponse.trades || parsedResponse.scenarios || [];
 
       return NextResponse.json({
         success: true,
         data: {
-          trades: parsedResponse,
+          trades,
           selectedAssets: selectedAssets,
           teamsAddedToTrade: teamsAddedToTrade,
           prompt: prompt,
         },
-        source: "OpenAI GPT-4o-turbo",
+        source: "OpenAI GPT-4o-mini",
       });
     } catch (parseError) {
-      console.error(
-        "Initial JSON parse failed, attempting to extract complete trades..."
-      );
-      console.error("Parse error:", parseError);
-
-      // Try to extract complete trade scenarios from the incomplete JSON
-      try {
-        // Find all complete trade objects by looking for the pattern: {"teams": [...]}
-        const tradeMatches = cleanedContent.match(
-          /\{[^}]*"teams"\s*:\s*\[[^\]]*\][^}]*\}/g
-        );
-
-        if (tradeMatches && tradeMatches.length > 0) {
-          console.log(`Found ${tradeMatches.length} potential complete trades`);
-
-          const completeTrades = [];
-
-          for (const tradeMatch of tradeMatches) {
-            try {
-              // Try to fix common JSON issues in individual trades
-              let fixedTrade = tradeMatch;
-
-              // Fix missing commas in arrays
-              fixedTrade = fixedTrade.replace(
-                /"([^"]*)"\s*"([^"]*)"\s*:/g,
-                '"$1", "$2":'
-              );
-              fixedTrade = fixedTrade.replace(
-                /(\d+)\s*"([^"]*)"\s*:/g,
-                '$1, "$2":'
-              );
-              fixedTrade = fixedTrade.replace(
-                /(true|false|null)\s*"([^"]*)"\s*:/g,
-                '$1, "$2":'
-              );
-
-              // Fix trailing commas
-              fixedTrade = fixedTrade.replace(/,(\s*[}\]])/g, "$1");
-
-              // Fix missing quotes around property names
-              fixedTrade = fixedTrade.replace(
-                /([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g,
-                '$1"$2":'
-              );
-
-              // Remove control characters
-              fixedTrade = fixedTrade.replace(/[\x00-\x1F\x7F]/g, "");
-
-              const parsedTrade = JSON.parse(fixedTrade);
-              if (
-                parsedTrade &&
-                parsedTrade.teams &&
-                Array.isArray(parsedTrade.teams)
-              ) {
-                completeTrades.push(parsedTrade);
-                console.log(
-                  "Successfully parsed trade:",
-                  parsedTrade.teams.length,
-                  "teams"
-                );
-              }
-            } catch (tradeParseError) {
-              console.log(
-                "Failed to parse individual trade:",
-                tradeParseError instanceof Error
-                  ? tradeParseError.message
-                  : "Unknown error"
-              );
-
-              // Try a more aggressive fix for this specific trade
-              try {
-                let aggressiveFix = tradeMatch;
-
-                // Remove any incomplete objects at the end
-                const lastCompleteObject = aggressiveFix.match(/.*\}(?=\s*$)/s);
-                if (lastCompleteObject) {
-                  aggressiveFix = lastCompleteObject[0] + "}";
-                }
-
-                // Balance braces
-                const openBraces = (aggressiveFix.match(/\{/g) || []).length;
-                const closeBraces = (aggressiveFix.match(/\}/g) || []).length;
-                for (let i = 0; i < openBraces - closeBraces; i++) {
-                  aggressiveFix += "}";
-                }
-
-                // Remove trailing commas
-                aggressiveFix = aggressiveFix.replace(/,(\s*[}\]])/g, "$1");
-
-                const parsedTrade = JSON.parse(aggressiveFix);
-                if (
-                  parsedTrade &&
-                  parsedTrade.teams &&
-                  Array.isArray(parsedTrade.teams)
-                ) {
-                  completeTrades.push(parsedTrade);
-                  console.log(
-                    "Successfully parsed trade with aggressive fix:",
-                    parsedTrade.teams.length,
-                    "teams"
-                  );
-                }
-              } catch (aggressiveError) {
-                console.log("Aggressive fix also failed for trade");
-              }
-            }
-          }
-
-          if (completeTrades.length > 0) {
-            console.log(`Returning ${completeTrades.length} complete trades`);
-            return NextResponse.json({
-              success: true,
-              data: {
-                trades: completeTrades,
-                selectedAssets: selectedAssets,
-                teamsAddedToTrade: teamsAddedToTrade,
-                prompt: prompt,
-              },
-              source: "OpenAI GPT-4o-turbo (partial)",
-            });
-          }
-        }
-
-        console.log("No complete trades found in extraction attempt");
-      } catch (extractError) {
-        console.error("Failed to extract complete trades:", extractError);
-      }
+      console.error("JSON parse failed:", parseError);
+      console.error("Raw response:", cleanedContent.substring(0, 500));
 
       throw new Error(
         `Invalid JSON response from OpenAI: ${

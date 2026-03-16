@@ -59,10 +59,12 @@ export default function TradeCard({
       return enrichedPick;
     }
 
-    // Parse year and round from the pick name (e.g., "2025 1st Round Pick")
+    // Parse year and round from the pick name (e.g., "2025 1st Round Pick" or "2026 R1")
     const pickName = pick.name;
     const yearMatch = pickName.match(/(\d{4})/);
-    const roundMatch = pickName.match(/(\d)(?:st|nd|rd|th)?\s*[Rr]ound/i);
+    const roundMatch =
+      pickName.match(/R(\d)/i) ||
+      pickName.match(/(\d)(?:st|nd|rd|th)?\s*[Rr]ound/i);
 
     if (yearMatch?.[1] && roundMatch?.[1]) {
       const year = parseInt(yearMatch[1]);
