@@ -10,7 +10,6 @@ import type { SelectedAsset, Team, TradeInfo, TradeScenario } from "~/types";
 import { toast } from "sonner";
 import { useState } from "react";
 import Image from "next/image";
-import { TradeLoader } from "../ui/trade-loader";
 import TradeContainer from "./generated-trades/trade-container";
 import {
   SelectedAssetsTrigger,
@@ -226,28 +225,30 @@ export default function TradeMachineClient({
     setActiveTab("");
   };
 
+  const [isStreamingTrades, setIsStreamingTrades] = useState(false);
+
   const handleGenerateTrade = async () => {
     setLoadingGeneratedTrades(true);
+    setIsStreamingTrades(true);
+    setGeneratedTrades([]);
+    setShowTradeContainer(true);
 
-    // Track generate trade event
     posthog?.capture("trade_generated", {
       teams_count: selectedTeams.length,
       teams: selectedTeams.map((t) => t.displayName),
       assets_count: selectedAssets.length,
-      
     });
 
     let randomTeamsForMockTrades: Team[] = [];
 
     if (selectedTeams.length === 1) {
       const copyOfNbaTeams = [...nbaTeams];
-
       randomTeamsForMockTrades = copyOfNbaTeams
         .sort(() => 0.5 - Math.random())
         .slice(0, 3);
     }
 
-    const trade = {
+    const tradePayload = {
       teams: selectedTeams,
       selectedAssets: selectedAssets,
       additionalTeams:
@@ -257,23 +258,76 @@ export default function TradeMachineClient({
     try {
       const response = await fetch("/api/trades/generate", {
         method: "POST",
-        body: JSON.stringify(trade),
+        body: JSON.stringify(tradePayload),
       });
-      const data: any = await response.json();
 
-      console.log("been hit data", data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to generate trades");
+      }
 
-      setGeneratedTrades(data.data.trades);
-      const copyOfSelectedTeams = [...selectedTeams];
-      const teamsAddedToTrade = data.data.teamsAddedToTrade;
-      const teamsToAddToTrade = [...copyOfSelectedTeams, ...teamsAddedToTrade];
-      setSelectedTeams(teamsToAddToTrade);
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No response stream");
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        // Process complete SSE events from the buffer
+        const lines = buffer.split("\n\n");
+        // Keep the last potentially incomplete chunk
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          const dataLine = line.trim();
+          if (!dataLine.startsWith("data: ")) continue;
+
+          try {
+            const event = JSON.parse(dataLine.slice(6));
+
+            if (event.type === "meta" && event.teamsAddedToTrade) {
+              const teamsToAdd = event.teamsAddedToTrade as Team[];
+              setSelectedTeams((prev) => {
+                // Avoid duplicates
+                const existingIds = new Set(prev.map((t) => t.id));
+                const newTeams = teamsToAdd.filter(
+                  (t) => !existingIds.has(t.id)
+                );
+                return [...prev, ...newTeams];
+              });
+            } else if (event.type === "trade" && event.trade) {
+              setGeneratedTrades((prev) => [...prev, event.trade]);
+              // Stop showing the full-page loader after first trade arrives
+              setLoadingGeneratedTrades(false);
+            } else if (event.type === "done") {
+              setIsStreamingTrades(false);
+              setLoadingGeneratedTrades(false);
+            } else if (event.type === "error") {
+              console.error("Stream error:", event.error);
+              toast.error("Error generating trade: " + event.error);
+              setIsStreamingTrades(false);
+              setLoadingGeneratedTrades(false);
+            }
+          } catch {
+            // Skip malformed events
+          }
+        }
+      }
+
+      // Ensure streaming state is cleared
+      setIsStreamingTrades(false);
+      setLoadingGeneratedTrades(false);
     } catch (error) {
       console.error("Error generating trade:", error);
       toast.error("Failed to generate trade. Please try again.");
-    } finally {
+      setIsStreamingTrades(false);
       setLoadingGeneratedTrades(false);
-      setShowTradeContainer(true);
+      setShowTradeContainer(false);
     }
   };
 
@@ -379,18 +433,16 @@ export default function TradeMachineClient({
     setGeneratedTrades([]);
   };
 
-  if (loadingGeneratedTrades) {
-    return <TradeLoader />;
-  }
-
-  if (generatedTrades.length > 0 && showTradeContainer) {
+  if (showTradeContainer && (generatedTrades.length > 0 || isStreamingTrades)) {
     return (
       <TradeContainer
         tradesData={generatedTrades}
         involvedTeams={selectedTeams}
+        isStreaming={isStreamingTrades}
         onBack={() => {
           setGeneratedTrades([]);
           setShowTradeContainer(false);
+          setIsStreamingTrades(false);
           setSelectedAssets([]);
           setSelectedTeamIds([]);
           setSelectedAssets([]);
@@ -427,8 +479,8 @@ export default function TradeMachineClient({
             {generatedTrades.length > 0 && (
               <Button
                 onClick={() => setShowTradeContainer(true)}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-green-600 text-primary-white hover:bg-green-700
-                         transition-all duration-150 ease-in-out"
+                variant="success"
+                className="w-full sm:w-auto"
               >
                 <UsersIcon className="h-4 w-4" strokeWidth={1.5} />
                 <span>View Generated Trades ({generatedTrades.length})</span>
@@ -444,9 +496,8 @@ export default function TradeMachineClient({
                 });
                 setShowTryTradePreview(true);
               }}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-600 text-primary-white hover:bg-emerald-700
-                         disabled:bg-muted disabled:text-muted-foreground/70 disabled:border disabled:border-muted-foreground/30 disabled:cursor-not-allowed
-                         transition-all duration-150 ease-in-out"
+              variant="success"
+              className="w-full sm:w-auto"
             >
               <PlayIcon className="h-4 w-4" strokeWidth={1.5} />
               <span>Try Trade</span>
@@ -454,9 +505,8 @@ export default function TradeMachineClient({
             <Button
               disabled={!isTradeButtonActive}
               onClick={handleGenerateTrade}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigoMain text-primary-white hover:bg-indigoMain/70
-                         disabled:bg-muted disabled:text-muted-foreground/70 disabled:border disabled:border-muted-foreground/30 disabled:cursor-not-allowed
-                         transition-all duration-150 ease-in-out"
+              variant="indigo"
+              className="w-full sm:w-auto"
             >
               <LightbulbIcon className="h-4 w-4" strokeWidth={1.5} />
               <span>Generate Trade</span>

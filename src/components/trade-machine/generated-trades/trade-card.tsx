@@ -14,7 +14,9 @@ import {
 import Image from "next/image";
 import SaveTradeModal from "../save-trade-modal";
 import { Button } from "~/components/ui/button";
+import { SnapshotButton } from "~/components/ui/snapshot-button";
 import { PlayerStatsModal } from "~/components/player-stats-modal";
+import { useTradeSnapshot } from "~/hooks/use-trade-snapshot";
 
 export default function TradeCard({
   trade,
@@ -31,6 +33,7 @@ export default function TradeCard({
     teamAltColor?: string;
   } | null>(null);
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
+  const { captureRef, capture, isCapturing } = useTradeSnapshot();
 
   const handleOpenPlayerStats = (
     player: Player,
@@ -221,14 +224,16 @@ export default function TradeCard({
           selectedTeamIds={involvedTeams.map((t) => t.id)}
         />
         <Button
-          variant="outline"
-          className="w-full sm:w-auto border-white text-white bg-transparent hover:bg-white/10 transition-all duration-150 ease-in-out"
+          variant="edit"
+          className="w-full sm:w-auto"
           onClick={() => onEditTrade(TradesWithInfo, involvedTeams)}
         >
           <PencilIcon className="mr-2 h-5 w-5" strokeWidth={1.5} />
           Edit Trade
         </Button>
+        <SnapshotButton onClick={capture} isCapturing={isCapturing} />
       </div>
+      <div ref={captureRef}>
       {isValidTrade && (
         <div
           className="flex items-center gap-2 py-3 px-4 mb-4 rounded-md border border-green-500/50 bg-green-500/10 text-green-500
@@ -247,7 +252,7 @@ export default function TradeCard({
             className="flex flex-col h-auto overflow-hidden border-indigoMain bg-gradient-to-br from-background via-background/95 to-muted/80 md:flex-1"
           >
             <CardHeader className="flex flex-row items-center justify-center space-y-0 pb-2 pt-4 px-4 bg-muted/60">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center gap-2 min-w-0 w-full">
                 {tradeInfo.team?.logos?.[0] && (
                   <Image
                     src={tradeInfo.team.logos[0].href}
@@ -257,7 +262,7 @@ export default function TradeCard({
                     className="object-contain"
                   />
                 )}
-                <span className="text-lg font-semibold">
+                <span className="text-lg font-semibold whitespace-nowrap">
                   {tradeInfo.team?.displayName}
                 </span>
               </div>
@@ -437,10 +442,12 @@ export default function TradeCard({
                                         />
                                       </div>
                                     )}
-                                    <div>
-                                      <div className="font-medium text-sm">
-                                        {player?.displayName}{" "}
-                                        <span className="text-xs text-muted-foreground">
+                                    <div className="min-w-0">
+                                      <div className="flex items-baseline gap-1 min-w-0">
+                                        <span className="font-medium text-sm truncate">
+                                          {player?.displayName}
+                                        </span>
+                                        <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
                                           (
                                           {player?.position?.abbreviation ||
                                             "Unknown"}
@@ -581,6 +588,7 @@ export default function TradeCard({
           </div>
         </div>
       )}
+      </div>{/* end captureRef */}
 
       {/* Player Stats Modal */}
       <PlayerStatsModal

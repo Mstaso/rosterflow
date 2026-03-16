@@ -46,8 +46,10 @@ import Image from "next/image";
 import { useState } from "react";
 import { cn } from "~/lib/utils";
 import { PlayerStatsModal } from "~/components/player-stats-modal";
+import { SnapshotButton } from "~/components/ui/snapshot-button";
 import type { Player } from "~/types";
 import { getDisplayName } from "~/lib/username-generator";
+import { useTradeSnapshot } from "~/hooks/use-trade-snapshot";
 
 type TradeComment = {
   id: number;
@@ -137,6 +139,7 @@ export function SavedTradeDetail({
   const { user } = useUser();
   const [isDeleting, setIsDeleting] = useState(false);
   const [isVoting, setIsVoting] = useState(false);
+  const { captureRef, capture, isCapturing } = useTradeSnapshot();
   const [commentText, setCommentText] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [deletingCommentId, setDeletingCommentId] = useState<number | null>(
@@ -417,7 +420,7 @@ export function SavedTradeDetail({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <SignInButton mode="modal">
               <Button
-                className="bg-indigoMain hover:bg-indigoMain/90"
+                variant="indigo"
                 onClick={() => setShowSignInPrompt(false)}
               >
                 Sign In
@@ -527,10 +530,16 @@ export function SavedTradeDetail({
               </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:justify-end">
+              <SnapshotButton
+                onClick={capture}
+                isCapturing={isCapturing}
+                className="w-full sm:w-auto"
+              />
               <Button
-                className="bg-indigoMain hover:bg-indigoMain/90 text-white"
+                variant="indigo"
                 onClick={handleShare}
+                className="w-full sm:w-auto"
               >
                 {shareStatus === "copied" ? (
                   <>
@@ -547,9 +556,9 @@ export function SavedTradeDetail({
               {isOwnTrade && (
                 <>
                   <Button
-                    variant="outline"
-                    className="border-white/50"
+                    variant="edit"
                     onClick={handleEditTrade}
+                    className="w-full sm:w-auto"
                   >
                     <PencilIcon className="h-4 w-4 mr-2" />
                     Edit
@@ -558,7 +567,7 @@ export function SavedTradeDetail({
                     <AlertDialogTrigger asChild>
                       <Button
                         variant="outline"
-                        className="text-red-500 border-red-500 hover:bg-red-500 hover:text-white"
+                        className="w-full sm:w-auto text-red-500 border-red-500 hover:bg-red-500 hover:text-white"
                         disabled={isDeleting}
                       >
                         <TrashIcon className="h-4 w-4 mr-2" />
@@ -594,6 +603,7 @@ export function SavedTradeDetail({
         </div>
 
         {/* Trade Cards - Similar to trade-card.tsx */}
+        <div ref={captureRef}>
         <div className="flex flex-col md:flex-row gap-4 justify-center">
           {teamsInfo.map((teamInfo, index) => (
             <Card
@@ -601,7 +611,7 @@ export function SavedTradeDetail({
               className="flex flex-col h-auto overflow-hidden border-white/30 bg-gradient-to-br from-background via-background/95 to-muted/80 md:flex-1"
             >
               <CardHeader className="flex flex-row items-center justify-center space-y-0 pb-2 pt-4 px-4 bg-muted/60">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center gap-2 min-w-0 w-full">
                   {(teamInfo.tradeTeam.teamLogo as { href?: string })?.href && (
                     <Image
                       src={
@@ -613,7 +623,7 @@ export function SavedTradeDetail({
                       className="object-contain"
                     />
                   )}
-                  <span className="text-lg font-semibold">
+                  <span className="text-lg font-semibold whitespace-nowrap">
                     {teamInfo.tradeTeam.teamDisplayName}
                   </span>
                 </div>
@@ -761,10 +771,12 @@ export function SavedTradeDetail({
                                   />
                                 </div>
                               )}
-                              <div>
-                                <div className="font-medium text-sm">
-                                  {asset.playerName}{" "}
-                                  <span className="text-xs text-muted-foreground">
+                              <div className="min-w-0">
+                                <div className="flex items-baseline gap-1 min-w-0">
+                                  <span className="font-medium text-sm truncate">
+                                    {asset.playerName}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
                                     ({asset.playerPosition || "Unknown"})
                                   </span>
                                 </div>
@@ -841,6 +853,7 @@ export function SavedTradeDetail({
             </Card>
           ))}
         </div>
+        </div>{/* end captureRef */}
 
         {/* Comments Section */}
         <div className="mt-8">
@@ -879,7 +892,7 @@ export function SavedTradeDetail({
                         ? !commentText.trim() || isSubmittingComment
                         : false
                     }
-                    className="bg-indigoMain hover:bg-indigoMain/90 text-white"
+                    variant="indigo"
                   >
                     {isSubmittingComment ? (
                       <>

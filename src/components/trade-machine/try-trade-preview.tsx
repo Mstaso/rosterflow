@@ -12,10 +12,12 @@ import {
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
+import { SnapshotButton } from "~/components/ui/snapshot-button";
 import Image from "next/image";
 import type { SelectedAsset, Team, Player, DraftPick } from "~/types";
 import SaveTradeModal from "./save-trade-modal";
 import { PlayerStatsModal } from "~/components/player-stats-modal";
+import { useTradeSnapshot } from "~/hooks/use-trade-snapshot";
 
 interface TryTradePreviewProps {
   selectedTeams: Team[];
@@ -34,6 +36,12 @@ type TeamTradeInfo = {
   capDifference: number;
 };
 
+const formatM = (value: number) => {
+  const millions = value / 1_000_000;
+  const prefix = millions < 0 ? "-" : "";
+  return `${prefix}$${Math.abs(millions).toFixed(1)}M`;
+};
+
 export default function TryTradePreview({
   selectedTeams,
   selectedAssets,
@@ -45,6 +53,7 @@ export default function TryTradePreview({
     teamAltColor?: string;
   } | null>(null);
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
+  const { captureRef, capture, isCapturing } = useTradeSnapshot();
 
   const handleOpenPlayerStats = (
     player: Player,
@@ -58,44 +67,27 @@ export default function TryTradePreview({
   // Build trade info for each team
   const buildTradeInfo = (): TeamTradeInfo[] => {
     return selectedTeams.map((team) => {
-      // Players this team is sending (assets where teamId matches this team)
       const playersSent: Player[] = [];
       const picksSent: DraftPick[] = [];
-
-      // Players this team is receiving (assets where targetTeamId matches this team)
       const playersReceived: Player[] = [];
       const picksReceived: DraftPick[] = [];
 
       selectedAssets.forEach((asset) => {
         if (asset.type === "player") {
-          // Find the player
           const sourceTeam = selectedTeams.find((t) => t.id === asset.teamId);
           const player = sourceTeam?.players?.find((p) => p.id === asset.id);
 
           if (player) {
-            if (asset.teamId === team.id) {
-              // This team is sending this player
-              playersSent.push(player);
-            }
-            if (asset.targetTeamId === team.id) {
-              // This team is receiving this player
-              playersReceived.push(player);
-            }
+            if (asset.teamId === team.id) playersSent.push(player);
+            if (asset.targetTeamId === team.id) playersReceived.push(player);
           }
         } else if (asset.type === "pick") {
-          // Find the pick
           const sourceTeam = selectedTeams.find((t) => t.id === asset.teamId);
           const pick = sourceTeam?.draftPicks?.find((p) => p.id === asset.id);
 
           if (pick) {
-            if (asset.teamId === team.id) {
-              // This team is sending this pick
-              picksSent.push(pick);
-            }
-            if (asset.targetTeamId === team.id) {
-              // This team is receiving this pick
-              picksReceived.push(pick);
-            }
+            if (asset.teamId === team.id) picksSent.push(pick);
+            if (asset.targetTeamId === team.id) picksReceived.push(pick);
           }
         }
       });
@@ -130,19 +122,15 @@ export default function TryTradePreview({
     for (const info of tradeInfo) {
       const { team, capDifference, outgoingSalary, incomingSalary } = info;
 
-      // Skip validation if no salary movement
       if (outgoingSalary === 0 && incomingSalary === 0) continue;
 
       const secondApronSpace = team.secondApronSpace || 0;
       const firstApronSpace = team.firstApronSpace || 0;
       const capSpace = team.capSpace || 0;
 
-      // Calculate post-trade apron spaces
       const postTradeSecondApronSpace = secondApronSpace - capDifference;
       const postTradeFirstApronSpace = firstApronSpace - capDifference;
 
-      // Check 1: Second Apron - Cannot receive more money than sent out
-      // Applies if team is already over second apron OR trade would put them over
       const isOverSecondApron = secondApronSpace < 0;
       const wouldCrossSecondApron =
         secondApronSpace >= 0 && postTradeSecondApronSpace < 0;
@@ -150,12 +138,10 @@ export default function TryTradePreview({
       if ((isOverSecondApron || wouldCrossSecondApron) && capDifference > 0) {
         return {
           isValid: false,
-          message: `Waring Invalid: ${team.displayName} is over/would cross second apron and cannot take on additional salary`,
+          message: `Warning: Invalid: ${team.displayName} is over/would cross second apron and cannot take on additional salary`,
         };
       }
 
-      // Check 2: First Apron - Must match within 110% + $100K
-      // Applies if team is already over first apron OR trade would put them over
       const isOverFirstApron = firstApronSpace < 0;
       const wouldCrossFirstApron =
         firstApronSpace >= 0 && postTradeFirstApronSpace < 0;
@@ -171,7 +157,6 @@ export default function TryTradePreview({
         };
       }
 
-      // Check 3: Over cap but under aprons - Must match within 125% + $100K
       if (capSpace < 0 && firstApronSpace >= 0) {
         const maxAllowedOverCap = outgoingSalary * 1.25 + 100000;
 
@@ -194,7 +179,6 @@ export default function TryTradePreview({
     team: info.team,
     playersReceived: info.playersReceived,
     picksReceived: info.picksReceived.map((pick) => {
-      // Find the asset to get the sending team (teamId is the sender)
       const asset = selectedAssets.find(
         (a) =>
           a.type === "pick" &&
@@ -207,7 +191,7 @@ export default function TryTradePreview({
         name: `${pick.year} ${pick.round === 1 ? "1st" : "2nd"} Round Pick`,
         type: "pick" as const,
         from: sendingTeam?.displayName || "",
-        id: pick.id, // Include the draft pick ID for direct lookup
+        id: pick.id,
       };
     }),
     outGoingSalary: info.outgoingSalary,
@@ -255,15 +239,17 @@ export default function TryTradePreview({
             selectedTeamIds={selectedTeams.map((t) => t.id)}
           />
           <Button
-            variant="outline"
-            className="w-full sm:w-auto flex items-center justify-center gap-2 border-white text-white bg-transparent hover:bg-white/10 transition-all duration-150 ease-in-out"
+            variant="edit"
+            className="w-full sm:w-auto"
             onClick={onBack}
           >
             <PencilIcon className="h-4 w-4" strokeWidth={1.5} />
             <span>Edit Trade</span>
           </Button>
+          <SnapshotButton onClick={capture} isCapturing={isCapturing} />
         </div>
 
+        <div ref={captureRef}>
         {isValid && (
           <div
             className="flex items-center gap-2 py-3 px-4 mb-4 rounded-md border border-green-500/50 bg-green-500/10 text-green-500
@@ -283,7 +269,7 @@ export default function TryTradePreview({
               className="flex flex-col h-auto overflow-hidden border-indigoMain bg-gradient-to-br from-background via-background/95 to-muted/80 md:flex-1"
             >
               <CardHeader className="flex flex-row items-center justify-center space-y-0 pb-2 pt-4 px-4 bg-muted/60">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center gap-2 min-w-0 w-full">
                   {info.team.logos?.[0] && (
                     <Image
                       src={info.team.logos[0].href}
@@ -293,7 +279,7 @@ export default function TryTradePreview({
                       className="object-contain"
                     />
                   )}
-                  <span className="text-lg font-semibold">
+                  <span className="text-lg font-semibold whitespace-nowrap">
                     {info.team.displayName}
                   </span>
                 </div>
@@ -306,7 +292,7 @@ export default function TryTradePreview({
                       Outgoing Salary
                     </div>
                     <div className="text-sm font-medium">
-                      ${(info.outgoingSalary / 1000000).toFixed(1)}M
+                      {formatM(info.outgoingSalary)}
                     </div>
                   </div>
                   <div>
@@ -314,7 +300,7 @@ export default function TryTradePreview({
                       Incoming Salary
                     </div>
                     <div className="text-sm font-medium">
-                      ${(info.incomingSalary / 1000000).toFixed(1)}M
+                      {formatM(info.incomingSalary)}
                     </div>
                   </div>
                   <div>
@@ -330,7 +316,7 @@ export default function TryTradePreview({
                           : "text-foreground"
                       }`}
                     >
-                      ${(info.capDifference / 1000000).toFixed(1)}M
+                      {formatM(info.capDifference)}
                     </div>
                   </div>
                 </div>
@@ -349,13 +335,7 @@ export default function TryTradePreview({
                             Total Cap
                           </td>
                           <td className="px-2 py-1 font-medium w-1/2 text-right">
-                            $
-                            {info.team.totalCapAllocation
-                              ? (
-                                  info.team.totalCapAllocation / 1000000
-                                ).toFixed(1)
-                              : "0.0"}
-                            M
+                            {formatM(info.team.totalCapAllocation || 0)}
                           </td>
                         </tr>
                         <tr className="bg-background">
@@ -363,14 +343,12 @@ export default function TryTradePreview({
                             Cap Space
                           </td>
                           <td className="px-2 py-1 font-medium w-1/2 text-right">
-                            $
-                            {(
+                            {formatM(
                               calculateUpdatedTaxValue(
                                 info.team.capSpace || 0,
                                 info.capDifference
-                              ) / 1000000
-                            ).toFixed(1)}
-                            M
+                              )
+                            )}
                           </td>
                         </tr>
                         <tr className="bg-muted/40">
@@ -378,14 +356,12 @@ export default function TryTradePreview({
                             1st Apron Space
                           </td>
                           <td className="px-2 py-1 font-medium w-1/2 text-right">
-                            $
-                            {(
+                            {formatM(
                               calculateUpdatedTaxValue(
                                 info.team.firstApronSpace || 0,
                                 info.capDifference
-                              ) / 1000000
-                            ).toFixed(1)}
-                            M
+                              )
+                            )}
                           </td>
                         </tr>
                         <tr className="bg-background">
@@ -393,14 +369,12 @@ export default function TryTradePreview({
                             2nd Apron Space
                           </td>
                           <td className="px-2 py-1 font-medium w-1/2 text-right">
-                            $
-                            {(
+                            {formatM(
                               calculateUpdatedTaxValue(
                                 info.team.secondApronSpace || 0,
                                 info.capDifference
-                              ) / 1000000
-                            ).toFixed(1)}
-                            M
+                              )
+                            )}
                           </td>
                         </tr>
                       </tbody>
@@ -418,7 +392,6 @@ export default function TryTradePreview({
                       </div>
                       <div className="space-y-3">
                         {info.playersReceived.map((player, playerIndex) => {
-                          // Find which team this player came from
                           const fromTeam = selectedTeams.find((t) =>
                             t.players?.some((p) => p.id === player.id)
                           );
@@ -447,10 +420,12 @@ export default function TryTradePreview({
                                     />
                                   </div>
                                 )}
-                                <div>
-                                  <div className="font-medium text-sm">
-                                    {player.displayName}{" "}
-                                    <span className="text-xs text-muted-foreground">
+                                <div className="min-w-0">
+                                  <div className="flex items-baseline gap-1 min-w-0">
+                                    <span className="font-medium text-sm truncate">
+                                      {player.displayName}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
                                       (
                                       {player.position?.abbreviation ||
                                         "Unknown"}
@@ -459,9 +434,7 @@ export default function TryTradePreview({
                                   </div>
                                   <div className="text-xs text-muted-foreground">
                                     {player.contract
-                                      ? `Salary: $${(
-                                          player.contract.salary / 1000000
-                                        ).toFixed(1)}M`
+                                      ? `Salary: ${formatM(player.contract.salary)}`
                                       : "No contract"}
                                     {" | "}
                                     {player.contract?.yearsRemaining}
@@ -509,7 +482,6 @@ export default function TryTradePreview({
                       </div>
                       <div className="space-y-3">
                         {info.picksReceived.map((pick, pickIndex) => {
-                          // Find which team this pick came from
                           const fromTeam = selectedTeams.find((t) =>
                             t.draftPicks?.some((p) => p.id === pick.id)
                           );
@@ -563,6 +535,7 @@ export default function TryTradePreview({
             <div className="text-sm font-medium">{message}</div>
           </div>
         )}
+        </div>{/* end captureRef */}
       </div>
 
       {/* Player Stats Modal */}
