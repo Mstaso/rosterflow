@@ -35,12 +35,9 @@ model Team {
   division           String
 
   // Relations
-  players              Player[]
-  draftPicks           DraftPick[]
-  tradeAssets          TradeAsset[] // Assets this team is trading away
-  targetTradeAssets    TradeAsset[]     @relation("TargetTeam") // Assets this team is receiving
-  userSelections       UserSelections[] // User selections from this team
-  targetUserSelections UserSelections[] @relation("UserSelectionsTargetTeam") // User selections going to this team
+  players    Player[]
+  draftPicks DraftPick[]
+  tradeTeams TradeTeam[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -79,8 +76,7 @@ model Player {
   team   Team @relation(fields: [teamId], references: [id])
 
   // Relations
-  tradeAssets    TradeAsset[]
-  userSelections UserSelections[]
+  tradeAssets TradeAsset[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -95,15 +91,15 @@ model DraftPick {
   id          Int     @id @default(autoincrement())
   year        Int
   round       Int
-  isProtected Boolean @default(false)
-  isSwap      Boolean @default(false)
-  description String?
+  isProtected    Boolean @default(false)
+  isSwap         Boolean @default(false)
+  description    String?
+  estimatedValue Int     @default(50) // 1-100 scale, higher = more valuable
 
   // Relations
-  teamId         Int
-  team           Team             @relation(fields: [teamId], references: [id])
-  tradeAssets    TradeAsset[]
-  userSelections UserSelections[]
+  teamId      Int
+  team        Team         @relation(fields: [teamId], references: [id])
+  tradeAssets TradeAsset[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -125,7 +121,7 @@ model Trade {
 
   // Relations
   assets     TradeAsset[]
-  selections UserSelections[]
+  tradeTeams TradeTeam[]
   votes      TradeVote[]
   comments   TradeComment[]
 
@@ -167,55 +163,71 @@ model TradeComment {
   @@index([tradeId])
 }
 
-// Assets in a trade (players or draft picks)
-model TradeAsset {
-  id           Int    @id @default(autoincrement())
-  type         String // "player" or "pick"
-  teamId       Int // Team this asset belongs to
-  targetTeamId Int // Team this asset is going to
-  tradeId      Int // Trade this asset is part of
+// Per-team snapshot within a trade
+model TradeTeam {
+  id                 Int    @id @default(autoincrement())
+  tradeId            Int
+  teamId             Int
+  teamDisplayName    String
+  teamAbbreviation   String
+  teamLogo           Json // First logo object {href, alt}
+  totalCapAllocation Int
+  capSpace           Int
+  firstApronSpace    Int
+  secondApronSpace   Int
 
-  // Relations
-  team        Team       @relation(fields: [teamId], references: [id]) // Team this asset is coming from
-  targetTeam  Team       @relation("TargetTeam", fields: [targetTeamId], references: [id]) // Team this asset is going to
-  playerId    Int? // ID of the player if type is "player"
-  player      Player?    @relation(fields: [playerId], references: [id])
-  draftPickId Int? // ID of the draft pick if type is "pick"
-  draftPick   DraftPick? @relation(fields: [draftPickId], references: [id])
-  trade       Trade      @relation(fields: [tradeId], references: [id])
+  trade        Trade        @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  team         Team         @relation(fields: [teamId], references: [id])
+  sourceAssets TradeAsset[] @relation("SourceTradeTeam")
+  targetAssets TradeAsset[] @relation("TargetTradeTeam")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([teamId])
-  @@index([targetTeamId])
+  @@unique([tradeId, teamId])
   @@index([tradeId])
-  @@index([playerId])
-  @@index([draftPickId])
+  @@index([teamId])
 }
 
-model UserSelections {
-  id           Int    @id @default(autoincrement())
-  type         String // "player" or "pick"
-  teamId       Int // Team this asset is coming from
-  targetTeamId Int // Team this asset is going to
-  tradeId      Int // Trade this selection is part of
+// Assets in a trade (players or draft picks)
+model TradeAsset {
+  id                Int    @id @default(autoincrement())
+  type              String // "player" or "pick"
+  tradeId           Int
+  tradeTeamId       Int // Source TradeTeam
+  targetTradeTeamId Int // Destination TradeTeam
 
-  // Relations
-  team        Team       @relation(fields: [teamId], references: [id]) // Team this asset is coming from
-  targetTeam  Team       @relation("UserSelectionsTargetTeam", fields: [targetTeamId], references: [id]) // Team this asset is going to
-  playerId    Int? // ID of the player if type is "player"
-  player      Player?    @relation(fields: [playerId], references: [id])
-  draftPickId Int? // ID of the draft pick if type is "pick"
-  draftPick   DraftPick? @relation(fields: [draftPickId], references: [id])
-  trade       Trade      @relation(fields: [tradeId], references: [id])
+  // Optional FKs for querying/editing
+  playerId    Int?
+  draftPickId Int?
+
+  // Player snapshots (when type="player")
+  playerName          String?
+  playerHeadshot      Json?
+  playerPosition      String?
+  playerSalary        Int?
+  playerContractYears Int?
+  playerEspnId        String?
+
+  // Pick snapshots (when type="pick")
+  pickYear        Int?
+  pickRound       Int?
+  pickIsProtected Boolean?
+  pickIsSwap      Boolean?
+  pickDescription String?
+
+  trade           Trade      @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  tradeTeam       TradeTeam  @relation("SourceTradeTeam", fields: [tradeTeamId], references: [id])
+  targetTradeTeam TradeTeam  @relation("TargetTradeTeam", fields: [targetTradeTeamId], references: [id])
+  player          Player?    @relation(fields: [playerId], references: [id])
+  draftPick       DraftPick? @relation(fields: [draftPickId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([teamId])
-  @@index([targetTeamId])
   @@index([tradeId])
+  @@index([tradeTeamId])
+  @@index([targetTradeTeamId])
   @@index([playerId])
   @@index([draftPickId])
 }

@@ -261,6 +261,8 @@ export default function TradeMachineClient({
       });
       const data: any = await response.json();
 
+      console.log("been hit data", data);
+
       setGeneratedTrades(data.data.trades);
       const copyOfSelectedTeams = [...selectedTeams];
       const teamsAddedToTrade = data.data.teamsAddedToTrade;

@@ -16,8 +16,8 @@ import Image from "next/image";
 import { cn } from "~/lib/utils";
 
 type TradeMovement = {
-  from: TradeWithAssets["assets"][0]["team"];
-  to: TradeWithAssets["assets"][0]["targetTeam"];
+  from: TradeWithAssets["assets"][0]["tradeTeam"];
+  to: TradeWithAssets["assets"][0]["targetTradeTeam"];
   assets: TradeWithAssets["assets"];
 };
 
@@ -27,11 +27,11 @@ function groupAssetsByMovement(
   const movements: Record<string, TradeMovement> = {};
 
   assets.forEach((asset) => {
-    const key = `${asset.teamId}-${asset.targetTeamId}`;
+    const key = `${asset.tradeTeamId}-${asset.targetTradeTeamId}`;
     if (!movements[key]) {
       movements[key] = {
-        from: asset.team,
-        to: asset.targetTeam,
+        from: asset.tradeTeam,
+        to: asset.targetTradeTeam,
         assets: [],
       };
     }
@@ -183,18 +183,20 @@ export function TradeCard({
             >
               {/* From team */}
               <div className="flex items-center gap-2 min-w-0">
-                {(movement.from.logos as { href: string }[] | null)?.[0]
+                {(movement.from.teamLogo as { href?: string } | null)
                   ?.href && (
                   <Image
-                    src={(movement.from.logos as { href: string }[])[0]!.href}
-                    alt={movement.from.displayName}
+                    src={
+                      (movement.from.teamLogo as { href: string }).href
+                    }
+                    alt={movement.from.teamDisplayName}
                     width={28}
                     height={28}
                     className="object-contain flex-shrink-0"
                   />
                 )}
                 <span className="text-sm font-medium truncate">
-                  {movement.from.abbreviation}
+                  {movement.from.teamAbbreviation}
                 </span>
               </div>
 
@@ -202,18 +204,20 @@ export function TradeCard({
 
               {/* To team */}
               <div className="flex items-center gap-2 min-w-0">
-                {(movement.to.logos as { href: string }[] | null)?.[0]
+                {(movement.to.teamLogo as { href?: string } | null)
                   ?.href && (
                   <Image
-                    src={(movement.to.logos as { href: string }[])[0]!.href}
-                    alt={movement.to.displayName}
+                    src={
+                      (movement.to.teamLogo as { href: string }).href
+                    }
+                    alt={movement.to.teamDisplayName}
                     width={28}
                     height={28}
                     className="object-contain flex-shrink-0"
                   />
                 )}
                 <span className="text-sm font-medium truncate">
-                  {movement.to.abbreviation}
+                  {movement.to.teamAbbreviation}
                 </span>
               </div>
 
@@ -221,10 +225,10 @@ export function TradeCard({
               <div className="flex-1 flex flex-wrap gap-1.5 justify-end">
                 {movement.assets.map((asset) => (
                   <Badge key={asset.id} variant="outline" className="text-xs">
-                    {asset.type === "player" && asset.player
-                      ? asset.player.displayName
-                      : asset.type === "pick" && asset.draftPick
-                      ? `${asset.draftPick.year} R${asset.draftPick.round}`
+                    {asset.type === "player" && asset.playerName
+                      ? asset.playerName
+                      : asset.type === "pick" && asset.pickYear
+                      ? `${asset.pickYear} R${asset.pickRound}`
                       : "Unknown"}
                   </Badge>
                 ))}
