@@ -519,13 +519,24 @@ export async function createComment(input: CreateCommentInput) {
     );
   }
 
-  const { tradeId, content, userName } = parseResult.data;
+  const { tradeId, userName } = parseResult.data;
+
+  // Sanitize: trim, collapse excessive newlines (max 2 consecutive), strip control chars
+  const sanitizedContent = parseResult.data.content
+    .trim()
+    .replace(/[^\S\n]+/g, " ") // collapse horizontal whitespace (preserve newlines)
+    .replace(/\n{3,}/g, "\n\n") // max 2 consecutive newlines
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ""); // strip control chars
+
+  if (!sanitizedContent) {
+    throw new Error("Comment cannot be empty");
+  }
 
   const comment = await db.tradeComment.create({
     data: {
       userId,
-      userName,
-      content,
+      userName: userName.trim(),
+      content: sanitizedContent,
       tradeId,
     },
   });

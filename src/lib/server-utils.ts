@@ -91,9 +91,11 @@ export function getCapContext(involvedTeams: Team[]) {
   return capEntries.join("\n");
 }
 
-type CapTier = "UNDER_CAP" | "OVER_CAP" | "FIRST_APRON" | "SECOND_APRON";
+export type CapTier = "UNDER_CAP" | "OVER_CAP" | "FIRST_APRON" | "SECOND_APRON";
 
-function getCapTier(team: any): CapTier {
+export { MIN_SALARY_THRESHOLD };
+
+export function getCapTier(team: any): CapTier {
   if ((team.secondApronSpace || 0) < 0) return "SECOND_APRON";
   if ((team.firstApronSpace || 0) < 0) return "FIRST_APRON";
   if ((team.capSpace || 0) < 0) return "OVER_CAP";
@@ -104,7 +106,7 @@ function formatM(val: number): string {
   return `$${(val / 1_000_000).toFixed(1)}M`;
 }
 
-function computeMatchingBounds(
+export function computeMatchingBounds(
   outgoingSalary: number,
   capTier: CapTier
 ): { min: number; max: number } | null {
