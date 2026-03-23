@@ -9,6 +9,10 @@ import {
   getSalaryMatchingContext,
   setupAdditionalTeamsForTrade,
 } from "~/lib/server-utils";
+import {
+  generateManualTrade,
+  describeManualTrade,
+} from "~/lib/manual-trade-generator";
 
 export const dynamic = "force-dynamic";
 
@@ -80,6 +84,20 @@ export async function POST(request: NextRequest) {
       destinationInfo = getDestinationInfo(selectedAssets, involvedTeams);
     }
 
+    // Generate manual first trade (algorithmic, instant result)
+    let manualTrade: ReturnType<typeof generateManualTrade> = null;
+    let manualTradeExclusion = "";
+    console.log("[manual-trade] Attempting manual trade generation...");
+    console.log("[manual-trade] Selected assets:", JSON.stringify(selectedAssets.map((a: SelectedAsset) => ({ id: a.id, type: a.type, teamId: a.teamId, targetTeamId: a.targetTeamId }))));
+    console.log("[manual-trade] Involved teams:", involvedTeams.map((t: Team) => `${t.displayName} (id:${t.id})`).join(", "));
+    manualTrade = generateManualTrade(selectedAssets, involvedTeams);
+    if (manualTrade) {
+      console.log("[manual-trade] SUCCESS - generated trade with", manualTrade.teams.length, "teams");
+      manualTradeExclusion = `\n\nALREADY GENERATED TRADE (do NOT duplicate):\n${describeManualTrade(manualTrade)}\nGenerate 3-4 DIFFERENT scenarios.`;
+    } else {
+      console.log("[manual-trade] FAILED - returned null (salary matching likely failed)");
+    }
+
     const prompt = `Generate 3-4 realistic 2025-26 NBA trade scenarios using the data below.
 
 SELECTED ASSETS (must appear in every scenario):
@@ -100,8 +118,9 @@ SALARY MATCHING INSTRUCTIONS:
 OTHER RULES:
 - Every asset received must be given by another team (balanced trades)
 - Only use players listed above
+- You SHOULD add additional players or picks beyond the selected assets when it makes the trade more realistic, improves salary matching, or balances value. Don't just swap the selected assets 1-for-1 if a real GM would include sweeteners or salary filler.
 - 2-5 teams per trade${hasDestinations ? "\n- Respect destination preferences when possible" : ""}
-- Pick [val:X] indicates estimated value (1-100). Use this to assess trade fairness — higher value picks are worth more.
+- Pick [val:X] indicates estimated value (1-100). Use this to assess trade fairness — higher value picks are worth more.${manualTradeExclusion}
 
 Respond with ONLY a JSON array. Each scenario:
 [
@@ -124,7 +143,7 @@ Respond with ONLY a JSON array. Each scenario:
 
     // Stream the response using SSE
     const stream = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-5.4-mini",
       messages: [
         {
           role: "system",
@@ -137,7 +156,7 @@ Respond with ONLY a JSON array. Each scenario:
         },
       ],
       temperature: 0.7,
-      max_tokens: 4000,
+      max_completion_tokens: 4000,
       stream: true,
     });
 
@@ -154,6 +173,16 @@ Respond with ONLY a JSON array. Each scenario:
 
         let accumulated = "";
         let tradeIndex = 0;
+
+        // Emit manual trade as the first trade event (instant result)
+        if (manualTrade) {
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({ type: "trade", trade: manualTrade, index: tradeIndex })}\n\n`
+            )
+          );
+          tradeIndex++;
+        }
 
         // State machine for tracking position in JSON
         let inString = false;
