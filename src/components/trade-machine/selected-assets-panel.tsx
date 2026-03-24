@@ -157,7 +157,7 @@ export function SelectedAssetsContent({
                             <div className="font-medium text-sm truncate">
                               {player.displayName}{" "}
                               <span className="text-xs text-muted-foreground">
-                                ({player.position?.abbreviation || "Unknown"})
+                                {player.position?.abbreviation || "Unknown"}{player.age ? `, Age: ${player.age}` : ""}
                               </span>
                             </div>
                             <div className="text-xs text-muted-foreground">
