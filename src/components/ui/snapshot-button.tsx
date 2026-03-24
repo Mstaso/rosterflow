@@ -79,7 +79,9 @@ export function SnapshotButton({
             <span>{isCapturing ? "Capturing..." : "Snapshot"}</span>
           </Button>
         </TooltipTrigger>
-        <TooltipContent>Save this trade as an image</TooltipContent>
+        <TooltipContent className="border-indigoMain/50 bg-indigoMain/15 text-foreground font-medium backdrop-blur-sm">
+          Save this trade as an image
+        </TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );
