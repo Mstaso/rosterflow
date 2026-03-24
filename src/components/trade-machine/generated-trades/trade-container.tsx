@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Undo2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "~/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "~/components/ui/tabs";
 import type { Team, TradeInfo, TradeScenario } from "~/types";
 import TradeCard from "./trade-card";
 import TradeCardSkeleton from "./trade-card-skeleton";
@@ -22,107 +21,96 @@ export default function TradeContainer({
   isStreaming?: boolean;
 }) {
   const hasTrades = tradesData.length > 0;
-  const tabCount = tradesData.length + (isStreaming ? 1 : 0);
-  const tabsListRef = useRef<HTMLDivElement>(null);
   const prevCount = useRef(tradesData.length);
-  const [activeTradeTab, setActiveTradeTab] = useState("trade-0");
+  const [currentTradeIndex, setCurrentTradeIndex] = useState(0);
 
-  const scrollToEnd = useCallback(() => {
-    const el = tabsListRef.current;
-    if (!el) return;
-    el.scrollTo({ left: el.scrollWidth, behavior: "smooth" });
-  }, []);
-
-  const scrollActiveTabIntoView = useCallback(() => {
-    const el = tabsListRef.current;
-    if (!el) return;
-
-    const activeTrigger = el.querySelector<HTMLButtonElement>(
-      '[role="tab"][data-state="active"]'
-    );
-    if (!activeTrigger) return;
-
-    activeTrigger.scrollIntoView({
-      behavior: "smooth",
-      block: "nearest",
-      inline: "center",
-    });
-  }, []);
-
-  // Auto-scroll to reveal new tabs as they arrive
+  // Track trade count for dot indicators (no auto-advance).
   useEffect(() => {
-    if (tradesData.length > prevCount.current) {
-      scrollToEnd();
-    }
     prevCount.current = tradesData.length;
-  }, [tradesData.length, scrollToEnd]);
+  }, [tradesData.length]);
 
-  // Keep the selected tab fully visible in horizontally scrollable tab bars.
+  // Keep index in bounds if trade list shrinks.
   useEffect(() => {
-    scrollActiveTabIntoView();
-  }, [activeTradeTab, tabCount, scrollActiveTabIntoView]);
+    if (tradesData.length === 0) return;
+    if (currentTradeIndex > tradesData.length - 1) {
+      setCurrentTradeIndex(tradesData.length - 1);
+    }
+  }, [currentTradeIndex, tradesData.length]);
 
   return (
     <div className="flex-grow">
       <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6">
-        <div className="mb-6 flex gap-4">
+        <div className="mb-6 flex items-center justify-between">
           <Button
             onClick={onBack}
             variant="ghost"
-            className="text-muted-foreground w-full sm:w-auto p-0 h-auto hover:text-white hover:bg-transparent justify-start sm:justify-center"
+            className="text-muted-foreground p-0 h-auto hover:text-white hover:bg-transparent"
           >
-            <ArrowLeft className="text-indigoMain" />
+            <Undo2 className="h-4 w-4 text-indigoMain" />
             Back to Trade Generator
           </Button>
+
+          {hasTrades && (
+            <div className="flex items-center gap-1.5">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setCurrentTradeIndex((i) => Math.max(i - 1, 0))}
+                disabled={currentTradeIndex === 0}
+                className="h-8 w-8 text-muted-foreground hover:text-white hover:bg-muted/40 disabled:opacity-30"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+
+              <div className="flex items-center gap-1.5 px-2">
+                {tradesData.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentTradeIndex(index)}
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      index === currentTradeIndex
+                        ? "w-6 bg-indigoMain"
+                        : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                    }`}
+                  />
+                ))}
+                {isStreaming && (
+                  <span className="relative flex h-2 w-2 ml-0.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigoMain opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-indigoMain/50" />
+                  </span>
+                )}
+              </div>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() =>
+                  setCurrentTradeIndex((i) =>
+                    Math.min(i + 1, tradesData.length - 1)
+                  )
+                }
+                disabled={currentTradeIndex === tradesData.length - 1}
+                className="h-8 w-8 text-muted-foreground hover:text-white hover:bg-muted/40 disabled:opacity-30"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+
+              <span className="text-xs text-muted-foreground ml-1 tabular-nums">
+                {currentTradeIndex + 1}/{tradesData.length}
+                {isStreaming && "+"}
+              </span>
+            </div>
+          )}
         </div>
 
         {hasTrades ? (
-          <Tabs
-            value={activeTradeTab}
-            onValueChange={setActiveTradeTab}
-            className="w-full"
-          >
-            <TabsList
-              ref={tabsListRef}
-              className="flex w-full h-auto overflow-x-auto scrollbar-none gap-2"
-              style={
-                tabCount <= 4
-                  ? { display: "grid", gridTemplateColumns: `repeat(${tabCount}, 1fr)` }
-                  : undefined
-              }
-            >
-              {tradesData.map((_trade, index) => (
-                <TabsTrigger key={index} value={`trade-${index}`} className="flex-shrink-0">
-                  Trade {index + 1}
-                </TabsTrigger>
-              ))}
-              {isStreaming && (
-                <TabsTrigger
-                  value="trade-loading"
-                  className="flex-shrink-0 border-dashed border-indigoMain/30 bg-indigoMain/5"
-                  disabled
-                >
-                  <span className="flex items-center gap-2">
-                    <span className="relative flex h-2 w-2">
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigoMain opacity-75" />
-                      <span className="relative inline-flex h-2 w-2 rounded-full bg-indigoMain" />
-                    </span>
-                    Generating...
-                  </span>
-                </TabsTrigger>
-              )}
-            </TabsList>
-
-            {tradesData.map((trade, index) => (
-              <TabsContent key={index} value={`trade-${index}`} className="mt-6">
-                <TradeCard
-                  trade={trade}
-                  involvedTeams={involvedTeams}
-                  onEditTrade={onEditTrade}
-                />
-              </TabsContent>
-            ))}
-          </Tabs>
+          <TradeCard
+            key={currentTradeIndex}
+            trade={tradesData[currentTradeIndex]!}
+            involvedTeams={involvedTeams}
+            onEditTrade={onEditTrade}
+          />
         ) : isStreaming ? (
           <TradeCardSkeleton />
         ) : null}
