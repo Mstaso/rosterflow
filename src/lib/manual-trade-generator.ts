@@ -272,12 +272,6 @@ function findFillerPlayers(
       (p.contract?.salary ?? 0) >= MIN_SALARY_THRESHOLD
   );
 
-  // Sort by salary descending for greedy pick
-  candidates.sort(
-    (a: Player, b: Player) =>
-      (b.contract?.salary ?? 0) - (a.contract?.salary ?? 0)
-  );
-
   if (capTier === "SECOND_APRON") {
     // One-for-one: find single player closest to deficit
     let bestPlayer: Player | null = null;
@@ -293,7 +287,28 @@ function findFillerPlayers(
     return bestPlayer ? [bestPlayer] : [];
   }
 
-  // Greedy: pick players until we cover the deficit
+  // Prefer a single player whose salary covers the deficit without massive overshoot (within 120%)
+  const maxSingle = deficit * 1.2;
+  let bestSingle: Player | null = null;
+  let bestSingleDiff = Infinity;
+  for (const p of candidates) {
+    const sal = p.contract?.salary ?? 0;
+    if (sal >= deficit && sal <= maxSingle) {
+      const diff = sal - deficit;
+      if (diff < bestSingleDiff) {
+        bestSingleDiff = diff;
+        bestSingle = p;
+      }
+    }
+  }
+  if (bestSingle) return [bestSingle];
+
+  // Greedy ascending: pick smallest-salary players that cover the gap
+  candidates.sort(
+    (a: Player, b: Player) =>
+      (a.contract?.salary ?? 0) - (b.contract?.salary ?? 0)
+  );
+
   const result: Player[] = [];
   let remaining = deficit;
   for (const p of candidates) {

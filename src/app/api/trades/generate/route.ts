@@ -7,6 +7,7 @@ import {
   getDestinationInfo,
   getRosterContext,
   getSalaryMatchingContext,
+  getTeamOutlookContext,
   setupAdditionalTeamsForTrade,
 } from "~/lib/server-utils";
 import {
@@ -70,6 +71,7 @@ export async function POST(request: NextRequest) {
     }
 
     const rosterContext = getRosterContext(involvedTeams);
+    const teamOutlookContext = getTeamOutlookContext(involvedTeams);
     const assetsDescription = getAssetsByTeam(selectedAssets, involvedTeams);
     const salaryMatchingContext = getSalaryMatchingContext(
       selectedAssets,
@@ -98,7 +100,10 @@ export async function POST(request: NextRequest) {
       console.log("[manual-trade] FAILED - returned null (salary matching likely failed)");
     }
 
-    const prompt = `Generate 3-4 realistic 2025-26 NBA trade scenarios using the data below.
+    const prompt = `Generate 3-4 realistic 2025-26 NBA trade scenarios using the data below. Think like a real GM — contenders trade picks for win-now talent, rebuilding teams trade veterans for young players and draft capital.
+
+TEAM OUTLOOK:
+${teamOutlookContext}
 
 SELECTED ASSETS (must appear in every scenario):
 ${assetsDescription}${destinationInfo}
@@ -115,12 +120,17 @@ SALARY MATCHING INSTRUCTIONS:
 - Make sure each team's total incoming salary falls within their valid range
 - SECOND APRON teams: one-for-one only (cannot combine multiple players' salaries)
 
-OTHER RULES:
+TRADE REALISM RULES:
 - Every asset received must be given by another team (balanced trades)
 - Only use players listed above
 - You SHOULD add additional players or picks beyond the selected assets when it makes the trade more realistic, improves salary matching, or balances value. Don't just swap the selected assets 1-for-1 if a real GM would include sweeteners or salary filler.
+- Use player stats (ppg/rpg/apg) to judge value. A 15ppg starter is worth more than a 5ppg bench player at the same salary.
+- Contenders should not give up key contributors (high ppg) without getting equivalent win-now help back.
+- Rebuilding teams should prioritize getting picks and young players.
 - 2-5 teams per trade${hasDestinations ? "\n- Respect destination preferences when possible" : ""}
-- Pick [val:X] indicates estimated value (1-100). Use this to assess trade fairness — higher value picks are worth more.${manualTradeExclusion}
+- Pick [val:X] indicates estimated value (1-100). Use this to assess trade fairness — higher value picks are worth more.
+
+VARIETY: Make each scenario meaningfully different — vary which additional players/picks are included, try different team pairings if 3+ teams are involved, and mix approaches (e.g. one pick-heavy deal, one player-for-player swap, one three-team trade).${manualTradeExclusion}
 
 Respond with ONLY a JSON array. Each scenario:
 [
@@ -148,7 +158,7 @@ Respond with ONLY a JSON array. Each scenario:
         {
           role: "system",
           content:
-            "You are an expert NBA trade analyst. Generate realistic trade scenarios using only the provided roster data. Respond with valid JSON only — no markdown, no explanations.",
+            "You are an expert NBA trade analyst and salary cap specialist. Generate realistic trade scenarios that a real front office would consider — weigh team windows (contending vs rebuilding), player production (stats), age curves, and contract value. Use only the provided roster data. Respond with valid JSON only — no markdown, no explanations.",
         },
         {
           role: "user",

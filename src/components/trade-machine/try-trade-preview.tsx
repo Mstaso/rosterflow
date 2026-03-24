@@ -426,10 +426,9 @@ export default function TryTradePreview({
                                       {player.displayName}
                                     </span>
                                     <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
-                                      (
                                       {player.position?.abbreviation ||
                                         "Unknown"}
-                                      )
+                                      {player.age ? `, Age: ${player.age}` : ""}
                                     </span>
                                   </div>
                                   <div className="text-xs text-muted-foreground">

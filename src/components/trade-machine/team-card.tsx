@@ -297,7 +297,7 @@ export function TeamCard({
                             <div className="font-medium text-sm">
                               {player.displayName}{" "}
                               <span className="text-xs text-muted-foreground">
-                                ({player.position?.abbreviation || "Unknown"})
+                                {player.position?.abbreviation || "Unknown"}{player.age ? `, Age: ${player.age}` : ""}
                               </span>
                             </div>
                             <div className="text-xs text-muted-foreground">

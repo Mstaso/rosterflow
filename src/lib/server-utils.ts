@@ -21,7 +21,12 @@ function getPlayerCompact(player: Player) {
     ? (player.contract.salary / 1000000).toFixed(1)
     : "0";
   const yrs = player.contract?.yearsRemaining ?? 0;
-  return `${player.fullName} | ${player.position?.abbreviation ?? "?"} | $${salary}M | ${yrs}yr | ${player.age}yo`;
+  let line = `${player.fullName} | ${player.position?.abbreviation ?? "?"} | $${salary}M | ${yrs}yr | ${player.age}yo`;
+  const s = player.statistics;
+  if (s) {
+    line += ` | ${s.points}ppg/${s.rebounds}rpg/${s.assists}apg`;
+  }
+  return line;
 }
 
 function getPickCompact(pick: DraftPick) {
@@ -47,6 +52,23 @@ function getPickInfo(pick: DraftPick) {
 function isTradeRelevantPlayer(player: Player): boolean {
   const salary = player.contract?.salary ?? 0;
   return salary >= MIN_SALARY_THRESHOLD;
+}
+
+export function getTeamOutlookContext(involvedTeams: Team[]) {
+  return involvedTeams
+    .map((team: any) => {
+      const name = team.displayName || team.name;
+      const r = team.record;
+      if (!r) return `${name}: record unknown`;
+      const winPct = r.winPercentage ?? (r.wins / (r.wins + r.losses));
+      let outlook = "mid-tier";
+      if (winPct >= 0.6) outlook = "contender (win-now)";
+      else if (winPct >= 0.5) outlook = "playoff team";
+      else if (winPct >= 0.4) outlook = "fringe playoff";
+      else outlook = "rebuilding (future-focused)";
+      return `${name}: ${r.wins}-${r.losses} (${outlook}, conf rank #${r.conferenceRank ?? "?"})`;
+    })
+    .join("\n");
 }
 
 export function getRosterContext(involvedTeams: Team[]) {
