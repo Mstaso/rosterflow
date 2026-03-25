@@ -9,6 +9,7 @@ import {
   MenuIcon,
   XIcon,
   ArrowLeftRight,
+  UserCircleIcon,
 } from "lucide-react";
 import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { UserButton } from "@clerk/nextjs";
@@ -104,7 +105,11 @@ export function Navbar() {
             {/* Right side: Auth */}
             <div className="flex items-center gap-4">
               <SignedOut>
-                <SignInButton mode="modal" />
+                <SignInButton mode="modal">
+                  <button className="p-1 text-muted-foreground hover:text-foreground transition-colors">
+                    <UserCircleIcon className="h-7 w-7" strokeWidth={1.5} />
+                  </button>
+                </SignInButton>
               </SignedOut>
               <SignedIn>
                 <UserButton />
