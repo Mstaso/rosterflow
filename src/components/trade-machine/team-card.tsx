@@ -142,33 +142,35 @@ export function TeamCard({
 
   return (
     <Card className="flex flex-col h-auto overflow-hidden border-indigoMain bg-gradient-to-br from-background via-background/95 to-muted/80 ">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 pt-4 px-4 bg-muted/60">
+      <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2 pt-4 px-4 bg-muted/60">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="text-lg font-semibold p-1 -ml-1 h-auto flex items-center gap-2"
+              className="flex-1 min-w-0 text-lg font-semibold p-1 -ml-1 h-auto justify-start"
               disabled={isLoading}
             >
               {isLoading ? (
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               ) : (
-                <>
+                <div className="flex items-center gap-2 min-w-0 w-full">
                   {team.logos[0] && (
                     <Image
                       src={team.logos[0].href}
                       alt={team.logos[0].alt}
                       width={32}
                       height={32}
-                      className="object-contain"
+                      className="object-contain shrink-0"
                     />
                   )}
-                  {team.displayName}
+                  <span className="truncate">
+                    {team.displayName}
+                  </span>
                   <RepeatIcon
-                    className="ml-2 h-4 w-4 text-muted-foreground hover:text-foreground transition-colors"
+                    className="ml-1 h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground transition-colors"
                     strokeWidth={1.5}
                   />
-                </>
+                </div>
               )}
             </Button>
           </DropdownMenuTrigger>
@@ -201,7 +203,7 @@ export function TeamCard({
           variant="ghost"
           size="icon"
           onClick={() => onRemoveTeam(team.id)}
-          className="text-muted-foreground hover:text-destructive"
+          className="shrink-0 text-muted-foreground hover:text-destructive"
           disabled={isLoading}
         >
           <XIcon className="h-5 w-5" strokeWidth={1.5} />
@@ -278,8 +280,7 @@ export function TeamCard({
                           isSelected
                             ? "bg-muted/90 border-white"
                             : "border-border bg-slate-950 hover:border-indigoMain/50"
-                        } transition-colors cursor-pointer`}
-                        onClick={() => handleOpenPlayerStats(player)}
+                        } transition-colors`}
                       >
                         <div className="flex items-center gap-3">
                           {player.headshot && (

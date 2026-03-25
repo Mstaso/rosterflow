@@ -399,14 +399,7 @@ export default function TryTradePreview({
                           return (
                             <div
                               key={playerIndex}
-                              className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950 hover:border-indigoMain/50 cursor-pointer transition-colors"
-                              onClick={() =>
-                                handleOpenPlayerStats(
-                                  player,
-                                  fromTeam?.color,
-                                  fromTeam?.alternateColor
-                                )
-                              }
+                              className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950 transition-colors"
                             >
                               <div className="flex items-center gap-3">
                                 {player.headshot && (

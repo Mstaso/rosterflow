@@ -261,8 +261,8 @@ export default function SaveTradeModal({
             variant="indigo"
             className="w-full sm:w-auto"
           >
-            <SaveIcon className="mr-2 h-5 w-5" strokeWidth={1.5} />
-            Save Trade
+            <SaveIcon className="mr-1 h-4 w-4" strokeWidth={1.5} />
+            Save
           </Button>
 
           <DialogContent className="w-[90vw] max-w-[425px] mx-auto border-white/80 rounded-xl p-4 sm:p-6">
@@ -388,8 +388,8 @@ export default function SaveTradeModal({
               }
             }}
           >
-            <SaveIcon className="mr-2 h-5 w-5" strokeWidth={1.5} />
-            Save Trade
+            <SaveIcon className="mr-1 h-4 w-4" strokeWidth={1.5} />
+            Save
           </Button>
         </SignInButton>
       )}

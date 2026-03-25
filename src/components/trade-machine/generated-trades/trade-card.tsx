@@ -216,35 +216,34 @@ export default function TradeCard({
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row gap-4 sm:gap-3 mb-4">
-        <SaveTradeModal
-          isLoading={false}
-          tradeInfo={TradesWithInfo}
-          isValidTrade={isValidTrade}
-          selectedTeamIds={involvedTeams.map((t) => t.id)}
-        />
-        <Button
-          variant="edit"
-          className="w-full sm:w-auto"
-          onClick={() => onEditTrade(TradesWithInfo, involvedTeams)}
-        >
-          <PencilIcon className="mr-2 h-5 w-5" strokeWidth={1.5} />
-          Edit Trade
-        </Button>
-        <SnapshotButton onClick={capture} isCapturing={isCapturing} />
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-4">
+        <div className="flex flex-row gap-2 sm:gap-3">
+          <SaveTradeModal
+            isLoading={false}
+            tradeInfo={TradesWithInfo}
+            isValidTrade={isValidTrade}
+            selectedTeamIds={involvedTeams.map((t) => t.id)}
+          />
+          <Button
+            variant="edit"
+            className="w-full sm:w-auto"
+            onClick={() => onEditTrade(TradesWithInfo, involvedTeams)}
+          >
+            <PencilIcon className="mr-1 h-4 w-4" strokeWidth={1.5} />
+            Edit
+          </Button>
+          <SnapshotButton onClick={capture} isCapturing={isCapturing} />
+        </div>
+        {isValidTrade && (
+          <div className="flex items-center gap-2 py-2 px-3 rounded-md border border-green-500/50 bg-green-500/10 text-green-500 w-full md:w-auto justify-center md:justify-end">
+            <CheckCircle className="w-4 h-4 shrink-0" />
+            <div className="text-sm font-medium">
+              Valid trade - Salary rules satisfied
+            </div>
+          </div>
+        )}
       </div>
       <div ref={captureRef}>
-      {isValidTrade && (
-        <div
-          className="flex items-center gap-2 py-3 px-4 mb-4 rounded-md border border-green-500/50 bg-green-500/10 text-green-500
-          justify-center w-full md:w-fit md:mx-0 md:justify-start"
-        >
-          <CheckCircle className="w-4 h-4 shrink-0" />
-          <div className="text-sm font-medium">
-            Valid trade - Salary rules satisfied
-          </div>
-        </div>
-      )}
       <div className="flex flex-col md:flex-row gap-4 justify-center mb-4">
         {TradesWithInfo.map((tradeInfo, index) => (
           <Card
@@ -262,7 +261,7 @@ export default function TradeCard({
                     className="object-contain"
                   />
                 )}
-                <span className="text-lg font-semibold whitespace-nowrap">
+                <span className="text-lg font-semibold whitespace-nowrap md:whitespace-normal md:truncate md:max-w-[180px] lg:max-w-[220px]">
                   {tradeInfo.team?.displayName}
                 </span>
               </div>
@@ -328,77 +327,6 @@ export default function TradeCard({
               </div>
             </div>
             <CardContent className="px-4 py-4 flex-grow flex flex-col bg-muted/60 border-indigoMain">
-              <div>
-                <div className="mb-4">
-                  <div className="text-sm font-semibold mb-2">
-                    Updated Team Cap Info
-                  </div>
-                  <table className="w-full border border-border rounded text-xs">
-                    <tbody>
-                      <tr className="bg-muted/40">
-                        <td className="px-2 py-1 text-muted-foreground w-1/2">
-                          Total Cap
-                        </td>
-                        <td className="px-2 py-1 font-medium w-1/2 text-right">
-                          $
-                          {tradeInfo.team?.totalCapAllocation
-                            ? (
-                                tradeInfo.team?.totalCapAllocation / 1000000
-                              ).toFixed(1)
-                            : "0.0"}
-                          M
-                        </td>
-                      </tr>
-                      <tr className="bg-background">
-                        <td className="px-2 py-1 text-muted-foreground w-1/2">
-                          Cap Space
-                        </td>
-                        <td className="px-2 py-1 font-medium w-1/2 text-right">
-                          $
-                          {(
-                            calculateUpdatedTaxValue(
-                              tradeInfo.team?.capSpace || 0,
-                              tradeInfo.capDifference
-                            ) / 1000000
-                          ).toFixed(1)}
-                          M
-                        </td>
-                      </tr>
-                      <tr className="bg-muted/40">
-                        <td className="px-2 py-1 text-muted-foreground w-1/2">
-                          1st Apron Space
-                        </td>
-                        <td className="px-2 py-1 font-medium w-1/2 text-right">
-                          $
-                          {(
-                            calculateUpdatedTaxValue(
-                              tradeInfo.team?.firstApronSpace || 0,
-                              tradeInfo.capDifference
-                            ) / 1000000
-                          ).toFixed(1)}
-                          M
-                        </td>
-                      </tr>
-                      <tr className="bg-background">
-                        <td className="px-2 py-1 text-muted-foreground w-1/2">
-                          2nd Apron Space
-                        </td>
-                        <td className="px-2 py-1 font-medium w-1/2 text-right">
-                          $
-                          {(
-                            calculateUpdatedTaxValue(
-                              tradeInfo.team?.secondApronSpace || 0,
-                              tradeInfo.capDifference
-                            ) / 1000000
-                          ).toFixed(1)}
-                          M
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
               <div className="space-y-6">
                 {/* Players Received */}
                 {tradeInfo.playersReceived &&
@@ -420,15 +348,7 @@ export default function TradeCard({
                               return (
                                 <div
                                   key={playerIndex}
-                                  className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950 hover:border-indigoMain/50 cursor-pointer transition-colors"
-                                  onClick={() =>
-                                    player &&
-                                    handleOpenPlayerStats(
-                                      player,
-                                      fromTeam?.color,
-                                      fromTeam?.alternateColor
-                                    )
-                                  }
+                                  className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950 transition-colors"
                                 >
                                   <div className="flex items-center gap-3">
                                     {player?.headshot && (
@@ -562,17 +482,78 @@ export default function TradeCard({
                       <div className="text-sm">No assets received</div>
                     </div>
                   )}
+
+                {/* Updated Cap Info */}
+                <div>
+                  <div className="text-sm font-semibold mb-2">
+                    Updated Team Cap Info
+                  </div>
+                  <table className="w-full border border-border rounded text-xs">
+                    <tbody>
+                      <tr className="bg-muted/40">
+                        <td className="px-2 py-1 text-muted-foreground w-1/2">
+                          Total Cap
+                        </td>
+                        <td className="px-2 py-1 font-medium w-1/2 text-right">
+                          $
+                          {tradeInfo.team?.totalCapAllocation
+                            ? (
+                                tradeInfo.team?.totalCapAllocation / 1000000
+                              ).toFixed(1)
+                            : "0.0"}
+                          M
+                        </td>
+                      </tr>
+                      <tr className="bg-background">
+                        <td className="px-2 py-1 text-muted-foreground w-1/2">
+                          Cap Space
+                        </td>
+                        <td className="px-2 py-1 font-medium w-1/2 text-right">
+                          $
+                          {(
+                            calculateUpdatedTaxValue(
+                              tradeInfo.team?.capSpace || 0,
+                              tradeInfo.capDifference
+                            ) / 1000000
+                          ).toFixed(1)}
+                          M
+                        </td>
+                      </tr>
+                      <tr className="bg-muted/40">
+                        <td className="px-2 py-1 text-muted-foreground w-1/2">
+                          1st Apron Space
+                        </td>
+                        <td className="px-2 py-1 font-medium w-1/2 text-right">
+                          $
+                          {(
+                            calculateUpdatedTaxValue(
+                              tradeInfo.team?.firstApronSpace || 0,
+                              tradeInfo.capDifference
+                            ) / 1000000
+                          ).toFixed(1)}
+                          M
+                        </td>
+                      </tr>
+                      <tr className="bg-background">
+                        <td className="px-2 py-1 text-muted-foreground w-1/2">
+                          2nd Apron Space
+                        </td>
+                        <td className="px-2 py-1 font-medium w-1/2 text-right">
+                          $
+                          {(
+                            calculateUpdatedTaxValue(
+                              tradeInfo.team?.secondApronSpace || 0,
+                              tradeInfo.capDifference
+                            ) / 1000000
+                          ).toFixed(1)}
+                          M
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </CardContent>
-            {/* <CardFooter className="flex flex-col gap-2 px-4 pb-4">
-            <div className="text-sm text-muted-foreground">
-              <strong>Trade Rationale:</strong>{" "}
-              {trade.teams[index]?.explanation}
-            </div>
-            <div className="text-sm text-muted-foreground">
-              <strong>Salary Details:</strong> {trade.teams[index]?.salaryMatch}
-            </div>
-          </CardFooter> */}
           </Card>
         ))}
       </div>
