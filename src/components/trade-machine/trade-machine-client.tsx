@@ -440,14 +440,7 @@ export default function TradeMachineClient({
         involvedTeams={selectedTeams}
         isStreaming={isStreamingTrades}
         onBack={() => {
-          setGeneratedTrades([]);
           setShowTradeContainer(false);
-          setIsStreamingTrades(false);
-          setSelectedAssets([]);
-          setSelectedTeamIds([]);
-          setSelectedAssets([]);
-          setSelectedTeams([]);
-          setActiveTab("");
         }}
         onEditTrade={handleEditTrade}
       />
@@ -509,7 +502,7 @@ export default function TradeMachineClient({
               className="w-full sm:w-auto"
             >
               <LightbulbIcon className="h-4 w-4" strokeWidth={1.5} />
-              <span>Generate Trade</span>
+              <span>Generate Trades</span>
             </Button>
             <SelectedAssetsTrigger
               selectedAssets={selectedAssets}

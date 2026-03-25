@@ -33,6 +33,7 @@ import {
   Loader2Icon,
   ShareIcon,
   CheckIcon,
+  BarChart3Icon,
 } from "lucide-react";
 import {
   deleteTrade,
@@ -668,75 +669,6 @@ export function SavedTradeDetail({
               </div>
 
               <CardContent className="px-4 py-4 flex-grow flex flex-col bg-muted/60 border-indigoMain">
-                {/* Updated Team Cap Info */}
-                <div className="mb-4">
-                  <div className="text-sm font-semibold mb-2">
-                    Updated Team Cap Info
-                  </div>
-                  <table className="w-full border border-border rounded text-xs">
-                    <tbody>
-                      <tr className="bg-muted/40">
-                        <td className="px-2 py-1 text-muted-foreground w-1/2">
-                          Total Cap
-                        </td>
-                        <td className="px-2 py-1 font-medium w-1/2 text-right">
-                          $
-                          {teamInfo.tradeTeam.totalCapAllocation
-                            ? (
-                                teamInfo.tradeTeam.totalCapAllocation / 1000000
-                              ).toFixed(1)
-                            : "0.0"}
-                          M
-                        </td>
-                      </tr>
-                      <tr className="bg-background">
-                        <td className="px-2 py-1 text-muted-foreground w-1/2">
-                          Cap Space
-                        </td>
-                        <td className="px-2 py-1 font-medium w-1/2 text-right">
-                          $
-                          {(
-                            calculateUpdatedTaxValue(
-                              teamInfo.tradeTeam.capSpace || 0,
-                              teamInfo.capDifference
-                            ) / 1000000
-                          ).toFixed(1)}
-                          M
-                        </td>
-                      </tr>
-                      <tr className="bg-muted/40">
-                        <td className="px-2 py-1 text-muted-foreground w-1/2">
-                          1st Apron Space
-                        </td>
-                        <td className="px-2 py-1 font-medium w-1/2 text-right">
-                          $
-                          {(
-                            calculateUpdatedTaxValue(
-                              teamInfo.tradeTeam.firstApronSpace || 0,
-                              teamInfo.capDifference
-                            ) / 1000000
-                          ).toFixed(1)}
-                          M
-                        </td>
-                      </tr>
-                      <tr className="bg-background">
-                        <td className="px-2 py-1 text-muted-foreground w-1/2">
-                          2nd Apron Space
-                        </td>
-                        <td className="px-2 py-1 font-medium w-1/2 text-right">
-                          $
-                          {(
-                            calculateUpdatedTaxValue(
-                              teamInfo.tradeTeam.secondApronSpace || 0,
-                              teamInfo.capDifference
-                            ) / 1000000
-                          ).toFixed(1)}
-                          M
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
                 <div className="space-y-6">
                   {/* Players Received */}
                   {teamInfo.playersReceived.length > 0 && (
@@ -749,8 +681,7 @@ export function SavedTradeDetail({
                         {teamInfo.playersReceived.map((asset) => (
                           <div
                             key={asset.id}
-                            className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950 hover:border-indigoMain/50 cursor-pointer transition-colors"
-                            onClick={() => handleOpenPlayerStats(asset)}
+                            className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950 transition-colors"
                           >
                             <div className="flex items-center gap-3">
                               {(asset.playerHeadshot as { href?: string })
@@ -803,6 +734,14 @@ export function SavedTradeDetail({
                                 </div>
                               </div>
                             </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-indigoMain"
+                              onClick={() => handleOpenPlayerStats(asset)}
+                            >
+                              <BarChart3Icon className="h-4 w-4" />
+                            </Button>
                           </div>
                         ))}
                       </div>
@@ -848,6 +787,76 @@ export function SavedTradeDetail({
                         <div className="text-sm">No assets received</div>
                       </div>
                     )}
+
+                  {/* Updated Cap Info */}
+                  <div>
+                    <div className="text-sm font-semibold mb-2">
+                      Updated Team Cap Info
+                    </div>
+                    <table className="w-full border border-border rounded text-xs">
+                      <tbody>
+                        <tr className="bg-muted/40">
+                          <td className="px-2 py-1 text-muted-foreground w-1/2">
+                            Total Cap
+                          </td>
+                          <td className="px-2 py-1 font-medium w-1/2 text-right">
+                            $
+                            {teamInfo.tradeTeam.totalCapAllocation
+                              ? (
+                                  teamInfo.tradeTeam.totalCapAllocation / 1000000
+                                ).toFixed(1)
+                              : "0.0"}
+                            M
+                          </td>
+                        </tr>
+                        <tr className="bg-background">
+                          <td className="px-2 py-1 text-muted-foreground w-1/2">
+                            Cap Space
+                          </td>
+                          <td className="px-2 py-1 font-medium w-1/2 text-right">
+                            $
+                            {(
+                              calculateUpdatedTaxValue(
+                                teamInfo.tradeTeam.capSpace || 0,
+                                teamInfo.capDifference
+                              ) / 1000000
+                            ).toFixed(1)}
+                            M
+                          </td>
+                        </tr>
+                        <tr className="bg-muted/40">
+                          <td className="px-2 py-1 text-muted-foreground w-1/2">
+                            1st Apron Space
+                          </td>
+                          <td className="px-2 py-1 font-medium w-1/2 text-right">
+                            $
+                            {(
+                              calculateUpdatedTaxValue(
+                                teamInfo.tradeTeam.firstApronSpace || 0,
+                                teamInfo.capDifference
+                              ) / 1000000
+                            ).toFixed(1)}
+                            M
+                          </td>
+                        </tr>
+                        <tr className="bg-background">
+                          <td className="px-2 py-1 text-muted-foreground w-1/2">
+                            2nd Apron Space
+                          </td>
+                          <td className="px-2 py-1 font-medium w-1/2 text-right">
+                            $
+                            {(
+                              calculateUpdatedTaxValue(
+                                teamInfo.tradeTeam.secondApronSpace || 0,
+                                teamInfo.capDifference
+                              ) / 1000000
+                            ).toFixed(1)}
+                            M
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </CardContent>
             </Card>

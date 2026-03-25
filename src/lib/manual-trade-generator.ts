@@ -265,6 +265,12 @@ function findFillerPlayers(
   );
   const fillerIds = new Set(movement.fillerOutgoing.map((p) => p.id));
 
+  // Cap total outgoing players per team at 3
+  const existingOutgoingPlayers =
+    movement.outgoing.filter((o) => o.player).length + movement.fillerOutgoing.length;
+  const maxFillers = Math.max(0, 3 - existingOutgoingPlayers);
+  if (maxFillers === 0) return [];
+
   const candidates = (movement.team.players || []).filter(
     (p: Player) =>
       !selectedPlayerIds.has(p.id) &&
@@ -312,7 +318,7 @@ function findFillerPlayers(
   const result: Player[] = [];
   let remaining = deficit;
   for (const p of candidates) {
-    if (remaining <= 0) break;
+    if (remaining <= 0 || result.length >= maxFillers) break;
     const sal = p.contract?.salary ?? 0;
     result.push(p);
     remaining -= sal;

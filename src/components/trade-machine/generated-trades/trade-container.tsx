@@ -40,11 +40,11 @@ export default function TradeContainer({
   return (
     <div className="flex-grow">
       <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Button
             onClick={onBack}
             variant="ghost"
-            className="text-muted-foreground p-0 h-auto hover:text-white hover:bg-transparent"
+            className="text-muted-foreground p-0 h-auto hover:text-white hover:bg-transparent justify-start sm:justify-center"
           >
             <Undo2 className="h-4 w-4 text-indigoMain" />
             Back to Trade Generator
@@ -57,27 +57,27 @@ export default function TradeContainer({
                 size="icon"
                 onClick={() => setCurrentTradeIndex((i) => Math.max(i - 1, 0))}
                 disabled={currentTradeIndex === 0}
-                className="h-8 w-8 text-muted-foreground hover:text-white hover:bg-muted/40 disabled:opacity-30"
+                className="h-9 w-9 text-muted-foreground hover:text-white hover:bg-muted/40 disabled:opacity-30"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-5 w-5" />
               </Button>
 
-              <div className="flex items-center gap-1.5 px-2">
+              <div className="flex items-center gap-2 px-2">
                 {tradesData.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentTradeIndex(index)}
-                    className={`h-2 rounded-full transition-all duration-300 ${
+                    className={`h-2.5 rounded-full transition-all duration-300 ${
                       index === currentTradeIndex
-                        ? "w-6 bg-indigoMain"
-                        : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                        ? "w-7 bg-indigoMain"
+                        : "w-2.5 bg-muted-foreground/30 hover:bg-muted-foreground/50"
                     }`}
                   />
                 ))}
                 {isStreaming && (
-                  <span className="relative flex h-2 w-2 ml-0.5">
+                  <span className="relative flex h-2.5 w-2.5 ml-0.5">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigoMain opacity-75" />
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-indigoMain/50" />
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-indigoMain/50" />
                   </span>
                 )}
               </div>
@@ -91,9 +91,9 @@ export default function TradeContainer({
                   )
                 }
                 disabled={currentTradeIndex === tradesData.length - 1}
-                className="h-8 w-8 text-muted-foreground hover:text-white hover:bg-muted/40 disabled:opacity-30"
+                className="h-9 w-9 text-muted-foreground hover:text-white hover:bg-muted/40 disabled:opacity-30"
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-5 w-5" />
               </Button>
 
               <span className="text-xs text-muted-foreground ml-1 tabular-nums">

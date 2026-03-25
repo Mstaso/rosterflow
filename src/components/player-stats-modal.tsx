@@ -80,19 +80,19 @@ export function PlayerStatsModal({
           fetch(`/api/espn/athlete/${espnId}`),
           fetch(`https://site.api.espn.com/apis/common/v3/sports/basketball/nba/athletes/${espnId}`),
         ]);
-   
+
         // Process stats
         if (statsResponse.ok) {
           const result = await statsResponse.json();
-          
+
           if (result.success && result.data?.categories) {
             const averagesCategory = result.data.categories.find(
               (cat: any) => cat.sortKey === "averages"
             );
-            
+
             if (averagesCategory) {
               const labels: string[] = averagesCategory.labels || averagesCategory.displayNames || [];
-              
+
               const seasons: SeasonStats[] = [];
               if (averagesCategory.statistics && Array.isArray(averagesCategory.statistics)) {
                 for (const seasonData of averagesCategory.statistics) {
@@ -105,11 +105,11 @@ export function PlayerStatsModal({
                   }
                 }
               }
-              
+
               const careerTotals: string[] = averagesCategory.totals || [];
               const lastSeason = seasons[seasons.length - 1];
               const currentSeasonYear = lastSeason?.season || "";
-              
+
               setPerGameStats({
                 labels,
                 seasons,
@@ -124,11 +124,11 @@ export function PlayerStatsModal({
         if (athleteResponse.ok) {
           const athleteData = await athleteResponse.json();
           const athlete = athleteData.athlete;
-          
+
           if (athlete) {
             // Try to get team colors from athlete's team
             const athleteTeam = athlete.team;
-            
+
             setAthleteInfo({
               displayHeight: athlete.displayHeight || "",
               displayWeight: athlete.displayWeight || "",
@@ -174,11 +174,11 @@ export function PlayerStatsModal({
   return (
     <>
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 z-[100] bg-black/80 animate-in fade-in-0"
         onClick={onClose}
       />
-      
+
       {/* Modal */}
       <div className="fixed left-[50%] top-[50%] z-[101] w-full max-w-2xl translate-x-[-50%] translate-y-[-50%] animate-in fade-in-0 zoom-in-95 px-4">
         <div className="bg-background border border-border rounded-lg shadow-lg overflow-hidden">
@@ -190,7 +190,7 @@ export function PlayerStatsModal({
             }}
           >
             <div className="absolute inset-0 bg-black/20" />
-            
+
             {/* Close button */}
             <Button
               variant="ghost"
@@ -235,30 +235,43 @@ export function PlayerStatsModal({
                   <h2 className="text-xl font-bold truncate">
                     {player?.displayName}
                   </h2>
-                  <div className="flex items-center gap-2 mt-1 text-sm text-white/80">
+                  <div className="flex items-center gap-2 mt-1 text-sm text-white/80 flex-wrap">
                     <Badge className="bg-white/20 text-white border-0 text-xs px-2 py-0">
                       {athleteInfo?.position || player?.position?.abbreviation}
                     </Badge>
-                    {(athleteInfo?.displayHeight || player?.displayHeight) && (
-                      <span>{athleteInfo?.displayHeight || player?.displayHeight}</span>
+                    {player?.age && (
+                      <span>Age: {player.age}</span>
                     )}
-                    {(athleteInfo?.displayHeight || player?.displayHeight) && (athleteInfo?.displayWeight || player?.displayWeight) && (
-                      <span className="text-white/40">·</span>
+                    {(athleteInfo?.displayHeight || player?.displayHeight) && (
+                      <>
+                        <span className="text-white/40">·</span>
+                        <span>{athleteInfo?.displayHeight || player?.displayHeight}</span>
+                      </>
                     )}
                     {(athleteInfo?.displayWeight || player?.displayWeight) && (
-                      <span>{athleteInfo?.displayWeight || player?.displayWeight}</span>
+                      <>
+                        <span className="text-white/40">·</span>
+                        <span>{athleteInfo?.displayWeight || player?.displayWeight}</span>
+                      </>
                     )}
                   </div>
+                  {player?.contract && (
+                    <div className="flex items-center gap-1.5 mt-1.5 text-sm text-white/90 font-medium">
+                      <span>${(player.contract.salary / 1000000).toFixed(1)}M</span>
+                      <span className="text-white/40">·</span>
+                      <span>{player.contract.yearsRemaining} {player.contract.yearsRemaining === 1 ? "yr" : "yrs"} remaining</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Current Season Stats Banner - ESPN style */}
+          {/* Current Season Stats Banner */}
           {perGameStats && keyStats.length > 0 && (
-            <div className="px-4 py-3 bg-background">
+            <div className="px-5 py-3 bg-background border-b border-border">
               <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                {perGameStats.currentSeasonYear} Regular Season Stats
+                {perGameStats.currentSeasonYear} Per Game
               </div>
               <div className="flex justify-between items-end">
                 {keyStats.map(({ label, value }) => (
@@ -271,12 +284,12 @@ export function PlayerStatsModal({
             </div>
           )}
 
-          {/* Stats section */}
-          <div className="max-h-[50vh] overflow-y-auto">
+          {/* Stats table */}
+          <div className="max-h-[35vh] overflow-y-auto">
             {isLoading ? (
               <div className="p-4 space-y-3">
                 <Skeleton className="h-8 w-32" />
-                <Skeleton className="h-48 w-full" />
+                <Skeleton className="h-32 w-full" />
               </div>
             ) : error || !espnId ? (
               <div className="text-center py-8 text-muted-foreground">
@@ -287,95 +300,71 @@ export function PlayerStatsModal({
                 <p className="text-sm">No stats available</p>
               </div>
             ) : (
-              <div>
-                {/* Per Game Stats Table */}
-                <div className="p-4">
-                  <h3 className="text-sm font-semibold text-foreground mb-3">
-                    Per Game Stats
-                  </h3>
-                  
-                  <div className="border border-border rounded-lg overflow-hidden">
-                    <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
-                      <table className="w-full text-sm">
-                        <thead className="sticky top-0 z-10">
-                          <tr className="bg-muted border-b border-border">
-                            <th className="px-3 py-2 text-left text-xs font-semibold text-muted-foreground sticky left-0 bg-muted">
-                              Season
+              <div className="p-4 pb-6">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Season History
+                </h3>
+
+                <div className="border border-border rounded-lg overflow-hidden">
+                  <div className="overflow-x-auto max-h-[28vh] overflow-y-auto">
+                    <table className="w-full text-xs">
+                      <thead className="sticky top-0 z-10">
+                        <tr className="bg-muted border-b border-border">
+                          <th className="px-2.5 py-1.5 text-left text-[10px] font-semibold text-muted-foreground sticky left-0 bg-muted">
+                            Season
+                          </th>
+                          {perGameStats.labels.map((label, i) => (
+                            <th
+                              key={i}
+                              className="px-1.5 py-1.5 text-[10px] font-semibold text-muted-foreground text-center whitespace-nowrap bg-muted"
+                            >
+                              {label}
                             </th>
-                            {perGameStats.labels.map((label, i) => (
-                              <th 
-                                key={i} 
-                                className="px-2 py-2 text-xs font-semibold text-muted-foreground text-center whitespace-nowrap bg-muted"
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[...perGameStats.seasons].reverse().map((season, idx) => (
+                          <tr
+                            key={idx}
+                            className={`border-b border-border last:border-b-0 ${
+                              idx === 0 ? "bg-muted font-medium" : "hover:bg-muted/20"
+                            }`}
+                          >
+                            <td className={`px-2.5 py-1.5 text-[11px] whitespace-nowrap sticky left-0 ${
+                              idx === 0 ? "bg-muted" : "bg-background"
+                            }`}>
+                              {season.season}
+                            </td>
+                            {season.stats.map((value, i) => (
+                              <td
+                                key={i}
+                                className="px-1.5 py-1.5 text-center whitespace-nowrap"
                               >
-                                {label}
-                              </th>
+                                {value}
+                              </td>
                             ))}
                           </tr>
-                        </thead>
-                        <tbody>
-                          {/* Show seasons in reverse order (most recent first) */}
-                          {[...perGameStats.seasons].reverse().map((season, idx) => (
-                            <tr 
-                              key={idx} 
-                              className={`border-b border-border last:border-b-0 ${
-                                idx === 0 ? "bg-muted font-medium" : "hover:bg-muted/20"
-                              }`}
-                            >
-                              <td className={`px-3 py-2 text-xs whitespace-nowrap sticky left-0 ${
-                                idx === 0 ? "bg-muted" : "bg-background"
-                              }`}>
-                                {season.season}
+                        ))}
+                        {perGameStats.careerTotals.length > 0 && (
+                          <tr className="bg-muted font-semibold border-t-2 border-border">
+                            <td className="px-2.5 py-1.5 text-[11px] whitespace-nowrap sticky left-0 bg-muted">
+                              Career
+                            </td>
+                            {perGameStats.careerTotals.map((value, i) => (
+                              <td
+                                key={i}
+                                className="px-1.5 py-1.5 text-center whitespace-nowrap"
+                              >
+                                {value}
                               </td>
-                              {season.stats.map((value, i) => (
-                                <td 
-                                  key={i} 
-                                  className="px-2 py-2 text-center whitespace-nowrap"
-                                >
-                                  {value}
-                                </td>
-                              ))}
-                            </tr>
-                          ))}
-                          {/* Career Totals Row */}
-                          {perGameStats.careerTotals.length > 0 && (
-                            <tr className="bg-muted font-semibold border-t-2 border-border">
-                              <td className="px-3 py-2 text-xs whitespace-nowrap sticky left-0 bg-muted">
-                                Career
-                              </td>
-                              {perGameStats.careerTotals.map((value, i) => (
-                                <td 
-                                  key={i} 
-                                  className="px-2 py-2 text-center whitespace-nowrap"
-                                >
-                                  {value}
-                                </td>
-                              ))}
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
+                            ))}
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
-
-                {/* Contract info if available */}
-                {player?.contract && (
-                  <div className="p-4 border-t border-border">
-                    <h3 className="text-sm font-semibold text-foreground mb-3">
-                      Contract
-                    </h3>
-                    <div className="flex gap-6 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">Salary: </span>
-                        <span className="font-medium">${(player.contract.salary / 1000000).toFixed(1)}M</span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Years: </span>
-                        <span className="font-medium">{player.contract.yearsRemaining}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
           </div>
