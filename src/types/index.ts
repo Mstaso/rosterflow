@@ -227,6 +227,8 @@ export type TradeInfo = {
   team: Team | undefined;
   playersReceived: (Player | undefined)[] | undefined;
   picksReceived: EnrichedPick[] | undefined;
+  playersSent: (Player | undefined)[] | undefined;
+  picksSent: EnrichedPick[] | undefined;
   outGoingSalary: number | undefined;
   inComingSalary: number | undefined;
   capDifference: number;

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Team, TradeScenario, TradeInfo, EnrichedPick, Player } from "~/types";
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "~/components/ui/tabs";
 import {
   UsersIcon,
   FileTextIcon,
@@ -113,6 +114,11 @@ export default function TradeCard({
       return findTeam?.players?.find((p) => p.fullName === player.name);
     });
 
+    const enrichedGivesPicks: EnrichedPick[] | undefined =
+      tradeTeam.gives?.picks?.map((pick) => {
+        return mapPickToRealDraftPick(pick, findTeam);
+      });
+
     const outGoingSalary =
       findGivenPlayers?.reduce((acc, player) => {
         return acc + (player?.contract?.salary || 0);
@@ -191,6 +197,8 @@ export default function TradeCard({
       team: findTeam,
       playersReceived: findReceivedPlayers,
       picksReceived: enrichedPicks,
+      playersSent: findGivenPlayers,
+      picksSent: enrichedGivesPicks,
       outGoingSalary,
       inComingSalary,
       capDifference,
@@ -327,6 +335,13 @@ export default function TradeCard({
               </div>
             </div>
             <CardContent className="px-4 py-4 flex-grow flex flex-col bg-muted/60 border-indigoMain">
+              <Tabs defaultValue="receives" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                  <TabsTrigger value="receives">Receives</TabsTrigger>
+                  <TabsTrigger value="sends">Sends</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="receives" className="mt-0">
               <div className="space-y-6">
                 {/* Players Received */}
                 {tradeInfo.playersReceived &&
@@ -483,75 +498,170 @@ export default function TradeCard({
                     </div>
                   )}
 
-                {/* Updated Cap Info */}
-                <div>
-                  <div className="text-sm font-semibold mb-2">
-                    Updated Team Cap Info
+              </div>
+                </TabsContent>
+
+                <TabsContent value="sends" className="mt-0">
+                  <div className="space-y-6">
+                    {/* Players Sent */}
+                    {tradeInfo.playersSent &&
+                      tradeInfo.playersSent.length > 0 && (
+                        <div>
+                          <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-muted-foreground">
+                            <UsersIcon className="w-4 h-4" strokeWidth={1.5} />
+                            Players Sent
+                          </div>
+                          <div className="space-y-3">
+                            {tradeInfo.playersSent.map(
+                              (player, playerIndex) => (
+                                <div
+                                  key={playerIndex}
+                                  className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950 transition-colors"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    {player?.headshot && (
+                                      <div className="bg-white/20 p-1 rounded-full">
+                                        <Image
+                                          src={player.headshot.href}
+                                          alt={player.displayName}
+                                          width={96}
+                                          height={96}
+                                          className="rounded-full object-cover w-12 h-12"
+                                        />
+                                      </div>
+                                    )}
+                                    <div className="min-w-0">
+                                      <div className="flex items-baseline gap-1 min-w-0">
+                                        <span className="font-medium text-sm truncate">
+                                          {player?.displayName}
+                                        </span>
+                                        <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
+                                          {player?.position?.abbreviation || "Unknown"}
+                                          {player?.age ? `, Age: ${player.age}` : ""}
+                                        </span>
+                                      </div>
+                                      <div className="text-xs text-muted-foreground">
+                                        {player?.contract
+                                          ? `Salary: $${(player.contract.salary / 1000000).toFixed(1)}M`
+                                          : "No contract"}
+                                        {" | "}
+                                        {player?.contract?.yearsRemaining}
+                                        {` ${player?.contract?.yearsRemaining === 1 ? "yr" : "yrs"}`}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-muted-foreground hover:text-indigoMain"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      player &&
+                                        handleOpenPlayerStats(
+                                          player,
+                                          tradeInfo.team?.color,
+                                          tradeInfo.team?.alternateColor
+                                        );
+                                    }}
+                                  >
+                                    <BarChart3Icon className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Picks Sent */}
+                    {tradeInfo.picksSent &&
+                      tradeInfo.picksSent.length > 0 && (
+                        <div>
+                          <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-muted-foreground">
+                            <FileTextIcon className="w-4 h-4" strokeWidth={1.5} />
+                            Picks Sent
+                          </div>
+                          <div className="space-y-3">
+                            {tradeInfo.picksSent.map((pick, pickIndex) => {
+                              const realPick = pick.draftPick;
+                              const roundSuffix =
+                                realPick?.round === 1 ? "st" : realPick?.round === 2 ? "nd" : "th";
+                              return (
+                                <div
+                                  key={pickIndex}
+                                  className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950"
+                                >
+                                  <div className="flex flex-col gap-1">
+                                    <div className="font-medium text-sm">
+                                      {realPick
+                                        ? `${realPick.year} ${realPick.round}${roundSuffix} Round Pick`
+                                        : pick?.name}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                      {realPick?.isProtected && (
+                                        <span className="text-amber-500 mr-2">Protected</span>
+                                      )}
+                                      {realPick?.isSwap && (
+                                        <span className="text-blue-400 mr-2">Swap Rights</span>
+                                      )}
+                                      {realPick?.description ? (
+                                        <span>{realPick.description}</span>
+                                      ) : (
+                                        <span>Draft pick</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                    {/* No assets sent */}
+                    {(!tradeInfo.playersSent || tradeInfo.playersSent.length === 0) &&
+                      (!tradeInfo.picksSent || tradeInfo.picksSent.length === 0) && (
+                        <div className="text-center py-6 text-muted-foreground">
+                          <div className="text-sm">No assets sent</div>
+                        </div>
+                      )}
                   </div>
-                  <table className="w-full border border-border rounded text-xs">
-                    <tbody>
-                      <tr className="bg-muted/40">
-                        <td className="px-2 py-1 text-muted-foreground w-1/2">
-                          Total Cap
-                        </td>
-                        <td className="px-2 py-1 font-medium w-1/2 text-right">
-                          $
-                          {tradeInfo.team?.totalCapAllocation
-                            ? (
-                                tradeInfo.team?.totalCapAllocation / 1000000
-                              ).toFixed(1)
-                            : "0.0"}
-                          M
-                        </td>
-                      </tr>
-                      <tr className="bg-background">
-                        <td className="px-2 py-1 text-muted-foreground w-1/2">
-                          Cap Space
-                        </td>
-                        <td className="px-2 py-1 font-medium w-1/2 text-right">
-                          $
-                          {(
-                            calculateUpdatedTaxValue(
-                              tradeInfo.team?.capSpace || 0,
-                              tradeInfo.capDifference
-                            ) / 1000000
-                          ).toFixed(1)}
-                          M
-                        </td>
-                      </tr>
-                      <tr className="bg-muted/40">
-                        <td className="px-2 py-1 text-muted-foreground w-1/2">
-                          1st Apron Space
-                        </td>
-                        <td className="px-2 py-1 font-medium w-1/2 text-right">
-                          $
-                          {(
-                            calculateUpdatedTaxValue(
-                              tradeInfo.team?.firstApronSpace || 0,
-                              tradeInfo.capDifference
-                            ) / 1000000
-                          ).toFixed(1)}
-                          M
-                        </td>
-                      </tr>
-                      <tr className="bg-background">
-                        <td className="px-2 py-1 text-muted-foreground w-1/2">
-                          2nd Apron Space
-                        </td>
-                        <td className="px-2 py-1 font-medium w-1/2 text-right">
-                          $
-                          {(
-                            calculateUpdatedTaxValue(
-                              tradeInfo.team?.secondApronSpace || 0,
-                              tradeInfo.capDifference
-                            ) / 1000000
-                          ).toFixed(1)}
-                          M
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                </TabsContent>
+              </Tabs>
+
+              {/* Updated Cap Info - always visible */}
+              <div className="mt-6">
+                <div className="text-sm font-semibold mb-2">
+                  Updated Team Cap Info
                 </div>
+                <table className="w-full border border-border rounded text-xs">
+                  <tbody>
+                    <tr className="bg-muted/40">
+                      <td className="px-2 py-1 text-muted-foreground w-1/2">Total Cap</td>
+                      <td className="px-2 py-1 font-medium w-1/2 text-right">
+                        ${tradeInfo.team?.totalCapAllocation ? (tradeInfo.team?.totalCapAllocation / 1000000).toFixed(1) : "0.0"}M
+                      </td>
+                    </tr>
+                    <tr className="bg-background">
+                      <td className="px-2 py-1 text-muted-foreground w-1/2">Cap Space</td>
+                      <td className="px-2 py-1 font-medium w-1/2 text-right">
+                        ${(calculateUpdatedTaxValue(tradeInfo.team?.capSpace || 0, tradeInfo.capDifference) / 1000000).toFixed(1)}M
+                      </td>
+                    </tr>
+                    <tr className="bg-muted/40">
+                      <td className="px-2 py-1 text-muted-foreground w-1/2">1st Apron Space</td>
+                      <td className="px-2 py-1 font-medium w-1/2 text-right">
+                        ${(calculateUpdatedTaxValue(tradeInfo.team?.firstApronSpace || 0, tradeInfo.capDifference) / 1000000).toFixed(1)}M
+                      </td>
+                    </tr>
+                    <tr className="bg-background">
+                      <td className="px-2 py-1 text-muted-foreground w-1/2">2nd Apron Space</td>
+                      <td className="px-2 py-1 font-medium w-1/2 text-right">
+                        ${(calculateUpdatedTaxValue(tradeInfo.team?.secondApronSpace || 0, tradeInfo.capDifference) / 1000000).toFixed(1)}M
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </CardContent>
           </Card>

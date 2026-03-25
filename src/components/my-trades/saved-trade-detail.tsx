@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "~/components/ui/tabs";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { Textarea } from "~/components/ui/textarea";
@@ -124,6 +125,8 @@ type TeamTradeInfo = {
   tradeTeam: TradeTeamSnapshot;
   playersReceived: TradeAsset[];
   picksReceived: TradeAsset[];
+  playersSent: TradeAsset[];
+  picksSent: TradeAsset[];
   outgoingSalary: number;
   incomingSalary: number;
   capDifference: number;
@@ -322,6 +325,8 @@ export function SavedTradeDetail({
           tradeTeam: asset.targetTradeTeam,
           playersReceived: [],
           picksReceived: [],
+          playersSent: [],
+          picksSent: [],
           outgoingSalary: 0,
           incomingSalary: 0,
           capDifference: 0,
@@ -338,14 +343,17 @@ export function SavedTradeDetail({
       }
     });
 
-    // Calculate outgoing salary for each team
+    // Build sent arrays and calculate outgoing salary for each team
     trade.assets.forEach((asset) => {
       const sourceTradeTeamId = asset.tradeTeamId;
-      // Find the target team entry that matches this source team
-      // (outgoing = assets where this team is the source)
-      if (teamMap.has(sourceTradeTeamId) && asset.type === "player") {
+      if (teamMap.has(sourceTradeTeamId)) {
         const teamInfo = teamMap.get(sourceTradeTeamId)!;
-        teamInfo.outgoingSalary += asset.playerSalary || 0;
+        if (asset.type === "player") {
+          teamInfo.playersSent.push(asset);
+          teamInfo.outgoingSalary += asset.playerSalary || 0;
+        } else if (asset.type === "pick") {
+          teamInfo.picksSent.push(asset);
+        }
       }
     });
 
@@ -669,6 +677,13 @@ export function SavedTradeDetail({
               </div>
 
               <CardContent className="px-4 py-4 flex-grow flex flex-col bg-muted/60 border-indigoMain">
+                <Tabs defaultValue="receives" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 mb-4">
+                    <TabsTrigger value="receives">Receives</TabsTrigger>
+                    <TabsTrigger value="sends">Sends</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="receives" className="mt-0">
                 <div className="space-y-6">
                   {/* Players Received */}
                   {teamInfo.playersReceived.length > 0 && (
@@ -788,75 +803,152 @@ export function SavedTradeDetail({
                       </div>
                     )}
 
-                  {/* Updated Cap Info */}
-                  <div>
-                    <div className="text-sm font-semibold mb-2">
-                      Updated Team Cap Info
+                </div>
+                  </TabsContent>
+
+                  <TabsContent value="sends" className="mt-0">
+                    <div className="space-y-6">
+                      {/* Players Sent */}
+                      {teamInfo.playersSent.length > 0 && (
+                        <div>
+                          <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-muted-foreground">
+                            <UsersIcon className="w-4 h-4" strokeWidth={1.5} />
+                            Players Sent
+                          </div>
+                          <div className="space-y-3">
+                            {teamInfo.playersSent.map((asset) => (
+                              <div
+                                key={asset.id}
+                                className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950 transition-colors"
+                              >
+                                <div className="flex items-center gap-3">
+                                  {(asset.playerHeadshot as { href?: string })?.href && (
+                                    <div className="bg-white/20 p-1 rounded-full">
+                                      <Image
+                                        src={(asset.playerHeadshot as { href: string }).href}
+                                        alt={asset.playerName || ""}
+                                        width={96}
+                                        height={96}
+                                        className="rounded-full object-cover w-12 h-12"
+                                      />
+                                    </div>
+                                  )}
+                                  <div className="min-w-0">
+                                    <div className="flex items-baseline gap-1 min-w-0">
+                                      <span className="font-medium text-sm truncate">
+                                        {asset.playerName}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
+                                        ({asset.playerPosition || "Unknown"})
+                                      </span>
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                      {asset.playerSalary
+                                        ? `Salary: $${(asset.playerSalary / 1000000).toFixed(1)}M`
+                                        : "No contract"}
+                                      {asset.playerContractYears && (
+                                        <>
+                                          {" | "}
+                                          {asset.playerContractYears}
+                                          {` ${asset.playerContractYears === 1 ? "yr" : "yrs"}`}
+                                        </>
+                                      )}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground mt-1">
+                                      to {asset.targetTradeTeam.teamAbbreviation}
+                                    </div>
+                                  </div>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-muted-foreground hover:text-indigoMain"
+                                  onClick={() => handleOpenPlayerStats(asset)}
+                                >
+                                  <BarChart3Icon className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Picks Sent */}
+                      {teamInfo.picksSent.length > 0 && (
+                        <div>
+                          <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-muted-foreground">
+                            <FileTextIcon className="w-4 h-4" strokeWidth={1.5} />
+                            Picks Sent
+                          </div>
+                          <div className="space-y-3">
+                            {teamInfo.picksSent.map((asset) => (
+                              <div
+                                key={asset.id}
+                                className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950"
+                              >
+                                <div className="flex flex-col gap-1">
+                                  <div className="text-xs text-muted-foreground">
+                                    to {asset.targetTradeTeam.teamAbbreviation}
+                                  </div>
+                                  <div className="font-medium text-sm">
+                                    {asset.pickYear} Round {asset.pickRound} Pick
+                                  </div>
+                                  {asset.pickDescription && (
+                                    <div className="text-xs text-muted-foreground">
+                                      {asset.pickDescription}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* No assets sent */}
+                      {teamInfo.playersSent.length === 0 &&
+                        teamInfo.picksSent.length === 0 && (
+                          <div className="text-center py-6 text-muted-foreground">
+                            <div className="text-sm">No assets sent</div>
+                          </div>
+                        )}
                     </div>
-                    <table className="w-full border border-border rounded text-xs">
-                      <tbody>
-                        <tr className="bg-muted/40">
-                          <td className="px-2 py-1 text-muted-foreground w-1/2">
-                            Total Cap
-                          </td>
-                          <td className="px-2 py-1 font-medium w-1/2 text-right">
-                            $
-                            {teamInfo.tradeTeam.totalCapAllocation
-                              ? (
-                                  teamInfo.tradeTeam.totalCapAllocation / 1000000
-                                ).toFixed(1)
-                              : "0.0"}
-                            M
-                          </td>
-                        </tr>
-                        <tr className="bg-background">
-                          <td className="px-2 py-1 text-muted-foreground w-1/2">
-                            Cap Space
-                          </td>
-                          <td className="px-2 py-1 font-medium w-1/2 text-right">
-                            $
-                            {(
-                              calculateUpdatedTaxValue(
-                                teamInfo.tradeTeam.capSpace || 0,
-                                teamInfo.capDifference
-                              ) / 1000000
-                            ).toFixed(1)}
-                            M
-                          </td>
-                        </tr>
-                        <tr className="bg-muted/40">
-                          <td className="px-2 py-1 text-muted-foreground w-1/2">
-                            1st Apron Space
-                          </td>
-                          <td className="px-2 py-1 font-medium w-1/2 text-right">
-                            $
-                            {(
-                              calculateUpdatedTaxValue(
-                                teamInfo.tradeTeam.firstApronSpace || 0,
-                                teamInfo.capDifference
-                              ) / 1000000
-                            ).toFixed(1)}
-                            M
-                          </td>
-                        </tr>
-                        <tr className="bg-background">
-                          <td className="px-2 py-1 text-muted-foreground w-1/2">
-                            2nd Apron Space
-                          </td>
-                          <td className="px-2 py-1 font-medium w-1/2 text-right">
-                            $
-                            {(
-                              calculateUpdatedTaxValue(
-                                teamInfo.tradeTeam.secondApronSpace || 0,
-                                teamInfo.capDifference
-                              ) / 1000000
-                            ).toFixed(1)}
-                            M
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
+                  </TabsContent>
+                </Tabs>
+
+                {/* Updated Cap Info - always visible */}
+                <div className="mt-6">
+                  <div className="text-sm font-semibold mb-2">
+                    Updated Team Cap Info
                   </div>
+                  <table className="w-full border border-border rounded text-xs">
+                    <tbody>
+                      <tr className="bg-muted/40">
+                        <td className="px-2 py-1 text-muted-foreground w-1/2">Total Cap</td>
+                        <td className="px-2 py-1 font-medium w-1/2 text-right">
+                          ${teamInfo.tradeTeam.totalCapAllocation ? (teamInfo.tradeTeam.totalCapAllocation / 1000000).toFixed(1) : "0.0"}M
+                        </td>
+                      </tr>
+                      <tr className="bg-background">
+                        <td className="px-2 py-1 text-muted-foreground w-1/2">Cap Space</td>
+                        <td className="px-2 py-1 font-medium w-1/2 text-right">
+                          ${(calculateUpdatedTaxValue(teamInfo.tradeTeam.capSpace || 0, teamInfo.capDifference) / 1000000).toFixed(1)}M
+                        </td>
+                      </tr>
+                      <tr className="bg-muted/40">
+                        <td className="px-2 py-1 text-muted-foreground w-1/2">1st Apron Space</td>
+                        <td className="px-2 py-1 font-medium w-1/2 text-right">
+                          ${(calculateUpdatedTaxValue(teamInfo.tradeTeam.firstApronSpace || 0, teamInfo.capDifference) / 1000000).toFixed(1)}M
+                        </td>
+                      </tr>
+                      <tr className="bg-background">
+                        <td className="px-2 py-1 text-muted-foreground w-1/2">2nd Apron Space</td>
+                        <td className="px-2 py-1 font-medium w-1/2 text-right">
+                          ${(calculateUpdatedTaxValue(teamInfo.tradeTeam.secondApronSpace || 0, teamInfo.capDifference) / 1000000).toFixed(1)}M
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </CardContent>
             </Card>

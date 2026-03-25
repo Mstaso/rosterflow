@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "~/components/ui/tabs";
 import { SnapshotButton } from "~/components/ui/snapshot-button";
 import Image from "next/image";
 import type { SelectedAsset, Team, Player, DraftPick } from "~/types";
@@ -382,6 +383,13 @@ export default function TryTradePreview({
                   </div>
                 </div>
 
+                <Tabs defaultValue="receives" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 mb-4">
+                    <TabsTrigger value="receives">Receives</TabsTrigger>
+                    <TabsTrigger value="sends">Sends</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="receives" className="mt-0">
                 <div className="space-y-6">
                   {/* Players Received */}
                   {info.playersReceived.length > 0 && (
@@ -514,6 +522,116 @@ export default function TryTradePreview({
                       </div>
                     )}
                 </div>
+                  </TabsContent>
+
+                  <TabsContent value="sends" className="mt-0">
+                    <div className="space-y-6">
+                      {/* Players Sent */}
+                      {info.playersSent.length > 0 && (
+                        <div>
+                          <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-muted-foreground">
+                            <UsersIcon className="w-4 h-4" strokeWidth={1.5} />
+                            Players Sent
+                          </div>
+                          <div className="space-y-3">
+                            {info.playersSent.map((player, playerIndex) => (
+                              <div
+                                key={playerIndex}
+                                className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950 transition-colors"
+                              >
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                  {player.headshot && (
+                                    <div className="bg-white/20 p-1 rounded-full">
+                                      <Image
+                                        src={player.headshot.href}
+                                        alt={player.displayName}
+                                        width={96}
+                                        height={96}
+                                        className="rounded-full object-cover w-12 h-12"
+                                      />
+                                    </div>
+                                  )}
+                                  <div className="min-w-0">
+                                    <div className="flex items-baseline gap-1 min-w-0 w-full">
+                                      <span className="font-medium text-sm truncate min-w-0 flex-1">
+                                        {player.displayName}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
+                                        {player.position?.abbreviation || "Unknown"}
+                                        {player.age ? `, Age: ${player.age}` : ""}
+                                      </span>
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                      {player.contract
+                                        ? `Salary: ${formatM(player.contract.salary)}`
+                                        : "No contract"}
+                                      {" | "}
+                                      {player.contract?.yearsRemaining}
+                                      {` ${player.contract?.yearsRemaining === 1 ? "yr" : "yrs"}`}
+                                    </div>
+                                  </div>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 shrink-0 text-muted-foreground hover:text-indigoMain"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenPlayerStats(
+                                      player,
+                                      info.team.color,
+                                      info.team.alternateColor
+                                    );
+                                  }}
+                                >
+                                  <BarChart3Icon className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Picks Sent */}
+                      {info.picksSent.length > 0 && (
+                        <div>
+                          <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-muted-foreground">
+                            <FileTextIcon className="w-4 h-4" strokeWidth={1.5} />
+                            Picks Sent
+                          </div>
+                          <div className="space-y-3">
+                            {info.picksSent.map((pick, pickIndex) => (
+                              <div
+                                key={pickIndex}
+                                className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950"
+                              >
+                                <div className="flex flex-col gap-1">
+                                  <div className="font-medium text-sm">
+                                    {pick.year} {pick.round === 1 ? "1st" : "2nd"}{" "}
+                                    Round {pick.isSwap ? "Pick Swap" : "Pick"}
+                                  </div>
+                                  {pick.description && (
+                                    <div className="text-xs text-muted-foreground">
+                                      {pick.description}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* No assets sent */}
+                      {info.playersSent.length === 0 &&
+                        info.picksSent.length === 0 && (
+                          <div className="text-center py-6 text-muted-foreground">
+                            <div className="text-sm">No assets sent</div>
+                          </div>
+                        )}
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </CardContent>
             </Card>
           ))}
