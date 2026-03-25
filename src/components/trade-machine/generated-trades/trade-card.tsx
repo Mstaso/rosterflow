@@ -261,7 +261,7 @@ export default function TradeCard({
                     className="object-contain"
                   />
                 )}
-                <span className="text-lg font-semibold whitespace-nowrap md:whitespace-normal md:truncate md:max-w-[180px] lg:max-w-[220px]">
+                <span className="text-lg font-semibold whitespace-nowrap md:inline-block md:max-w-[220px] md:truncate">
                   {tradeInfo.team?.displayName}
                 </span>
               </div>
@@ -350,7 +350,7 @@ export default function TradeCard({
                                   key={playerIndex}
                                   className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950 transition-colors"
                                 >
-                                  <div className="flex items-center gap-3">
+                                  <div className="flex items-center gap-3 min-w-0 flex-1">
                                     {player?.headshot && (
                                       <div className="bg-white/20 p-1 rounded-full">
                                         <Image
@@ -363,8 +363,8 @@ export default function TradeCard({
                                       </div>
                                     )}
                                     <div className="min-w-0">
-                                      <div className="flex items-baseline gap-1 min-w-0">
-                                        <span className="font-medium text-sm truncate">
+                                      <div className="flex items-baseline gap-1 min-w-0 w-full">
+                                        <span className="font-medium text-sm truncate min-w-0 flex-1">
                                           {player?.displayName}
                                         </span>
                                         <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
@@ -392,7 +392,7 @@ export default function TradeCard({
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8 text-muted-foreground hover:text-indigoMain"
+                                    className="h-8 w-8 shrink-0 text-muted-foreground hover:text-indigoMain"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       player &&
