@@ -45,6 +45,13 @@ export default function TradeMachineClient({
   const [hasInitialized, setHasInitialized] = useState(false);
   const [assetsExpanded, setAssetsExpanded] = useState(false);
   const [showTryTradePreview, setShowTryTradePreview] = useState(false);
+  const [tradeInvolvedTeams, setTradeInvolvedTeams] = useState<Team[]>([]);
+  const preGenerateStateRef = React.useRef<{
+    teams: Team[];
+    teamIds: number[];
+    assets: SelectedAsset[];
+    activeTab: string;
+  } | null>(null);
 
   // Initialize from URL params (for editing saved trades)
   React.useEffect(() => {
@@ -228,9 +235,18 @@ export default function TradeMachineClient({
   const [isStreamingTrades, setIsStreamingTrades] = useState(false);
 
   const handleGenerateTrade = async () => {
+    // Snapshot user's original selections before AI adds teams
+    preGenerateStateRef.current = {
+      teams: [...selectedTeams],
+      teamIds: [...selectedTeamIds],
+      assets: [...selectedAssets],
+      activeTab,
+    };
+
     setLoadingGeneratedTrades(true);
     setIsStreamingTrades(true);
     setGeneratedTrades([]);
+    setTradeInvolvedTeams([...selectedTeams]);
     setShowTradeContainer(true);
 
     posthog?.capture("trade_generated", {
@@ -293,7 +309,13 @@ export default function TradeMachineClient({
             if (event.type === "meta" && event.teamsAddedToTrade) {
               const teamsToAdd = event.teamsAddedToTrade as Team[];
               setSelectedTeams((prev) => {
-                // Avoid duplicates
+                const existingIds = new Set(prev.map((t) => t.id));
+                const newTeams = teamsToAdd.filter(
+                  (t) => !existingIds.has(t.id)
+                );
+                return [...prev, ...newTeams];
+              });
+              setTradeInvolvedTeams((prev) => {
                 const existingIds = new Set(prev.map((t) => t.id));
                 const newTeams = teamsToAdd.filter(
                   (t) => !existingIds.has(t.id)
@@ -437,10 +459,17 @@ export default function TradeMachineClient({
     return (
       <TradeContainer
         tradesData={generatedTrades}
-        involvedTeams={selectedTeams}
+        involvedTeams={tradeInvolvedTeams}
         isStreaming={isStreamingTrades}
         onBack={() => {
           setShowTradeContainer(false);
+          // Restore user's original selections (before AI-added teams)
+          if (preGenerateStateRef.current) {
+            setSelectedTeams(preGenerateStateRef.current.teams);
+            setSelectedTeamIds(preGenerateStateRef.current.teamIds);
+            setSelectedAssets(preGenerateStateRef.current.assets);
+            setActiveTab(preGenerateStateRef.current.activeTab);
+          }
         }}
         onEditTrade={handleEditTrade}
       />

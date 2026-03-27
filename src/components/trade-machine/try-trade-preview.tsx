@@ -137,9 +137,10 @@ export default function TryTradePreview({
         secondApronSpace >= 0 && postTradeSecondApronSpace < 0;
 
       if ((isOverSecondApron || wouldCrossSecondApron) && capDifference > 0) {
+        const excess = (capDifference / 1000000).toFixed(1);
         return {
           isValid: false,
-          message: `Warning: Invalid: ${team.displayName} is over/would cross second apron and cannot take on additional salary`,
+          message: `${team.displayName} (2nd apron): must send $${excess}M more or receive $${excess}M less`,
         };
       }
 
@@ -152,9 +153,10 @@ export default function TryTradePreview({
         (isOverFirstApron || wouldCrossFirstApron) &&
         incomingSalary > maxAllowedFirstApron
       ) {
+        const excess = ((incomingSalary - maxAllowedFirstApron) / 1000000).toFixed(1);
         return {
           isValid: false,
-          message: `Warning: Invalid: ${team.displayName} exceeds 110% + $100K salary matching rule for first apron teams`,
+          message: `${team.displayName} (1st apron): incoming exceeds limit by $${excess}M — need $${(maxAllowedFirstApron / 1000000).toFixed(1)}M max`,
         };
       }
 
@@ -162,9 +164,10 @@ export default function TryTradePreview({
         const maxAllowedOverCap = outgoingSalary * 1.25 + 100000;
 
         if (incomingSalary > maxAllowedOverCap) {
+          const excess = ((incomingSalary - maxAllowedOverCap) / 1000000).toFixed(1);
           return {
             isValid: false,
-            message: `Warning: Invalid: ${team.displayName} exceeds 125% + $100K salary matching rule for over-cap teams`,
+            message: `${team.displayName} (over cap): incoming exceeds limit by $${excess}M — need $${(maxAllowedOverCap / 1000000).toFixed(1)}M max`,
           };
         }
       }
