@@ -148,16 +148,11 @@ export default function TradeCard({
         secondApronSpace >= 0 && postTradeSecondApronSpace < 0;
 
       if ((isOverSecondApron || wouldCrossSecondApron) && capDifference > 0) {
-        console.log(
-          "INVALID TRADE - SECOND APRON",
-          findTeam.displayName,
-          "Cannot take on more salary"
-        );
+        const excess = (capDifference / 1000000).toFixed(1);
         isValidTrade = false;
-        salaryRationale = `Warning: Invalid: ${findTeam.displayName} is over/would cross second apron and cannot take on additional salary`;
+        salaryRationale = `${findTeam.displayName} (2nd apron): must send $${excess}M more or receive $${excess}M less`;
       }
       // Check 2: First Apron - Must match within 110% + $100K
-      // Applies if team is already over first apron OR trade would put them over
       else {
         const isOverFirstApron = firstApronSpace < 0;
         const wouldCrossFirstApron =
@@ -168,26 +163,18 @@ export default function TradeCard({
           (isOverFirstApron || wouldCrossFirstApron) &&
           inComingSalary > maxAllowedFirstApron
         ) {
-          console.log(
-            "INVALID TRADE - FIRST APRON",
-            findTeam.displayName,
-            `Incoming: ${inComingSalary}, Max allowed: ${maxAllowedFirstApron}`
-          );
+          const excess = ((inComingSalary - maxAllowedFirstApron) / 1000000).toFixed(1);
           isValidTrade = false;
-          salaryRationale = `Warning: Invalid: ${findTeam.displayName} exceeds 110% + $100K salary matching rule for first apron teams`;
+          salaryRationale = `${findTeam.displayName} (1st apron): incoming exceeds limit by $${excess}M — need $${((maxAllowedFirstApron) / 1000000).toFixed(1)}M max`;
         }
         // Check 3: Over cap but under aprons - Must match within 125% + $100K
         else if (capSpace < 0 && firstApronSpace >= 0) {
           const maxAllowedOverCap = outGoingSalary * 1.25 + 100000;
 
           if (inComingSalary > maxAllowedOverCap) {
-            console.log(
-              "INVALID TRADE - OVER CAP",
-              findTeam.displayName,
-              `Incoming: ${inComingSalary}, Max allowed: ${maxAllowedOverCap}`
-            );
+            const excess = ((inComingSalary - maxAllowedOverCap) / 1000000).toFixed(1);
             isValidTrade = false;
-            salaryRationale = `Warning: Invalid: ${findTeam.displayName} exceeds 125% + $100K salary matching rule for over-cap teams`;
+            salaryRationale = `${findTeam.displayName} (over cap): incoming exceeds limit by $${excess}M — need $${((maxAllowedOverCap) / 1000000).toFixed(1)}M max`;
           }
         }
       }
