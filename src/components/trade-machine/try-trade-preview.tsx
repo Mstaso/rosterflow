@@ -234,37 +234,36 @@ export default function TryTradePreview({
           </Button>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 sm:gap-3 mb-4">
-          <SaveTradeModal
-            isLoading={false}
-            tradeInfo={tradeInfoForModal}
-            isValidTrade={isValid}
-            selectedAssets={selectedAssets}
-            selectedTeamIds={selectedTeams.map((t) => t.id)}
-          />
-          <Button
-            variant="edit"
-            className="w-full sm:w-auto"
-            onClick={onBack}
-          >
-            <PencilIcon className="h-4 w-4" strokeWidth={1.5} />
-            <span>Edit Trade</span>
-          </Button>
-          <SnapshotButton onClick={capture} isCapturing={isCapturing} />
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-4">
+          <div className="flex flex-row gap-2 sm:gap-3">
+            <SaveTradeModal
+              isLoading={false}
+              tradeInfo={tradeInfoForModal}
+              isValidTrade={isValid}
+              selectedAssets={selectedAssets}
+              selectedTeamIds={selectedTeams.map((t) => t.id)}
+            />
+            <Button
+              variant="edit"
+              className="w-full sm:w-auto"
+              onClick={onBack}
+            >
+              <PencilIcon className="mr-1 h-4 w-4" strokeWidth={1.5} />
+              Edit
+            </Button>
+            <SnapshotButton onClick={capture} isCapturing={isCapturing} />
+          </div>
+          {isValid && (
+            <div className="flex items-center gap-2 py-2 px-3 rounded-md border border-green-500/50 bg-green-500/10 text-green-500 w-full md:w-auto justify-center md:justify-end">
+              <CheckCircle className="w-4 h-4 shrink-0" />
+              <div className="text-sm font-medium">
+                Valid trade - Salary rules satisfied
+              </div>
+            </div>
+          )}
         </div>
 
         <div ref={captureRef}>
-        {isValid && (
-          <div
-            className="flex items-center gap-2 py-3 px-4 mb-4 rounded-md border border-green-500/50 bg-green-500/10 text-green-500
-          justify-center w-full md:w-fit md:mx-0 md:justify-start"
-          >
-            <CheckCircle className="w-4 h-4 shrink-0" />
-            <div className="text-sm font-medium">
-              Valid trade - Salary rules satisfied
-            </div>
-          </div>
-        )}
 
         <div className="flex flex-col md:flex-row gap-4 justify-center mb-4">
           {tradeInfo.map((info, index) => (
@@ -327,65 +326,6 @@ export default function TryTradePreview({
               </div>
 
               <CardContent className="px-4 py-4 flex-grow flex flex-col bg-muted/60 border-indigoMain">
-                <div>
-                  <div className="mb-4">
-                    <div className="text-sm font-semibold mb-2">
-                      Updated Team Cap Info
-                    </div>
-                    <table className="w-full border border-border rounded text-xs">
-                      <tbody>
-                        <tr className="bg-muted/40">
-                          <td className="px-2 py-1 text-muted-foreground w-1/2">
-                            Total Cap
-                          </td>
-                          <td className="px-2 py-1 font-medium w-1/2 text-right">
-                            {formatM(info.team.totalCapAllocation || 0)}
-                          </td>
-                        </tr>
-                        <tr className="bg-background">
-                          <td className="px-2 py-1 text-muted-foreground w-1/2">
-                            Cap Space
-                          </td>
-                          <td className="px-2 py-1 font-medium w-1/2 text-right">
-                            {formatM(
-                              calculateUpdatedTaxValue(
-                                info.team.capSpace || 0,
-                                info.capDifference
-                              )
-                            )}
-                          </td>
-                        </tr>
-                        <tr className="bg-muted/40">
-                          <td className="px-2 py-1 text-muted-foreground w-1/2">
-                            1st Apron Space
-                          </td>
-                          <td className="px-2 py-1 font-medium w-1/2 text-right">
-                            {formatM(
-                              calculateUpdatedTaxValue(
-                                info.team.firstApronSpace || 0,
-                                info.capDifference
-                              )
-                            )}
-                          </td>
-                        </tr>
-                        <tr className="bg-background">
-                          <td className="px-2 py-1 text-muted-foreground w-1/2">
-                            2nd Apron Space
-                          </td>
-                          <td className="px-2 py-1 font-medium w-1/2 text-right">
-                            {formatM(
-                              calculateUpdatedTaxValue(
-                                info.team.secondApronSpace || 0,
-                                info.capDifference
-                              )
-                            )}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
                 <Tabs defaultValue="receives" className="w-full">
                   <TabsList className="grid w-full grid-cols-2 mb-4">
                     <TabsTrigger value="receives">Receives</TabsTrigger>
@@ -635,6 +575,41 @@ export default function TryTradePreview({
                     </div>
                   </TabsContent>
                 </Tabs>
+
+                {/* Updated Cap Info - always visible */}
+                <div className="mt-6">
+                  <div className="text-sm font-semibold mb-2">
+                    Updated Team Cap Info
+                  </div>
+                  <table className="w-full border border-border rounded text-xs">
+                    <tbody>
+                      <tr className="bg-muted/40">
+                        <td className="px-2 py-1 text-muted-foreground w-1/2">Total Cap</td>
+                        <td className="px-2 py-1 font-medium w-1/2 text-right">
+                          {formatM(info.team.totalCapAllocation || 0)}
+                        </td>
+                      </tr>
+                      <tr className="bg-background">
+                        <td className="px-2 py-1 text-muted-foreground w-1/2">Cap Space</td>
+                        <td className="px-2 py-1 font-medium w-1/2 text-right">
+                          {formatM(calculateUpdatedTaxValue(info.team.capSpace || 0, info.capDifference))}
+                        </td>
+                      </tr>
+                      <tr className="bg-muted/40">
+                        <td className="px-2 py-1 text-muted-foreground w-1/2">1st Apron Space</td>
+                        <td className="px-2 py-1 font-medium w-1/2 text-right">
+                          {formatM(calculateUpdatedTaxValue(info.team.firstApronSpace || 0, info.capDifference))}
+                        </td>
+                      </tr>
+                      <tr className="bg-background">
+                        <td className="px-2 py-1 text-muted-foreground w-1/2">2nd Apron Space</td>
+                        <td className="px-2 py-1 font-medium w-1/2 text-right">
+                          {formatM(calculateUpdatedTaxValue(info.team.secondApronSpace || 0, info.capDifference))}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </CardContent>
             </Card>
           ))}
