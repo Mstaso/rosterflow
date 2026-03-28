@@ -322,7 +322,6 @@ export function TeamCard({
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                            onClick={(e) => e.stopPropagation()}
                           >
                             {isSelected ? (
                               <Minus className="h-4 w-4" />
