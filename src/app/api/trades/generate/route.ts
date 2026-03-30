@@ -14,6 +14,7 @@ import {
   generateManualTrade,
   describeManualTrade,
 } from "~/lib/manual-trade-generator";
+import { tradeGenerateLimiter, getClientIp } from "~/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,15 @@ const openai = new OpenAI({
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+    const { success, remaining } = tradeGenerateLimiter.check(ip);
+    if (!success) {
+      return NextResponse.json(
+        { success: false, error: "Rate limit exceeded. Please try again later." },
+        { status: 429, headers: { "Retry-After": "3600" } }
+      );
+    }
+
     if (!env.OPENAI_API_KEY) {
       return NextResponse.json(
         { success: false, error: "OpenAI API key not configured" },

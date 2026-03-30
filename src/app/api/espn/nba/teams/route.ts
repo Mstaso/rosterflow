@@ -1,12 +1,30 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { getCached, setCache } from "~/lib/cache";
+import { espnLimiter, getClientIp } from "~/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
+const CACHE_TTL = 86400000; // 24 hours
+
 export async function GET(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+    const { success, remaining } = espnLimiter.check(ip);
+    if (!success) {
+      return NextResponse.json(
+        { success: false, error: "Rate limit exceeded. Please try again later." },
+        { status: 429, headers: { "Retry-After": "3600" } }
+      );
+    }
     const searchParams = request.nextUrl.searchParams;
     const season = searchParams.get("season") || "2024";
+
+    const cacheKey = `espn:nba:teams`;
+    const cached = getCached<any>(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached);
+    }
 
     // ESPN's NBA teams endpoint
     const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams`;
@@ -43,13 +61,17 @@ export async function GET(request: NextRequest) {
         venue: teamData.team.venue,
       })) || [];
 
-    return NextResponse.json({
+    const result = {
       success: true,
       data: teams,
       total: teams.length,
       season,
       source: "ESPN API",
-    });
+    };
+
+    setCache(cacheKey, result, CACHE_TTL);
+
+    return NextResponse.json(result);
   } catch (error) {
     console.error("Error fetching NBA teams:", error);
     return NextResponse.json(

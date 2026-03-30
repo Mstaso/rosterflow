@@ -200,17 +200,6 @@ export function SavedTradesClient({
       </AlertDialog>
 
       <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-xl font-semibold">
-            {isLoggedIn
-              ? activeTab === "my-trades"
-                ? "My Trades"
-                : activeTab === "upvoted"
-                ? "Liked Trades"
-                : "Community Trades"
-              : "Community Trades"}
-          </h1>
-        </div>
 
         {isLoggedIn ? (
           <Tabs

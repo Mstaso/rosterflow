@@ -74,7 +74,12 @@ const footerLinks = [
       { name: "View Trades", href: "/my-trades" },
     ],
   },
-
+  {
+    title: "Resources",
+    links: [
+      { name: "FAQ", href: "/faq" },
+    ],
+  },
 ];
 
 export function Footer() {

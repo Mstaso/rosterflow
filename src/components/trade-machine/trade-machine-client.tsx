@@ -489,7 +489,7 @@ export default function TradeMachineClient({
   return (
     <div className="flex-grow">
       <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6">
-        <div className="my-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="mt-2 mb-6 sm:my-6 flex flex-col sm:flex-row justify-between items-center gap-4">
           <TeamSelectDropdown
             allTeams={nbaTeams}
             selectedTeamIds={selectedTeamIds}

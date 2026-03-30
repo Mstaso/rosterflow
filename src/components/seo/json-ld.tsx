@@ -24,13 +24,6 @@ export function WebsiteJsonLd() {
       "Trade Idea Generator",
     ],
     screenshot: `${siteUrl}/opengraph-image`,
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "4.8",
-      ratingCount: "150",
-      bestRating: "5",
-      worstRating: "1",
-    },
   };
 
   return (

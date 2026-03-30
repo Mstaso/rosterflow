@@ -126,6 +126,8 @@ model Trade {
   comments   TradeComment[]
 
   @@index([userId])
+  @@index([createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
 }
 
 // Reddit-style voting on trades
@@ -144,6 +146,8 @@ model TradeVote {
   @@unique([userId, tradeId])
   @@index([userId])
   @@index([tradeId])
+  @@index([tradeId, value])
+  @@index([userId, value])
 }
 
 // Comments on trades
@@ -161,6 +165,7 @@ model TradeComment {
 
   @@index([userId])
   @@index([tradeId])
+  @@index([tradeId, createdAt(sort: Desc)])
 }
 
 // Per-team snapshot within a trade
@@ -230,4 +235,5 @@ model TradeAsset {
   @@index([targetTradeTeamId])
   @@index([playerId])
   @@index([draftPickId])
+  @@index([tradeId, type])
 }
