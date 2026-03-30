@@ -11,10 +11,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
-      url: `${siteUrl}/my-trades`,
+      url: `${siteUrl}/faq`,
       lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 0.8,
+      changeFrequency: "weekly",
+      priority: 0.7,
     },
   ];
 }

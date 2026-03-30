@@ -1,0 +1,22 @@
+# Roster Flows
+
+> Roster Flows is an AI-powered NBA trade machine that generates multiple realistic trade scenarios at once. Unlike traditional trade simulators where you build one trade at a time, Roster Flows uses AI to create and compare several trade options instantly — with full salary cap validation under current CBA rules.
+
+## What It Does
+
+- **AI Trade Generation**: Select at least one NBA team and one player or draft pick, and the AI generates multiple realistic trade scenarios to compare.
+- **Try Trade (Manual Mode)**: Build your own trade by selecting two or more teams and adding players or picks from each side. The system validates salary cap compliance automatically.
+- **Salary Cap Validation**: Every trade is checked against current NBA salary cap rules, including luxury tax thresholds, first and second apron limits, trade exceptions, and the 125% matching rule.
+- **Clean, Modern Interface**: No ads, no clutter, no confusing menus — just the trade tool.
+
+## Key Differentiators
+
+- Generates multiple trade scenarios at once (competitors only support one at a time)
+- AI-powered trade suggestions you wouldn't think of
+- Clean, ad-free interface designed for speed
+- Full CBA compliance checking built in
+
+## Links
+
+- Homepage / Trade Machine: https://rosterflows.com
+- FAQ: https://rosterflows.com/faq

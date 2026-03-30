@@ -42,6 +42,9 @@ export const metadata: Metadata = {
     "NBA trade rumors",
     "basketball trade calculator",
     "NBA player trades",
+    "best NBA trade machine",
+    "easy NBA trade simulator",
+    "NBA trade machine alternative",
   ],
   authors: [{ name: "RosterFlows" }],
   creator: "RosterFlows", 
@@ -70,14 +73,6 @@ export const metadata: Metadata = {
     title: "Roster Flows - AI-Powered NBA Trade Machine & Simulator",
     description:
       "Create realistic NBA trades with AI-powered analysis. Validate salary cap compliance, analyze trade value, and generate smart trade suggestions.",
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Roster Flows - AI-Powered NBA Trade Machine",
-      },  
-    ],
   },
   alternates: {
     canonical: siteUrl,

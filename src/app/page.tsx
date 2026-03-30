@@ -2,19 +2,22 @@ import { getNBATeams } from "~/actions/nbaTeams";
 import { Navbar } from "~/components/layout/navbar";
 import { Footer } from "~/components/layout/footer";
 import TradeMachineClient from "~/components/trade-machine/trade-machine-client";
+import { BreadcrumbJsonLd } from "~/components/seo/json-ld";
 import type { SelectedAsset } from "~/types";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://rosterflows.com";
+
 export const metadata: Metadata = {
-  title: "NBA Trade Machine - Create & Simulate Trades",
+  title: "NBA Trade Machine - AI Trade Generator",
   description:
-    "Build realistic NBA trades with our AI-powered trade machine. Select teams, add players and draft picks, check salary cap compliance, and let AI generate smart trade suggestions.",
+    "Generate multiple realistic NBA trade scenarios instantly with AI — no clunky menus or one-trade-at-a-time limits. Validates salary cap rules, analyzes trade value, and suggests deals you wouldn't think of.",
   openGraph: {
-    title: "NBA Trade Machine - Create & Simulate Trades | Roster Flows",
+    title: "NBA Trade Machine - AI Trade Generator | Roster Flows",
     description:
-      "Build realistic NBA trades with our AI-powered trade machine. Select teams, add players and draft picks, and let AI generate smart trade suggestions.",
+      "Generate multiple realistic NBA trade scenarios instantly with AI. Clean interface, salary cap validation, and trade ideas you wouldn't think of.",
   },
 };
 
@@ -46,15 +49,29 @@ export default async function TradeMachinePage({
 
   return (
     <main className="bg-background text-foreground">
+      <BreadcrumbJsonLd
+        items={[{ name: "Home", url: siteUrl }]}
+      />
       <div className="flex flex-col">
         <div className="min-h-screen flex flex-col">
           <Navbar />
+          <div className="w-full border-b border-border bg-muted/40">
+            <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-2.5">
+              <h1 className="text-sm font-medium tracking-wide text-muted-foreground/80 uppercase">
+                NBA Trade Machine
+              </h1>
+              <p className="sr-only">
+                The fastest way to explore NBA trades. Generate multiple AI-powered trade scenarios at once with a clean, modern interface — no clutter, no clunky menus. Includes full salary cap validation under current CBA rules.
+              </p>
+            </div>
+          </div>
           <TradeMachineClient
             nbaTeams={nbaTeams || []}
             initialTeamIds={initialTeamIds}
             initialAssets={initialAssets}
           />
         </div>
+
         <Footer />
       </div>
     </main>
