@@ -132,6 +132,8 @@ SALARY MATCHING INSTRUCTIONS:
 
 TRADE REALISM RULES:
 - Every asset received must be given by another team (balanced trades)
+- A player can only be traded to ONE team — never send the same player to multiple teams
+- A draft pick can only be traded to ONE team — never send the same pick to multiple teams
 - Only use players listed above
 - You SHOULD add additional players or picks beyond the selected assets when it makes the trade more realistic, improves salary matching, or balances value. Don't just swap the selected assets 1-for-1 if a real GM would include sweeteners or salary filler.
 - Use player stats (ppg/rpg/apg) to judge value. A 15ppg starter is worth more than a 5ppg bench player at the same salary.
@@ -160,6 +162,64 @@ Respond with ONLY a JSON array. Each scenario:
     ]
   }
 ]`;
+
+    // Validate that no player or pick appears in multiple teams' gives/receives
+    function isValidTrade(trade: any): boolean {
+      if (!trade?.teams || !Array.isArray(trade.teams)) return false;
+
+      const receivedPlayers = new Set<string>();
+      const givenPlayers = new Set<string>();
+      const receivedPicks = new Set<string>();
+      const givenPicks = new Set<string>();
+
+      for (const team of trade.teams) {
+        // Check received players
+        for (const player of team.receives?.players || []) {
+          const name = player.name?.toLowerCase().trim();
+          if (!name) continue;
+          if (receivedPlayers.has(name)) {
+            console.log(`[trade-validation] REJECTED: player "${player.name}" received by multiple teams`);
+            return false;
+          }
+          receivedPlayers.add(name);
+        }
+
+        // Check given players
+        for (const player of team.gives?.players || []) {
+          const name = player.name?.toLowerCase().trim();
+          if (!name) continue;
+          if (givenPlayers.has(name)) {
+            console.log(`[trade-validation] REJECTED: player "${player.name}" given by multiple teams`);
+            return false;
+          }
+          givenPlayers.add(name);
+        }
+
+        // Check received picks
+        for (const pick of team.receives?.picks || []) {
+          const name = pick.name?.toLowerCase().trim();
+          if (!name) continue;
+          if (receivedPicks.has(name)) {
+            console.log(`[trade-validation] REJECTED: pick "${pick.name}" received by multiple teams`);
+            return false;
+          }
+          receivedPicks.add(name);
+        }
+
+        // Check given picks
+        for (const pick of team.gives?.picks || []) {
+          const name = pick.name?.toLowerCase().trim();
+          if (!name) continue;
+          if (givenPicks.has(name)) {
+            console.log(`[trade-validation] REJECTED: pick "${pick.name}" given by multiple teams`);
+            return false;
+          }
+          givenPicks.add(name);
+        }
+      }
+
+      return true;
+    }
 
     // Stream the response using SSE
     const stream = await openai.chat.completions.create({
@@ -273,12 +333,16 @@ Respond with ONLY a JSON array. Each scenario:
 
                   try {
                     const trade = JSON.parse(tradeJson);
-                    controller.enqueue(
-                      encoder.encode(
-                        `data: ${JSON.stringify({ type: "trade", trade, index: tradeIndex })}\n\n`
-                      )
-                    );
-                    tradeIndex++;
+                    if (!isValidTrade(trade)) {
+                      console.log(`[trade-validation] Skipping invalid trade scenario ${tradeIndex}`);
+                    } else {
+                      controller.enqueue(
+                        encoder.encode(
+                          `data: ${JSON.stringify({ type: "trade", trade, index: tradeIndex })}\n\n`
+                        )
+                      );
+                      tradeIndex++;
+                    }
                   } catch (e) {
                     console.error(
                       "Failed to parse trade chunk:",
@@ -307,6 +371,10 @@ Respond with ONLY a JSON array. Each scenario:
                 ? parsed
                 : parsed.trades || parsed.scenarios || [];
               for (const trade of trades) {
+                if (!isValidTrade(trade)) {
+                  console.log(`[trade-validation] Skipping invalid trade scenario ${tradeIndex} (full parse)`);
+                  continue;
+                }
                 controller.enqueue(
                   encoder.encode(
                     `data: ${JSON.stringify({ type: "trade", trade, index: tradeIndex })}\n\n`
