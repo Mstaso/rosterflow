@@ -110,6 +110,30 @@ export async function POST(request: NextRequest) {
       console.log("[manual-trade] FAILED - returned null (salary matching likely failed)");
     }
 
+    // Determine which teams are required (have selected assets or destinations) vs optional
+    const requiredTeamIds = new Set<number>();
+    for (const asset of selectedAssets) {
+      requiredTeamIds.add(asset.teamId);
+      if (asset.targetTeamId) requiredTeamIds.add(asset.targetTeamId);
+    }
+    const requiredTeamNames = involvedTeams
+      .filter((t: Team) => requiredTeamIds.has(t.id))
+      .map((t: Team) => t.displayName);
+    const optionalTeamNames = involvedTeams
+      .filter((t: Team) => !requiredTeamIds.has(t.id))
+      .map((t: Team) => t.displayName);
+
+    let teamParticipationRule: string;
+    if (optionalTeamNames.length === 0) {
+      // All teams have selected assets — all must appear
+      teamParticipationRule = `- ALL teams listed above MUST appear in every scenario — do not drop any team`;
+    } else {
+      teamParticipationRule = `- REQUIRED teams (must appear in every scenario): ${requiredTeamNames.join(", ")}
+- OPTIONAL trade partners (available to use but not required in every scenario): ${optionalTeamNames.join(", ")}
+- Use at least one optional team when it makes the trade more realistic, but not every scenario needs all of them
+- Vary which optional teams you include across scenarios for diversity`;
+    }
+
     const prompt = `Generate 3-4 realistic 2025-26 NBA trade scenarios using the data below. Think like a real GM — contenders trade picks for win-now talent, rebuilding teams trade veterans for young players and draft capital.
 
 TEAM OUTLOOK:
@@ -142,10 +166,10 @@ TRADE REALISM RULES:
 - Use player stats (ppg/rpg/apg) to judge value. A 15ppg starter is worth more than a 5ppg bench player at the same salary.
 - Contenders should not give up key contributors (high ppg) without getting equivalent win-now help back.
 - Rebuilding teams should prioritize getting picks and young players.
-- ALL teams listed above MUST appear in every scenario — do not drop any team
+${teamParticipationRule}
 - Pick [val:X] indicates estimated value (1-100). Use this to assess trade fairness — higher value picks are worth more.${hasDestinations ? "\n- You MUST follow the destination preferences listed above. These are required, not suggestions." : ""}
 
-VARIETY: Make each scenario meaningfully different — vary which additional players/picks are included and mix approaches (e.g. one pick-heavy deal, one player-for-player swap), but always include ALL listed teams.${manualTradeExclusion}
+VARIETY: Make each scenario meaningfully different — vary which additional players/picks are included and mix approaches (e.g. one pick-heavy deal, one player-for-player swap).${manualTradeExclusion}
 
 Respond with ONLY a JSON array. Each scenario lists only what each team GIVES and where it goes (the "to" field). Do NOT include a "receives" section — it will be derived automatically.
 [

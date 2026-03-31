@@ -14,27 +14,77 @@ export function useTradeSnapshot() {
     setIsCapturing(true);
     try {
       const element = captureRef.current;
-      const rect = element.getBoundingClientRect();
 
-      // Temporarily lock the element's width so nothing reflows in the clone
+      // Force desktop grid layout for snapshot (even on mobile)
+      // Find grid containers that use md:grid and force them to grid display
+      const gridContainers = element.querySelectorAll<HTMLElement>('.md\\:grid');
+      const savedGridStyles: {
+        el: HTMLElement;
+        display: string;
+        flexDirection: string;
+        overflow: string;
+        width: string;
+        gridTemplateColumns: string;
+      }[] = [];
+
+      for (const container of gridContainers) {
+        const computed = getComputedStyle(container);
+        savedGridStyles.push({
+          el: container,
+          display: container.style.display,
+          flexDirection: container.style.flexDirection,
+          overflow: container.style.overflow,
+          width: container.style.width,
+          gridTemplateColumns: container.style.gridTemplateColumns,
+        });
+
+        // Force grid layout with the inline gridTemplateColumns already set
+        container.style.display = 'grid';
+        container.style.overflow = 'visible';
+
+        // Count direct card children to determine column count
+        const cardCount = container.querySelectorAll(':scope > div, :scope > [class*="Card"]').length;
+        if (cardCount > 0 && !container.style.gridTemplateColumns) {
+          container.style.gridTemplateColumns = `repeat(${cardCount}, minmax(280px, 1fr))`;
+        }
+      }
+
+      // Set a minimum width to ensure desktop-like rendering
+      const desiredWidth = Math.max(1024, element.scrollWidth);
+
+      // Temporarily lock the element's width
       const originalWidth = element.style.width;
       const originalMinWidth = element.style.minWidth;
-      element.style.width = `${rect.width}px`;
-      element.style.minWidth = `${rect.width}px`;
+      element.style.width = `${desiredWidth}px`;
+      element.style.minWidth = `${desiredWidth}px`;
+
+      // Allow layout to reflow
+      await new Promise((r) => requestAnimationFrame(r));
+
+      const fullWidth = element.scrollWidth;
+      const fullHeight = element.scrollHeight;
 
       const dataUrl = await domToPng(element, {
         scale: 2,
         backgroundColor: "#030712",
-        width: rect.width + 48,
-        height: rect.height + 48,
+        width: fullWidth + 48,
+        height: fullHeight + 48,
         style: {
           padding: "24px",
         },
       });
 
-      // Restore original styles
+      // Restore all styles
       element.style.width = originalWidth;
       element.style.minWidth = originalMinWidth;
+
+      for (const saved of savedGridStyles) {
+        saved.el.style.display = saved.display;
+        saved.el.style.flexDirection = saved.flexDirection;
+        saved.el.style.overflow = saved.overflow;
+        saved.el.style.width = saved.width;
+        saved.el.style.gridTemplateColumns = saved.gridTemplateColumns;
+      }
 
       // Always download as PNG
       const link = document.createElement("a");
