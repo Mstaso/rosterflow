@@ -331,7 +331,6 @@ Respond with ONLY a JSON array. Each scenario lists only what each team GIVES an
       return true;
     }
 
-    console.log("been hit generate prompt", prompt);
     // Stream the response using SSE
     const stream = await openai.chat.completions.create({
       model: "gpt-5.4-mini",

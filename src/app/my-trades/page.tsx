@@ -52,14 +52,7 @@ export default async function MyTradesPage() {
     <main className="bg-background text-foreground">
       <div className="flex flex-col">
         <div className="min-h-screen flex flex-col">
-          <Navbar />
-          <div className="w-full border-b border-border bg-muted/40">
-            <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-2.5">
-              <h1 className="text-sm font-medium tracking-wide text-muted-foreground/80 uppercase">
-                Community Trades
-              </h1>
-            </div>
-          </div>
+          <Navbar subtitle={<h1>Community Trades</h1>} />
           <SavedTradesClient
             initialAllTrades={initialAllTrades}
             initialUserTrades={initialUserTrades}

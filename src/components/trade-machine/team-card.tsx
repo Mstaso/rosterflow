@@ -69,16 +69,16 @@ type CapTier = "UNDER_CAP" | "OVER_CAP" | "FIRST_APRON" | "SECOND_APRON";
 
 function getCapTier(team: Team): { tier: CapTier; label: string; color: string } {
   if ((team.secondApronSpace || 0) < 0)
-    return { tier: "SECOND_APRON", label: "2nd Apron", color: "text-red-400 bg-red-500/15 border-red-500/30" };
+    return { tier: "SECOND_APRON", label: "2nd Apron", color: "text-red-400 bg-red-500/10 border-l-2 border-red-400" };
   if ((team.firstApronSpace || 0) < 0)
-    return { tier: "FIRST_APRON", label: "1st Apron", color: "text-orange-400 bg-orange-500/15 border-orange-500/30" };
+    return { tier: "FIRST_APRON", label: "1st Apron", color: "text-orange-400 bg-orange-500/10 border-l-2 border-orange-400" };
   if ((team.capSpace || 0) < 0)
-    return { tier: "OVER_CAP", label: "Over Cap", color: "text-yellow-400 bg-yellow-500/15 border-yellow-500/30" };
-  return { tier: "UNDER_CAP", label: "Under Cap", color: "text-green-400 bg-green-500/15 border-green-500/30" };
+    return { tier: "OVER_CAP", label: "Over Cap", color: "text-yellow-400 bg-yellow-500/10 border-l-2 border-yellow-400" };
+  return { tier: "UNDER_CAP", label: "Under Cap", color: "text-emerald-400 bg-emerald-500/10 border-l-2 border-emerald-400" };
 }
 
 function capValueColor(value: number): string {
-  if (value > 0) return "text-green-400";
+  if (value > 0) return "text-emerald-400";
   if (value < 0) return "text-red-400";
   return "text-foreground";
 }
@@ -141,8 +141,8 @@ export function TeamCard({
   };
 
   return (
-    <Card className="flex flex-col h-auto overflow-hidden border-indigoMain bg-gradient-to-br from-background via-background/95 to-muted/80 ">
-      <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2 pt-4 px-4 bg-muted/60">
+    <Card className="flex flex-col h-auto overflow-hidden bg-surface-low">
+      <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2 pt-5 px-4 bg-surface-container">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -151,7 +151,7 @@ export function TeamCard({
               disabled={isLoading}
             >
               {isLoading ? (
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <Loader2 className="h-6 w-6 animate-spin text-on-surface-variant" />
               ) : (
                 <div className="flex items-center gap-2 min-w-0 w-full">
                   {team.logos[0] && (
@@ -167,7 +167,7 @@ export function TeamCard({
                     {team.displayName}
                   </span>
                   <RepeatIcon
-                    className="ml-1 h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+                    className="ml-1 h-4 w-4 shrink-0 text-on-surface-variant hover:text-foreground transition-colors"
                     strokeWidth={1.5}
                   />
                 </div>
@@ -176,7 +176,7 @@ export function TeamCard({
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="start"
-            className="max-h-60 overflow-y-auto border-indigoMain"
+            className="max-h-60 overflow-y-auto"
           >
             {availableTeamsForChange.map((newTeam) => (
               <DropdownMenuItem
@@ -203,42 +203,42 @@ export function TeamCard({
           variant="ghost"
           size="icon"
           onClick={() => onRemoveTeam(team.id)}
-          className="shrink-0 text-muted-foreground hover:text-destructive"
+          className="shrink-0 text-on-surface-variant hover:text-destructive"
           disabled={isLoading}
         >
           <XIcon className="h-5 w-5" strokeWidth={1.5} />
           <span className="sr-only">Remove team</span>
         </Button>
       </CardHeader>
-      <CardContent className="px-4 pb-4 flex-grow flex flex-col bg-muted/60 border-indigoMain">
+      <CardContent className="px-4 pb-4 flex-grow flex flex-col bg-surface-container">
         {/* Cap Status */}
         {(() => {
           const cap = getCapTier(team);
           return (
             <div className="mb-3 space-y-2">
               <div className="flex items-center justify-between">
-                <span className={`text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded border ${cap.color}`}>
+                <span className={`text-[11px] font-semibold uppercase tracking-wide px-2.5 py-1 rounded-lg ${cap.color}`}>
                   {cap.label}
                 </span>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-on-surface-variant">
                   Total: {formatM(team.totalCapAllocation || 0)}
                 </span>
               </div>
               <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="rounded-md bg-slate-950 border border-border px-2 py-1.5">
-                  <div className="text-[10px] text-muted-foreground mb-0.5">Cap Space</div>
+                <div className="rounded-lg bg-surface-low px-2 py-1.5">
+                  <div className="text-[10px] text-on-surface-variant mb-0.5">Cap Space</div>
                   <div className={`text-xs font-semibold ${capValueColor(team.capSpace || 0)}`}>
                     {formatM(team.capSpace || 0)}
                   </div>
                 </div>
-                <div className="rounded-md bg-slate-950 border border-border px-2 py-1.5">
-                  <div className="text-[10px] text-muted-foreground mb-0.5">1st Apron</div>
+                <div className="rounded-lg bg-surface-low px-2 py-1.5">
+                  <div className="text-[10px] text-on-surface-variant mb-0.5">1st Apron</div>
                   <div className={`text-xs font-semibold ${capValueColor(team.firstApronSpace || 0)}`}>
                     {formatM(team.firstApronSpace || 0)}
                   </div>
                 </div>
-                <div className="rounded-md bg-slate-950 border border-border px-2 py-1.5">
-                  <div className="text-[10px] text-muted-foreground mb-0.5">2nd Apron</div>
+                <div className="rounded-lg bg-surface-low px-2 py-1.5">
+                  <div className="text-[10px] text-on-surface-variant mb-0.5">2nd Apron</div>
                   <div className={`text-xs font-semibold ${capValueColor(team.secondApronSpace || 0)}`}>
                     {formatM(team.secondApronSpace || 0)}
                   </div>
@@ -276,15 +276,15 @@ export function TeamCard({
                   return (
                     <DropdownMenu key={player.id}>
                       <div
-                        className={`group relative flex items-center justify-between p-2.5 rounded-md border-2 ${
+                        className={`group relative flex items-center justify-between p-2.5 rounded-lg ${
                           isSelected
-                            ? "bg-muted/90 border-white"
-                            : "border-border bg-slate-950 hover:border-indigoMain/50"
-                        } transition-colors`}
+                            ? "bg-primary/10 glow-primary"
+                            : "bg-surface-low hover:bg-surface-high"
+                        } transition-all duration-200`}
                       >
                         <div className="flex items-center gap-3">
                           {player.headshot && (
-                            <div className="bg-white/20 p-1 rounded-full">
+                            <div className="bg-surface-highest p-1 rounded-lg">
                               <Image
                                 src={player.headshot.href}
                                 alt={player.displayName}
@@ -297,11 +297,11 @@ export function TeamCard({
                           <div>
                             <div className="font-medium text-sm">
                               {player.displayName}{" "}
-                              <span className="text-xs text-muted-foreground">
+                              <span className="text-xs text-on-surface-variant">
                                 {player.position?.abbreviation || "Unknown"}{player.age ? `, Age: ${player.age}` : ""}
                               </span>
                             </div>
-                            <div className="text-xs text-muted-foreground">
+                            <div className="text-xs text-on-surface-variant">
                               {player.contract
                                 ? `Salary: $${(
                                     player.contract.salary / 1000000
@@ -321,7 +321,7 @@ export function TeamCard({
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                            className="h-8 w-8 text-on-surface-variant hover:text-foreground focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                             onClick={(e) => e.stopPropagation()}
                           >
                             {isSelected ? (
@@ -371,7 +371,7 @@ export function TeamCard({
                           </DropdownMenuItem>
                         ) : (
                           <>
-                            <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                            <div className="px-2 py-1.5 text-xs text-on-surface-variant">
                               Trade to specific team:
                             </div>
                             {otherSelectedTeams.map((targetTeam) => (
@@ -419,11 +419,11 @@ export function TeamCard({
                   return (
                     <DropdownMenu key={pick.id}>
                       <div
-                        className={`group relative flex items-center justify-between p-2.5 rounded-md border-2 ${
+                        className={`group relative flex items-center justify-between p-2.5 rounded-lg ${
                           isSelected
-                            ? "bg-muted/90 border-white"
-                            : "border-border bg-slate-950"
-                        } transition-colors cursor-pointer`}
+                            ? "bg-primary/10 glow-primary"
+                            : "bg-surface-low hover:bg-surface-high"
+                        } transition-all duration-200 cursor-pointer`}
                         onClick={(e) => {
                           if (otherSelectedTeams.length === 0) {
                             e.preventDefault();
@@ -436,7 +436,7 @@ export function TeamCard({
                             {pick.year} {pick.round === 1 ? "1st" : "2nd"} round{" "}
                             {pick.isSwap ? "Pick Swap" : "Pick"}
                           </div>
-                          <div className="text-xs text-muted-foreground">
+                          <div className="text-xs text-on-surface-variant">
                             {pick.description}
                           </div>
                         </div>
@@ -444,7 +444,7 @@ export function TeamCard({
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                            className="h-8 w-8 text-on-surface-variant hover:text-foreground focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                           >
                             {isSelected ? (
                               <Minus className="h-4 w-4" />
@@ -488,7 +488,7 @@ export function TeamCard({
                           </DropdownMenuItem>
                         ) : (
                           <>
-                            <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                            <div className="px-2 py-1.5 text-xs text-on-surface-variant">
                               Trade to specific team:
                             </div>
                             {otherSelectedTeams.map((targetTeam) => (

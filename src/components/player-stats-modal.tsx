@@ -181,7 +181,7 @@ export function PlayerStatsModal({
 
       {/* Modal */}
       <div className="fixed left-[50%] top-[50%] z-[101] w-full max-w-2xl translate-x-[-50%] translate-y-[-50%] animate-in fade-in-0 zoom-in-95 px-4">
-        <div className="bg-background border border-border rounded-lg shadow-lg overflow-hidden">
+        <div className="bg-surface-low glass ghost-border rounded-xl shadow-ambient overflow-hidden">
           {/* Header with team colors */}
           <div
             className="relative"
@@ -269,14 +269,14 @@ export function PlayerStatsModal({
 
           {/* Current Season Stats Banner */}
           {perGameStats && keyStats.length > 0 && (
-            <div className="px-5 py-3 bg-background border-b border-border">
-              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+            <div className="px-5 py-3 bg-surface-container">
+              <div className="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider mb-2">
                 {perGameStats.currentSeasonYear} Per Game
               </div>
               <div className="flex justify-between items-end">
                 {keyStats.map(({ label, value }) => (
                   <div key={label} className="text-center flex-1">
-                    <div className="text-[10px] text-muted-foreground uppercase mb-0.5">{label}</div>
+                    <div className="text-[10px] text-on-surface-variant uppercase mb-0.5">{label}</div>
                     <div className="text-2xl font-bold text-foreground">{value}</div>
                   </div>
                 ))}
@@ -292,31 +292,31 @@ export function PlayerStatsModal({
                 <Skeleton className="h-32 w-full" />
               </div>
             ) : error || !espnId ? (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="text-center py-8 text-on-surface-variant">
                 <p className="text-sm">{error || "Stats not available"}</p>
               </div>
             ) : !perGameStats || perGameStats.seasons.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="text-center py-8 text-on-surface-variant">
                 <p className="text-sm">No stats available</p>
               </div>
             ) : (
               <div className="p-4 pb-6">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                <h3 className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">
                   Season History
                 </h3>
 
-                <div className="border border-border rounded-lg overflow-hidden">
+                <div className="rounded-lg overflow-hidden">
                   <div className="overflow-x-auto max-h-[28vh] overflow-y-auto">
                     <table className="w-full text-xs">
                       <thead className="sticky top-0 z-10">
-                        <tr className="bg-muted border-b border-border">
-                          <th className="px-2.5 py-1.5 text-left text-[10px] font-semibold text-muted-foreground sticky left-0 bg-muted">
+                        <tr className="bg-surface-high border-b border-outline-variant/15">
+                          <th className="px-2.5 py-1.5 text-left text-[10px] font-semibold text-on-surface-variant sticky left-0 bg-surface-high">
                             Season
                           </th>
                           {perGameStats.labels.map((label, i) => (
                             <th
                               key={i}
-                              className="px-1.5 py-1.5 text-[10px] font-semibold text-muted-foreground text-center whitespace-nowrap bg-muted"
+                              className="px-1.5 py-1.5 text-[10px] font-semibold text-on-surface-variant text-center whitespace-nowrap bg-surface-high"
                             >
                               {label}
                             </th>
@@ -327,12 +327,12 @@ export function PlayerStatsModal({
                         {[...perGameStats.seasons].reverse().map((season, idx) => (
                           <tr
                             key={idx}
-                            className={`border-b border-border last:border-b-0 ${
-                              idx === 0 ? "bg-muted font-medium" : "hover:bg-muted/20"
+                            className={`border-b border-outline-variant/15 last:border-b-0 ${
+                              idx === 0 ? "bg-surface-high font-medium" : "hover:bg-surface-high/20"
                             }`}
                           >
                             <td className={`px-2.5 py-1.5 text-[11px] whitespace-nowrap sticky left-0 ${
-                              idx === 0 ? "bg-muted" : "bg-background"
+                              idx === 0 ? "bg-surface-high" : "bg-background"
                             }`}>
                               {season.season}
                             </td>
@@ -347,8 +347,8 @@ export function PlayerStatsModal({
                           </tr>
                         ))}
                         {perGameStats.careerTotals.length > 0 && (
-                          <tr className="bg-muted font-semibold border-t-2 border-border">
-                            <td className="px-2.5 py-1.5 text-[11px] whitespace-nowrap sticky left-0 bg-muted">
+                          <tr className="bg-surface-high font-semibold border-t-2 border-outline-variant/15">
+                            <td className="px-2.5 py-1.5 text-[11px] whitespace-nowrap sticky left-0 bg-surface-high">
                               Career
                             </td>
                             {perGameStats.careerTotals.map((value, i) => (

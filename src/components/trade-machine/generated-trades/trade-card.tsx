@@ -93,12 +93,32 @@ export default function TradeCard({
     );
 
     const findReceivedPlayers = tradeTeam.receives?.players?.map((player) => {
+      const playerName = player.name.toLowerCase().trim();
+
+      // First try the team the AI says the player is from
       const findPlayerFromResponse = involvedTeams.find(
         (team) => team.displayName === player.from
       );
-      return findPlayerFromResponse?.players?.find(
-        (p) => p.fullName === player.name
+      const matchOnFromTeam = findPlayerFromResponse?.players?.find(
+        (p) =>
+          p.fullName.toLowerCase() === playerName ||
+          p.displayName.toLowerCase() === playerName ||
+          p.shortName.toLowerCase() === playerName
       );
+      if (matchOnFromTeam) return matchOnFromTeam;
+
+      // Fallback: search all involved teams (AI may have the wrong "from")
+      for (const team of involvedTeams) {
+        const match = team.players?.find(
+          (p) =>
+            p.fullName.toLowerCase() === playerName ||
+            p.displayName.toLowerCase() === playerName ||
+            p.shortName.toLowerCase() === playerName
+        );
+        if (match) return match;
+      }
+
+      return undefined;
     });
 
     // Map AI-generated picks to real draft picks
@@ -111,7 +131,29 @@ export default function TradeCard({
       });
 
     const findGivenPlayers = tradeTeam.gives?.players?.map((player) => {
-      return findTeam?.players?.find((p) => p.fullName === player.name);
+      const playerName = player.name.toLowerCase().trim();
+
+      // First try the team's own roster
+      const matchOnTeam = findTeam?.players?.find(
+        (p) =>
+          p.fullName.toLowerCase() === playerName ||
+          p.displayName.toLowerCase() === playerName ||
+          p.shortName.toLowerCase() === playerName
+      );
+      if (matchOnTeam) return matchOnTeam;
+
+      // Fallback: search all involved teams
+      for (const team of involvedTeams) {
+        const match = team.players?.find(
+          (p) =>
+            p.fullName.toLowerCase() === playerName ||
+            p.displayName.toLowerCase() === playerName ||
+            p.shortName.toLowerCase() === playerName
+        );
+        if (match) return match;
+      }
+
+      return undefined;
     });
 
     const enrichedGivesPicks: EnrichedPick[] | undefined =
@@ -230,7 +272,7 @@ export default function TradeCard({
           <SnapshotButton onClick={capture} isCapturing={isCapturing} />
         </div>
         {isValidTrade && (
-          <div className="flex items-center gap-2 py-2 px-3 rounded-md border border-green-500/50 bg-green-500/10 text-green-500 w-full md:w-auto justify-center md:justify-end">
+          <div className="flex items-center gap-2 py-2 px-3 rounded-lg bg-surface-high border-l-2 border-primary text-primary w-full md:w-auto justify-center md:justify-end">
             <CheckCircle className="w-4 h-4 shrink-0" />
             <div className="text-sm font-medium">
               Valid trade - Salary rules satisfied
@@ -254,9 +296,9 @@ export default function TradeCard({
         {TradesWithInfo.map((tradeInfo, index) => (
           <Card
             key={index}
-            className="flex flex-col h-auto overflow-hidden border-indigoMain bg-gradient-to-br from-background via-background/95 to-muted/80"
+            className="flex flex-col h-auto overflow-hidden bg-surface-low"
           >
-            <CardHeader className="flex flex-row items-center justify-center space-y-0 pb-2 pt-4 px-4 bg-muted/60">
+            <CardHeader className="flex flex-row items-center justify-center space-y-0 pb-2 pt-4 px-4 bg-surface-container">
               <div className="flex items-center justify-center gap-2 min-w-0 w-full">
                 {tradeInfo.team?.logos?.[0] && (
                   <Image
@@ -272,10 +314,10 @@ export default function TradeCard({
                 </span>
               </div>
             </CardHeader>
-            <div className="px-4 py-3 bg-muted/10 ">
+            <div className="px-4 py-3 bg-surface-low ">
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <div className="text-xs text-muted-foreground mb-1">
+                  <div className="text-xs text-on-surface-variant mb-1">
                     Outgoing Salary
                   </div>
                   <div className="text-sm font-medium">
@@ -287,7 +329,7 @@ export default function TradeCard({
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-muted-foreground mb-1">
+                  <div className="text-xs text-on-surface-variant mb-1">
                     Incoming Salary
                   </div>
                   <div className="text-sm font-medium">
@@ -299,7 +341,7 @@ export default function TradeCard({
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-muted-foreground mb-1">
+                  <div className="text-xs text-on-surface-variant mb-1">
                     Cap Difference
                   </div>
                   <div
@@ -332,7 +374,7 @@ export default function TradeCard({
                 </div>
               </div>
             </div>
-            <CardContent className="px-4 py-4 flex-grow flex flex-col bg-muted/60 border-indigoMain">
+            <CardContent className="px-4 py-4 flex-grow flex flex-col bg-surface-container ">
               <Tabs defaultValue="receives" className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-4">
                   <TabsTrigger value="receives">Receives</TabsTrigger>
@@ -345,7 +387,7 @@ export default function TradeCard({
                 {tradeInfo.playersReceived &&
                   tradeInfo.playersReceived.length > 0 && (
                     <div>
-                      <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-muted-foreground">
+                      <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-on-surface-variant">
                         <UsersIcon className="w-4 h-4" strokeWidth={1.5} />
                         Players Received
                       </div>
@@ -361,11 +403,11 @@ export default function TradeCard({
                               return (
                                 <div
                                   key={playerIndex}
-                                  className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950 transition-colors"
+                                  className="group relative flex items-center justify-between p-3 rounded-md bg-surface-low rounded-lg transition-colors"
                                 >
                                   <div className="flex items-center gap-3 min-w-0 flex-1">
                                     {player?.headshot && (
-                                      <div className="bg-white/20 p-1 rounded-full">
+                                      <div className="bg-surface-highest p-1 rounded-full">
                                         <Image
                                           src={player.headshot.href}
                                           alt={player.displayName}
@@ -380,13 +422,13 @@ export default function TradeCard({
                                         <span className="font-medium text-sm truncate min-w-0 flex-1">
                                           {player?.displayName}
                                         </span>
-                                        <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
+                                        <span className="text-xs text-on-surface-variant whitespace-nowrap shrink-0">
                                           {player?.position?.abbreviation ||
                                             "Unknown"}
                                           {player?.age ? `, Age: ${player.age}` : ""}
                                         </span>
                                       </div>
-                                      <div className="text-xs text-muted-foreground">
+                                      <div className="text-xs text-on-surface-variant">
                                         {player?.contract
                                           ? `Salary: $${(
                                               player.contract.salary / 1000000
@@ -405,7 +447,7 @@ export default function TradeCard({
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8 shrink-0 text-muted-foreground hover:text-indigoMain"
+                                    className="h-8 w-8 shrink-0 text-on-surface-variant hover:text-indigoMain"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       player &&
@@ -431,7 +473,7 @@ export default function TradeCard({
                 {tradeInfo.picksReceived &&
                   tradeInfo.picksReceived.length > 0 && (
                     <div>
-                      <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-muted-foreground">
+                      <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-on-surface-variant">
                         <FileTextIcon className="w-4 h-4 " strokeWidth={1.5} />
                         Picks Received
                       </div>
@@ -449,10 +491,10 @@ export default function TradeCard({
                             return (
                               <div
                                 key={pickIndex}
-                                className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950"
+                                className="group relative flex items-center justify-between p-3 rounded-md bg-surface-low rounded-lg"
                               >
                                 <div className="flex flex-col gap-1">
-                                  <div className="text-xs text-muted-foreground">
+                                  <div className="text-xs text-on-surface-variant">
                                     from {pick?.from}
                                   </div>
                                   <div className="font-medium text-sm">
@@ -460,7 +502,7 @@ export default function TradeCard({
                                       ? `${realPick.year} ${realPick.round}${roundSuffix} Round Pick`
                                       : pick?.name}
                                   </div>
-                                  <div className="text-xs text-muted-foreground">
+                                  <div className="text-xs text-on-surface-variant">
                                     {realPick?.isProtected && (
                                       <span className="text-amber-500 mr-2">
                                         Protected
@@ -491,7 +533,7 @@ export default function TradeCard({
                   tradeInfo.playersReceived.length === 0) &&
                   (!tradeInfo.picksReceived ||
                     tradeInfo.picksReceived.length === 0) && (
-                    <div className="text-center py-6 text-muted-foreground">
+                    <div className="text-center py-6 text-on-surface-variant">
                       <div className="text-sm">No assets received</div>
                     </div>
                   )}
@@ -505,7 +547,7 @@ export default function TradeCard({
                     {tradeInfo.playersSent &&
                       tradeInfo.playersSent.length > 0 && (
                         <div>
-                          <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-muted-foreground">
+                          <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-on-surface-variant">
                             <UsersIcon className="w-4 h-4" strokeWidth={1.5} />
                             Players Sent
                           </div>
@@ -514,11 +556,11 @@ export default function TradeCard({
                               (player, playerIndex) => (
                                 <div
                                   key={playerIndex}
-                                  className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950 transition-colors"
+                                  className="group relative flex items-center justify-between p-3 rounded-md bg-surface-low rounded-lg transition-colors"
                                 >
                                   <div className="flex items-center gap-3">
                                     {player?.headshot && (
-                                      <div className="bg-white/20 p-1 rounded-full">
+                                      <div className="bg-surface-highest p-1 rounded-full">
                                         <Image
                                           src={player.headshot.href}
                                           alt={player.displayName}
@@ -533,12 +575,12 @@ export default function TradeCard({
                                         <span className="font-medium text-sm truncate">
                                           {player?.displayName}
                                         </span>
-                                        <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
+                                        <span className="text-xs text-on-surface-variant whitespace-nowrap shrink-0">
                                           {player?.position?.abbreviation || "Unknown"}
                                           {player?.age ? `, Age: ${player.age}` : ""}
                                         </span>
                                       </div>
-                                      <div className="text-xs text-muted-foreground">
+                                      <div className="text-xs text-on-surface-variant">
                                         {player?.contract
                                           ? `Salary: $${(player.contract.salary / 1000000).toFixed(1)}M`
                                           : "No contract"}
@@ -551,7 +593,7 @@ export default function TradeCard({
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8 text-muted-foreground hover:text-indigoMain"
+                                    className="h-8 w-8 text-on-surface-variant hover:text-indigoMain"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       player &&
@@ -575,7 +617,7 @@ export default function TradeCard({
                     {tradeInfo.picksSent &&
                       tradeInfo.picksSent.length > 0 && (
                         <div>
-                          <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-muted-foreground">
+                          <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-on-surface-variant">
                             <FileTextIcon className="w-4 h-4" strokeWidth={1.5} />
                             Picks Sent
                           </div>
@@ -587,7 +629,7 @@ export default function TradeCard({
                               return (
                                 <div
                                   key={pickIndex}
-                                  className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950"
+                                  className="group relative flex items-center justify-between p-3 rounded-md bg-surface-low rounded-lg"
                                 >
                                   <div className="flex flex-col gap-1">
                                     <div className="font-medium text-sm">
@@ -595,7 +637,7 @@ export default function TradeCard({
                                         ? `${realPick.year} ${realPick.round}${roundSuffix} Round Pick`
                                         : pick?.name}
                                     </div>
-                                    <div className="text-xs text-muted-foreground">
+                                    <div className="text-xs text-on-surface-variant">
                                       {realPick?.isProtected && (
                                         <span className="text-amber-500 mr-2">Protected</span>
                                       )}
@@ -619,7 +661,7 @@ export default function TradeCard({
                     {/* No assets sent */}
                     {(!tradeInfo.playersSent || tradeInfo.playersSent.length === 0) &&
                       (!tradeInfo.picksSent || tradeInfo.picksSent.length === 0) && (
-                        <div className="text-center py-6 text-muted-foreground">
+                        <div className="text-center py-6 text-on-surface-variant">
                           <div className="text-sm">No assets sent</div>
                         </div>
                       )}
@@ -632,28 +674,28 @@ export default function TradeCard({
                 <div className="text-sm font-semibold mb-2">
                   Updated Team Cap Info
                 </div>
-                <table className="w-full border border-border rounded text-xs">
+                <table className="w-full rounded-lg overflow-hidden text-xs">
                   <tbody>
-                    <tr className="bg-muted/40">
-                      <td className="px-2 py-1 text-muted-foreground w-1/2">Total Cap</td>
+                    <tr className="bg-surface-high">
+                      <td className="px-2 py-1 text-on-surface-variant w-1/2">Total Cap</td>
                       <td className="px-2 py-1 font-medium w-1/2 text-right">
                         ${tradeInfo.team?.totalCapAllocation ? (tradeInfo.team?.totalCapAllocation / 1000000).toFixed(1) : "0.0"}M
                       </td>
                     </tr>
                     <tr className="bg-background">
-                      <td className="px-2 py-1 text-muted-foreground w-1/2">Cap Space</td>
+                      <td className="px-2 py-1 text-on-surface-variant w-1/2">Cap Space</td>
                       <td className="px-2 py-1 font-medium w-1/2 text-right">
                         ${(calculateUpdatedTaxValue(tradeInfo.team?.capSpace || 0, tradeInfo.capDifference) / 1000000).toFixed(1)}M
                       </td>
                     </tr>
-                    <tr className="bg-muted/40">
-                      <td className="px-2 py-1 text-muted-foreground w-1/2">1st Apron Space</td>
+                    <tr className="bg-surface-high">
+                      <td className="px-2 py-1 text-on-surface-variant w-1/2">1st Apron Space</td>
                       <td className="px-2 py-1 font-medium w-1/2 text-right">
                         ${(calculateUpdatedTaxValue(tradeInfo.team?.firstApronSpace || 0, tradeInfo.capDifference) / 1000000).toFixed(1)}M
                       </td>
                     </tr>
                     <tr className="bg-background">
-                      <td className="px-2 py-1 text-muted-foreground w-1/2">2nd Apron Space</td>
+                      <td className="px-2 py-1 text-on-surface-variant w-1/2">2nd Apron Space</td>
                       <td className="px-2 py-1 font-medium w-1/2 text-right">
                         ${(calculateUpdatedTaxValue(tradeInfo.team?.secondApronSpace || 0, tradeInfo.capDifference) / 1000000).toFixed(1)}M
                       </td>
@@ -667,7 +709,7 @@ export default function TradeCard({
       </div>
       {!isValidTrade && (
         <div
-          className="flex items-center gap-2 py-3 px-4 rounded-md border border-orange-500/50 bg-orange-500/10 text-orange-500
+          className="flex items-center gap-2 py-3 px-4 rounded-lg bg-surface-high border-l-2 border-orange-400 text-orange-400
           justify-center w-full md:w-fit md:mx-0 md:justify-start"
         >
           <AlertCircle className="w-4 h-4 shrink-0" />

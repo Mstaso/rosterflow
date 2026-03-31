@@ -445,7 +445,7 @@ export function SavedTradeDetail({
           <Button
             onClick={() => router.push("/my-trades")}
             variant="ghost"
-            className="text-muted-foreground p-0 h-auto hover:text-white hover:bg-transparent mb-4"
+            className="text-on-surface-variant p-0 h-auto hover:text-white hover:bg-transparent mb-4"
           >
             <ArrowLeft className="mr-2 h-4 w-4 text-indigoMain" />
             Back to My Trades
@@ -461,8 +461,8 @@ export function SavedTradeDetail({
                   className={cn(
                     "h-9 w-9 rounded-md transition-all duration-200",
                     userVote === 1
-                      ? "text-orange-500 bg-orange-500/10 hover:bg-orange-500/20 scale-110"
-                      : "text-muted-foreground hover:text-orange-500 hover:bg-orange-500/10 hover:scale-110"
+                      ? "text-primary bg-primary/10 hover:bg-primary/20 scale-110"
+                      : "text-on-surface-variant hover:text-primary hover:bg-primary/10 hover:scale-110"
                   )}
                   disabled={isVoting}
                   onClick={() => handleVote(1)}
@@ -477,9 +477,9 @@ export function SavedTradeDetail({
                 <span
                   className={cn(
                     "text-lg font-bold tabular-nums transition-colors duration-200",
-                    score > 0 && "text-orange-500",
-                    score < 0 && "text-blue-500",
-                    score === 0 && "text-muted-foreground"
+                    score > 0 && "text-primary",
+                    score < 0 && "text-on-surface-variant",
+                    score === 0 && "text-on-surface-variant"
                   )}
                 >
                   {score}
@@ -490,8 +490,8 @@ export function SavedTradeDetail({
                   className={cn(
                     "h-9 w-9 rounded-md transition-all duration-200",
                     userVote === -1
-                      ? "text-blue-500 bg-blue-500/10 hover:bg-blue-500/20 scale-110"
-                      : "text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 hover:scale-110"
+                      ? "text-on-surface-variant bg-surface-high hover:bg-surface-highest scale-110"
+                      : "text-on-surface-variant hover:text-on-surface-variant hover:bg-surface-high hover:scale-110"
                   )}
                   disabled={isVoting}
                   onClick={() => handleVote(-1)}
@@ -507,7 +507,7 @@ export function SavedTradeDetail({
 
               <div>
                 <h1 className="text-2xl font-bold mb-2">{trade.title}</h1>
-                <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-3 text-sm text-on-surface-variant">
                   <span className="flex items-center gap-1">
                     <CalendarIcon className="h-4 w-4" />
                     {formatDate(trade.createdAt)}
@@ -519,21 +519,15 @@ export function SavedTradeDetail({
                 </div>
                 <div className="flex items-center gap-1 mt-4">
                   {trade.salaryValid ? (
-                    <Badge
-                      variant="outline"
-                      className="text-green-500 border-green-500"
-                    >
-                      <CheckCircleIcon className="h-3.5 w-3.5 mr-1" />
-                      Salary Valid
-                    </Badge>
+                    <div className="flex items-center gap-2 py-1.5 px-3 rounded-lg bg-surface-high border-l-2 border-primary text-primary">
+                      <CheckCircleIcon className="h-3.5 w-3.5" />
+                      <span className="text-sm font-medium">Valid trade - Salary rules satisfied</span>
+                    </div>
                   ) : (
-                    <Badge
-                      variant="outline"
-                      className="text-orange-500 border-orange-500"
-                    >
-                      <XCircleIcon className="h-3.5 w-3.5 mr-1" />
-                      Salary Invalid
-                    </Badge>
+                    <div className="flex items-center gap-2 py-1.5 px-3 rounded-lg bg-surface-high border-l-2 border-destructive text-destructive">
+                      <XCircleIcon className="h-3.5 w-3.5" />
+                      <span className="text-sm font-medium">Invalid trade - Salary rules not satisfied</span>
+                    </div>
                   )}
                 </div>
               </div>
@@ -546,7 +540,7 @@ export function SavedTradeDetail({
                 className="w-full sm:w-auto"
               />
               <Button
-                variant="indigo"
+                variant="outline"
                 onClick={handleShare}
                 className="w-full sm:w-auto"
               >
@@ -565,7 +559,7 @@ export function SavedTradeDetail({
               {isOwnTrade && (
                 <>
                   <Button
-                    variant="edit"
+                    variant="outline"
                     onClick={handleEditTrade}
                     className="w-full sm:w-auto"
                   >
@@ -575,8 +569,8 @@ export function SavedTradeDetail({
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button
-                        variant="outline"
-                        className="w-full sm:w-auto text-red-500 border-red-500 hover:bg-red-500 hover:text-white"
+                        variant="destructive"
+                        className="w-full sm:w-auto"
                         disabled={isDeleting}
                       >
                         <TrashIcon className="h-4 w-4 mr-2" />
@@ -608,7 +602,7 @@ export function SavedTradeDetail({
           </div>
 
           {/* Description */}
-          <p className="text-muted-foreground mt-4">{trade.description}</p>
+          <p className="text-on-surface-variant mt-4">{trade.description}</p>
         </div>
 
         {/* Trade Cards - Similar to trade-card.tsx */}
@@ -628,9 +622,9 @@ export function SavedTradeDetail({
           {teamsInfo.map((teamInfo, index) => (
             <Card
               key={index}
-              className="flex flex-col h-auto overflow-hidden border-white/30 bg-gradient-to-br from-background via-background/95 to-muted/80"
+              className="flex flex-col h-auto overflow-hidden bg-surface-low"
             >
-              <CardHeader className="flex flex-row items-center justify-center space-y-0 pb-2 pt-4 px-4 bg-muted/60">
+              <CardHeader className="flex flex-row items-center justify-center space-y-0 pb-2 pt-4 px-4 bg-surface-container">
                 <div className="flex items-center justify-center gap-2 min-w-0 w-full">
                   {(teamInfo.tradeTeam.teamLogo as { href?: string })?.href && (
                     <Image
@@ -650,10 +644,10 @@ export function SavedTradeDetail({
               </CardHeader>
 
               {/* Salary Info */}
-              <div className="px-4 py-3 bg-muted/10">
+              <div className="px-4 py-3 bg-surface-low">
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
-                    <div className="text-xs text-muted-foreground mb-1">
+                    <div className="text-xs text-on-surface-variant mb-1">
                       Outgoing Salary
                     </div>
                     <div className="text-sm font-medium">
@@ -661,7 +655,7 @@ export function SavedTradeDetail({
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-muted-foreground mb-1">
+                    <div className="text-xs text-on-surface-variant mb-1">
                       Incoming Salary
                     </div>
                     <div className="text-sm font-medium">
@@ -669,7 +663,7 @@ export function SavedTradeDetail({
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-muted-foreground mb-1">
+                    <div className="text-xs text-on-surface-variant mb-1">
                       Cap Difference
                     </div>
                     <div
@@ -687,7 +681,7 @@ export function SavedTradeDetail({
                 </div>
               </div>
 
-              <CardContent className="px-4 py-4 flex-grow flex flex-col bg-muted/60 border-indigoMain">
+              <CardContent className="px-4 py-4 flex-grow flex flex-col bg-surface-container ">
                 <Tabs defaultValue="receives" className="w-full">
                   <TabsList className="grid w-full grid-cols-2 mb-4">
                     <TabsTrigger value="receives">Receives</TabsTrigger>
@@ -699,7 +693,7 @@ export function SavedTradeDetail({
                   {/* Players Received */}
                   {teamInfo.playersReceived.length > 0 && (
                     <div>
-                      <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-muted-foreground">
+                      <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-on-surface-variant">
                         <UsersIcon className="w-4 h-4" strokeWidth={1.5} />
                         Players Received
                       </div>
@@ -707,12 +701,12 @@ export function SavedTradeDetail({
                         {teamInfo.playersReceived.map((asset) => (
                           <div
                             key={asset.id}
-                            className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950 transition-colors"
+                            className="group relative flex items-center justify-between p-3 rounded-md bg-surface-low rounded-lg transition-colors"
                           >
                             <div className="flex items-center gap-3 min-w-0 flex-1">
                               {(asset.playerHeadshot as { href?: string })
                                 ?.href && (
-                                <div className="bg-white/20 p-1 rounded-full">
+                                <div className="bg-surface-highest p-1 rounded-full">
                                   <Image
                                     src={
                                       (
@@ -733,11 +727,11 @@ export function SavedTradeDetail({
                                   <span className="font-medium text-sm truncate min-w-0 flex-1">
                                     {asset.playerName}
                                   </span>
-                                  <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
+                                  <span className="text-xs text-on-surface-variant whitespace-nowrap shrink-0">
                                     ({asset.playerPosition || "Unknown"})
                                   </span>
                                 </div>
-                                <div className="text-xs text-muted-foreground">
+                                <div className="text-xs text-on-surface-variant">
                                   {asset.playerSalary
                                     ? `Salary: $${(
                                         asset.playerSalary / 1000000
@@ -755,7 +749,7 @@ export function SavedTradeDetail({
                                     </>
                                   )}
                                 </div>
-                                <div className="text-xs text-muted-foreground mt-1">
+                                <div className="text-xs text-on-surface-variant mt-1">
                                   from {asset.tradeTeam.teamAbbreviation}
                                 </div>
                               </div>
@@ -763,7 +757,7 @@ export function SavedTradeDetail({
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 shrink-0 text-muted-foreground hover:text-indigoMain"
+                              className="h-8 w-8 shrink-0 text-on-surface-variant hover:text-indigoMain"
                               onClick={() => handleOpenPlayerStats(asset)}
                             >
                               <BarChart3Icon className="h-4 w-4" />
@@ -777,7 +771,7 @@ export function SavedTradeDetail({
                   {/* Picks Received */}
                   {teamInfo.picksReceived.length > 0 && (
                     <div>
-                      <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-muted-foreground">
+                      <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-on-surface-variant">
                         <FileTextIcon className="w-4 h-4" strokeWidth={1.5} />
                         Picks Received
                       </div>
@@ -785,17 +779,17 @@ export function SavedTradeDetail({
                         {teamInfo.picksReceived.map((asset) => (
                           <div
                             key={asset.id}
-                            className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950"
+                            className="group relative flex items-center justify-between p-3 rounded-md bg-surface-low rounded-lg"
                           >
                             <div className="flex flex-col gap-1">
-                              <div className="text-xs text-muted-foreground">
+                              <div className="text-xs text-on-surface-variant">
                                 from {asset.tradeTeam.teamAbbreviation}
                               </div>
                               <div className="font-medium text-sm">
                                 {asset.pickYear} Round {asset.pickRound} Pick
                               </div>
                               {asset.pickDescription && (
-                                <div className="text-xs text-muted-foreground">
+                                <div className="text-xs text-on-surface-variant">
                                   {asset.pickDescription}
                                 </div>
                               )}
@@ -809,7 +803,7 @@ export function SavedTradeDetail({
                   {/* No assets received */}
                   {teamInfo.playersReceived.length === 0 &&
                     teamInfo.picksReceived.length === 0 && (
-                      <div className="text-center py-6 text-muted-foreground">
+                      <div className="text-center py-6 text-on-surface-variant">
                         <div className="text-sm">No assets received</div>
                       </div>
                     )}
@@ -822,7 +816,7 @@ export function SavedTradeDetail({
                       {/* Players Sent */}
                       {teamInfo.playersSent.length > 0 && (
                         <div>
-                          <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-muted-foreground">
+                          <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-on-surface-variant">
                             <UsersIcon className="w-4 h-4" strokeWidth={1.5} />
                             Players Sent
                           </div>
@@ -830,11 +824,11 @@ export function SavedTradeDetail({
                             {teamInfo.playersSent.map((asset) => (
                               <div
                                 key={asset.id}
-                                className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950 transition-colors"
+                                className="group relative flex items-center justify-between p-3 rounded-md bg-surface-low rounded-lg transition-colors"
                               >
                                 <div className="flex items-center gap-3">
                                   {(asset.playerHeadshot as { href?: string })?.href && (
-                                    <div className="bg-white/20 p-1 rounded-full">
+                                    <div className="bg-surface-highest p-1 rounded-full">
                                       <Image
                                         src={(asset.playerHeadshot as { href: string }).href}
                                         alt={asset.playerName || ""}
@@ -849,11 +843,11 @@ export function SavedTradeDetail({
                                       <span className="font-medium text-sm truncate">
                                         {asset.playerName}
                                       </span>
-                                      <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
+                                      <span className="text-xs text-on-surface-variant whitespace-nowrap shrink-0">
                                         ({asset.playerPosition || "Unknown"})
                                       </span>
                                     </div>
-                                    <div className="text-xs text-muted-foreground">
+                                    <div className="text-xs text-on-surface-variant">
                                       {asset.playerSalary
                                         ? `Salary: $${(asset.playerSalary / 1000000).toFixed(1)}M`
                                         : "No contract"}
@@ -865,7 +859,7 @@ export function SavedTradeDetail({
                                         </>
                                       )}
                                     </div>
-                                    <div className="text-xs text-muted-foreground mt-1">
+                                    <div className="text-xs text-on-surface-variant mt-1">
                                       to {asset.targetTradeTeam.teamAbbreviation}
                                     </div>
                                   </div>
@@ -873,7 +867,7 @@ export function SavedTradeDetail({
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-8 w-8 text-muted-foreground hover:text-indigoMain"
+                                  className="h-8 w-8 text-on-surface-variant hover:text-indigoMain"
                                   onClick={() => handleOpenPlayerStats(asset)}
                                 >
                                   <BarChart3Icon className="h-4 w-4" />
@@ -887,7 +881,7 @@ export function SavedTradeDetail({
                       {/* Picks Sent */}
                       {teamInfo.picksSent.length > 0 && (
                         <div>
-                          <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-muted-foreground">
+                          <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-on-surface-variant">
                             <FileTextIcon className="w-4 h-4" strokeWidth={1.5} />
                             Picks Sent
                           </div>
@@ -895,17 +889,17 @@ export function SavedTradeDetail({
                             {teamInfo.picksSent.map((asset) => (
                               <div
                                 key={asset.id}
-                                className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950"
+                                className="group relative flex items-center justify-between p-3 rounded-md bg-surface-low rounded-lg"
                               >
                                 <div className="flex flex-col gap-1">
-                                  <div className="text-xs text-muted-foreground">
+                                  <div className="text-xs text-on-surface-variant">
                                     to {asset.targetTradeTeam.teamAbbreviation}
                                   </div>
                                   <div className="font-medium text-sm">
                                     {asset.pickYear} Round {asset.pickRound} Pick
                                   </div>
                                   {asset.pickDescription && (
-                                    <div className="text-xs text-muted-foreground">
+                                    <div className="text-xs text-on-surface-variant">
                                       {asset.pickDescription}
                                     </div>
                                   )}
@@ -919,7 +913,7 @@ export function SavedTradeDetail({
                       {/* No assets sent */}
                       {teamInfo.playersSent.length === 0 &&
                         teamInfo.picksSent.length === 0 && (
-                          <div className="text-center py-6 text-muted-foreground">
+                          <div className="text-center py-6 text-on-surface-variant">
                             <div className="text-sm">No assets sent</div>
                           </div>
                         )}
@@ -932,28 +926,28 @@ export function SavedTradeDetail({
                   <div className="text-sm font-semibold mb-2">
                     Updated Team Cap Info
                   </div>
-                  <table className="w-full border border-border rounded text-xs">
+                  <table className="w-full ghost-border rounded text-xs">
                     <tbody>
-                      <tr className="bg-muted/40">
-                        <td className="px-2 py-1 text-muted-foreground w-1/2">Total Cap</td>
+                      <tr className="bg-surface-high">
+                        <td className="px-2 py-1 text-on-surface-variant w-1/2">Total Cap</td>
                         <td className="px-2 py-1 font-medium w-1/2 text-right">
                           ${teamInfo.tradeTeam.totalCapAllocation ? (teamInfo.tradeTeam.totalCapAllocation / 1000000).toFixed(1) : "0.0"}M
                         </td>
                       </tr>
                       <tr className="bg-background">
-                        <td className="px-2 py-1 text-muted-foreground w-1/2">Cap Space</td>
+                        <td className="px-2 py-1 text-on-surface-variant w-1/2">Cap Space</td>
                         <td className="px-2 py-1 font-medium w-1/2 text-right">
                           ${(calculateUpdatedTaxValue(teamInfo.tradeTeam.capSpace || 0, teamInfo.capDifference) / 1000000).toFixed(1)}M
                         </td>
                       </tr>
-                      <tr className="bg-muted/40">
-                        <td className="px-2 py-1 text-muted-foreground w-1/2">1st Apron Space</td>
+                      <tr className="bg-surface-high">
+                        <td className="px-2 py-1 text-on-surface-variant w-1/2">1st Apron Space</td>
                         <td className="px-2 py-1 font-medium w-1/2 text-right">
                           ${(calculateUpdatedTaxValue(teamInfo.tradeTeam.firstApronSpace || 0, teamInfo.capDifference) / 1000000).toFixed(1)}M
                         </td>
                       </tr>
                       <tr className="bg-background">
-                        <td className="px-2 py-1 text-muted-foreground w-1/2">2nd Apron Space</td>
+                        <td className="px-2 py-1 text-on-surface-variant w-1/2">2nd Apron Space</td>
                         <td className="px-2 py-1 font-medium w-1/2 text-right">
                           ${(calculateUpdatedTaxValue(teamInfo.tradeTeam.secondApronSpace || 0, teamInfo.capDifference) / 1000000).toFixed(1)}M
                         </td>
@@ -969,14 +963,14 @@ export function SavedTradeDetail({
 
         {/* Comments Section */}
         <div className="mt-8">
-          <Card className="border-indigoMain bg-gradient-to-br from-background via-background/95 to-muted/80">
+          <Card className="bg-surface-low">
             <CardHeader className="pb-4">
               <div className="flex items-center gap-2">
                 <MessageCircleIcon className="h-5 w-5 text-indigoMain" />
                 <h2 className="text-lg font-semibold">
                   Comments{" "}
                   {trade.comments && trade.comments.length > 0 && (
-                    <span className="text-muted-foreground font-normal">
+                    <span className="text-on-surface-variant font-normal">
                       ({trade.comments.length})
                     </span>
                   )}
@@ -990,11 +984,11 @@ export function SavedTradeDetail({
                   placeholder="Share your thoughts on this trade..."
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
-                  className="min-h-[100px] bg-slate-950 border-border focus:border-indigoMain resize-none"
+                  className="min-h-[100px] bg-surface-low ghost-border focus:bg-surface-high resize-none"
                   maxLength={1000}
                 />
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-on-surface-variant">
                     {commentText.length}/1000 characters
                   </span>
                   <Button
@@ -1023,11 +1017,11 @@ export function SavedTradeDetail({
 
               {/* Comments List */}
               {trade.comments && trade.comments.length > 0 ? (
-                <div className="space-y-4 pt-4 border-t border-border">
+                <div className="space-y-4 pt-4 border-t border-outline-variant/15">
                   {trade.comments.map((comment) => (
                     <div
                       key={comment.id}
-                      className="group flex gap-3 p-4 rounded-lg bg-slate-950/50 border border-border hover:border-indigoMain/50 transition-colors"
+                      className="group flex gap-3 p-4 rounded-lg bg-surface-container ghost-border hover:/50 transition-colors"
                     >
                       <Avatar className="h-10 w-10 flex-shrink-0">
                         <AvatarFallback className="bg-indigoMain/20 text-indigoMain text-sm font-medium">
@@ -1040,7 +1034,7 @@ export function SavedTradeDetail({
                             <span className="font-medium text-sm">
                               {comment.userName}
                             </span>
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-xs text-on-surface-variant">
                               {formatCommentDate(comment.createdAt)}
                             </span>
                           </div>
@@ -1050,7 +1044,7 @@ export function SavedTradeDetail({
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-on-surface-variant hover:text-destructive"
                                   disabled={deletingCommentId === comment.id}
                                 >
                                   {deletingCommentId === comment.id ? (
@@ -1093,7 +1087,7 @@ export function SavedTradeDetail({
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground border-t border-border">
+                <div className="text-center py-8 text-on-surface-variant border-t border-outline-variant/15">
                   <MessageCircleIcon className="h-10 w-10 mx-auto mb-3 opacity-50" />
                   <p className="text-sm">No comments yet</p>
                   <p className="text-xs mt-1">

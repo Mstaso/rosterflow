@@ -54,17 +54,14 @@ export default async function TradeMachinePage({
       />
       <div className="flex flex-col">
         <div className="min-h-screen flex flex-col">
-          <Navbar />
-          <div className="w-full border-b border-border bg-muted/40">
-            <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-2.5">
-              <h1 className="text-sm font-medium tracking-wide text-muted-foreground/80 uppercase">
-                NBA Trade Machine
-              </h1>
+          <Navbar subtitle={
+            <>
+              <h1>NBA Trade Machine</h1>
               <p className="sr-only">
                 The fastest way to explore NBA trades. Generate multiple AI-powered trade scenarios at once with a clean, modern interface — no clutter, no clunky menus. Includes full salary cap validation under current CBA rules.
               </p>
-            </div>
-          </div>
+            </>
+          } />
           <TradeMachineClient
             nbaTeams={nbaTeams || []}
             initialTeamIds={initialTeamIds}

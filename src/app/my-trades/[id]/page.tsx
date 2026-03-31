@@ -41,7 +41,7 @@ export default async function TradeDetailPage({
     <main className="bg-background text-foreground">
       <div className="flex flex-col">
         <div className="min-h-screen flex flex-col">
-          <Navbar />
+          <Navbar subtitle={<h1>Trade Details</h1>} />
           <SavedTradeDetail trade={trade} currentUserId={userId} />
         </div>
         <Footer />

@@ -15,7 +15,11 @@ import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { UserButton } from "@clerk/nextjs";
 import { cn } from "~/lib/utils";
 
-export function Navbar() {
+interface NavbarProps {
+  subtitle?: React.ReactNode;
+}
+
+export function Navbar({ subtitle }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
 
@@ -51,7 +55,7 @@ export function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-[100] bg-background/80 border-b border-gray-800 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <nav className="sticky top-0 z-[100] bg-surface-low/80 backdrop-blur-xl supports-[backdrop-filter]:bg-surface-low/60">
         <div className="container mx-auto px-4 md:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Left side: Mobile Menu Button + Logo */}
@@ -59,25 +63,40 @@ export function Navbar() {
               {/* Mobile Menu Button - Left side */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2 -ml-2 text-muted-foreground hover:text-foreground transition-colors"
+                className="md:hidden p-2 -ml-2 text-on-surface-variant hover:text-foreground transition-colors"
                 aria-label="Toggle menu"
               >
                 <MenuIcon className="h-6 w-6" />
               </button>
 
-              {/* Logo */}
-              <Link
-                href="/"
-                className="flex items-center gap-2 text-xl font-bold text-foreground hover:text-foreground/90 transition-colors"
-              >
+              {/* Logo + Subtitle */}
+              <div className="flex items-center gap-2">
                 <HandshakeIcon
-                  className="h-7 w-7 text-indigoMain"
+                  className="h-7 w-7 text-indigoMain shrink-0"
                   strokeWidth={1.5}
                 />
-                <span className="font-supermolot">Roster Flows</span>
-              </Link>
+                <div className="flex flex-col md:flex-row md:items-center md:gap-3">
+                  <Link
+                    href="/"
+                    className="text-xl font-bold text-foreground hover:text-foreground/90 transition-colors font-supermolot"
+                  >
+                    Roster Flows
+                  </Link>
+                  {subtitle && (
+                    <>
+                      <span className="hidden md:inline text-on-surface-variant/30 text-lg font-light select-none">/</span>
+                      <div className="text-[11px] md:text-sm font-medium tracking-wide text-on-surface-variant uppercase -mt-0.5 md:mt-0">
+                        {subtitle}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
 
               {/* Desktop Navigation Links */}
+              {subtitle && (
+                <div className="hidden md:block w-px h-6 bg-on-surface-variant/15 ml-4" />
+              )}
               <div className="hidden md:flex items-center gap-1 ml-4">
                 {navLinks.map((link) => {
                   const isActive =
@@ -90,8 +109,8 @@ export function Navbar() {
                       className={cn(
                         "flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors",
                         isActive
-                          ? "text-foreground bg-muted"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                          ? "text-foreground bg-surface-high"
+                          : "text-on-surface-variant hover:text-foreground hover:bg-surface-container"
                       )}
                     >
                       <link.icon className="h-4 w-4" strokeWidth={1.5} />
@@ -106,7 +125,7 @@ export function Navbar() {
             <div className="flex items-center gap-4">
               <SignedOut>
                 <SignInButton mode="modal">
-                  <button className="p-1 text-muted-foreground hover:text-foreground transition-colors">
+                  <button className="p-1 text-on-surface-variant hover:text-foreground transition-colors">
                     <UserCircleIcon className="h-7 w-7" strokeWidth={1.5} />
                   </button>
                 </SignInButton>
@@ -133,12 +152,12 @@ export function Navbar() {
       {/* Mobile Flyout Menu Panel */}
       <div
         className={cn(
-          "fixed top-0 left-0 z-[200] h-full w-72 bg-background border-r border-gray-800 shadow-xl transition-transform duration-300 ease-out md:hidden",
+          "fixed top-0 left-0 z-[200] h-full w-72 bg-surface-low shadow-ambient transition-transform duration-300 ease-out md:hidden",
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         {/* Flyout Header */}
-        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-800">
+        <div className="flex items-center justify-between h-16 px-4 bg-surface-container/50">
           <Link
             href="/"
             className="flex items-center gap-2 text-lg font-bold text-foreground"
@@ -152,7 +171,7 @@ export function Navbar() {
           </Link>
           <button
             onClick={() => setMobileMenuOpen(false)}
-            className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+            className="p-2 text-on-surface-variant hover:text-foreground transition-colors"
             aria-label="Close menu"
           >
             <XIcon className="h-5 w-5" />
@@ -174,8 +193,8 @@ export function Navbar() {
                   className={cn(
                     "flex items-center gap-3 px-3 py-3 text-sm rounded-md transition-colors",
                     isActive
-                      ? "text-foreground bg-muted"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      ? "text-foreground bg-surface-high"
+                      : "text-on-surface-variant hover:text-foreground hover:bg-surface-container"
                   )}
                 >
                   <link.icon className="h-5 w-5" strokeWidth={1.5} />

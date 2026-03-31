@@ -265,7 +265,7 @@ export default function SaveTradeModal({
             Save
           </Button>
 
-          <DialogContent className="w-[90vw] max-w-[425px] mx-auto border-white/80 rounded-xl p-4 sm:p-6">
+          <DialogContent className="w-[90vw] max-w-[425px] mx-auto glass ghost-border rounded-xl p-4 sm:p-6">
             <DialogHeader className="space-y-1 sm:space-y-2">
               <DialogTitle className="text-base sm:text-lg">
                 Save Trade

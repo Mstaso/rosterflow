@@ -227,7 +227,7 @@ export default function TryTradePreview({
           <Button
             onClick={onBack}
             variant="ghost"
-            className="text-muted-foreground w-full sm:w-auto p-0 h-auto hover:text-white hover:bg-transparent justify-start sm:justify-center"
+            className="text-on-surface-variant w-full sm:w-auto p-0 h-auto hover:text-white hover:bg-transparent justify-start sm:justify-center"
           >
             <ArrowLeft className="text-indigoMain mr-2" />
             Back to Trade Machine
@@ -254,7 +254,7 @@ export default function TryTradePreview({
             <SnapshotButton onClick={capture} isCapturing={isCapturing} />
           </div>
           {isValid && (
-            <div className="flex items-center gap-2 py-2 px-3 rounded-md border border-green-500/50 bg-green-500/10 text-green-500 w-full md:w-auto justify-center md:justify-end">
+            <div className="flex items-center gap-2 py-2 px-3 rounded-lg bg-surface-high border-l-2 border-primary text-primary w-full md:w-auto justify-center md:justify-end">
               <CheckCircle className="w-4 h-4 shrink-0" />
               <div className="text-sm font-medium">
                 Valid trade - Salary rules satisfied
@@ -280,9 +280,9 @@ export default function TryTradePreview({
           {tradeInfo.map((info, index) => (
             <Card
               key={index}
-              className="flex flex-col h-auto overflow-hidden border-indigoMain bg-gradient-to-br from-background via-background/95 to-muted/80"
+              className="flex flex-col h-auto overflow-hidden bg-surface-low"
             >
-              <CardHeader className="flex flex-row items-center justify-center space-y-0 pb-2 pt-4 px-4 bg-muted/60">
+              <CardHeader className="flex flex-row items-center justify-center space-y-0 pb-2 pt-4 px-4 bg-surface-container">
                 <div className="flex items-center justify-center gap-2 min-w-0 w-full">
                   {info.team.logos?.[0] && (
                     <Image
@@ -299,10 +299,10 @@ export default function TryTradePreview({
                 </div>
               </CardHeader>
 
-              <div className="px-4 py-3 bg-muted/10">
+              <div className="px-4 py-3 bg-surface-low">
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
-                    <div className="text-xs text-muted-foreground mb-1">
+                    <div className="text-xs text-on-surface-variant mb-1">
                       Outgoing Salary
                     </div>
                     <div className="text-sm font-medium">
@@ -310,7 +310,7 @@ export default function TryTradePreview({
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-muted-foreground mb-1">
+                    <div className="text-xs text-on-surface-variant mb-1">
                       Incoming Salary
                     </div>
                     <div className="text-sm font-medium">
@@ -318,7 +318,7 @@ export default function TryTradePreview({
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-muted-foreground mb-1">
+                    <div className="text-xs text-on-surface-variant mb-1">
                       Cap Difference
                     </div>
                     <div
@@ -336,7 +336,7 @@ export default function TryTradePreview({
                 </div>
               </div>
 
-              <CardContent className="px-4 py-4 flex-grow flex flex-col bg-muted/60 border-indigoMain">
+              <CardContent className="px-4 py-4 flex-grow flex flex-col bg-surface-container ">
                 <Tabs defaultValue="receives" className="w-full">
                   <TabsList className="grid w-full grid-cols-2 mb-4">
                     <TabsTrigger value="receives">Receives</TabsTrigger>
@@ -348,7 +348,7 @@ export default function TryTradePreview({
                   {/* Players Received */}
                   {info.playersReceived.length > 0 && (
                     <div>
-                      <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-muted-foreground">
+                      <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-on-surface-variant">
                         <UsersIcon className="w-4 h-4" strokeWidth={1.5} />
                         Players Received
                       </div>
@@ -361,11 +361,11 @@ export default function TryTradePreview({
                           return (
                             <div
                               key={playerIndex}
-                              className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950 transition-colors"
+                              className="group relative flex items-center justify-between p-3 rounded-md bg-surface-low rounded-lg transition-colors"
                             >
                               <div className="flex items-center gap-3 min-w-0 flex-1">
                                 {player.headshot && (
-                                  <div className="bg-white/20 p-1 rounded-full">
+                                  <div className="bg-surface-highest p-1 rounded-full">
                                     <Image
                                       src={player.headshot.href}
                                       alt={player.displayName}
@@ -380,13 +380,13 @@ export default function TryTradePreview({
                                     <span className="font-medium text-sm truncate min-w-0 flex-1">
                                       {player.displayName}
                                     </span>
-                                    <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
+                                    <span className="text-xs text-on-surface-variant whitespace-nowrap shrink-0">
                                       {player.position?.abbreviation ||
                                         "Unknown"}
                                       {player.age ? `, Age: ${player.age}` : ""}
                                     </span>
                                   </div>
-                                  <div className="text-xs text-muted-foreground">
+                                  <div className="text-xs text-on-surface-variant">
                                     {player.contract
                                       ? `Salary: ${formatM(player.contract.salary)}`
                                       : "No contract"}
@@ -399,7 +399,7 @@ export default function TryTradePreview({
                                     }`}
                                   </div>
                                   {fromTeam && fromTeam.id !== info.team.id && (
-                                    <div className="text-xs text-muted-foreground mt-1">
+                                    <div className="text-xs text-on-surface-variant mt-1">
                                       from {fromTeam.abbreviation}
                                     </div>
                                   )}
@@ -408,7 +408,7 @@ export default function TryTradePreview({
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 shrink-0 text-muted-foreground hover:text-indigoMain"
+                                className="h-8 w-8 shrink-0 text-on-surface-variant hover:text-indigoMain"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleOpenPlayerStats(
@@ -430,7 +430,7 @@ export default function TryTradePreview({
                   {/* Picks Received */}
                   {info.picksReceived.length > 0 && (
                     <div>
-                      <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-muted-foreground">
+                      <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-on-surface-variant">
                         <FileTextIcon className="w-4 h-4" strokeWidth={1.5} />
                         Picks Received
                       </div>
@@ -443,11 +443,11 @@ export default function TryTradePreview({
                           return (
                             <div
                               key={pickIndex}
-                              className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950"
+                              className="group relative flex items-center justify-between p-3 rounded-md bg-surface-low rounded-lg"
                             >
                               <div className="flex flex-col gap-1">
                                 {fromTeam && fromTeam.id !== info.team.id && (
-                                  <div className="text-xs text-muted-foreground">
+                                  <div className="text-xs text-on-surface-variant">
                                     from {fromTeam.abbreviation}
                                   </div>
                                 )}
@@ -456,7 +456,7 @@ export default function TryTradePreview({
                                   Round {pick.isSwap ? "Pick Swap" : "Pick"}
                                 </div>
                                 {pick.description && (
-                                  <div className="text-xs text-muted-foreground">
+                                  <div className="text-xs text-on-surface-variant">
                                     {pick.description}
                                   </div>
                                 )}
@@ -471,7 +471,7 @@ export default function TryTradePreview({
                   {/* No assets received */}
                   {info.playersReceived.length === 0 &&
                     info.picksReceived.length === 0 && (
-                      <div className="text-center py-6 text-muted-foreground">
+                      <div className="text-center py-6 text-on-surface-variant">
                         <div className="text-sm">No assets received</div>
                       </div>
                     )}
@@ -483,7 +483,7 @@ export default function TryTradePreview({
                       {/* Players Sent */}
                       {info.playersSent.length > 0 && (
                         <div>
-                          <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-muted-foreground">
+                          <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-on-surface-variant">
                             <UsersIcon className="w-4 h-4" strokeWidth={1.5} />
                             Players Sent
                           </div>
@@ -491,11 +491,11 @@ export default function TryTradePreview({
                             {info.playersSent.map((player, playerIndex) => (
                               <div
                                 key={playerIndex}
-                                className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950 transition-colors"
+                                className="group relative flex items-center justify-between p-3 rounded-md bg-surface-low rounded-lg transition-colors"
                               >
                                 <div className="flex items-center gap-3 min-w-0 flex-1">
                                   {player.headshot && (
-                                    <div className="bg-white/20 p-1 rounded-full">
+                                    <div className="bg-surface-highest p-1 rounded-full">
                                       <Image
                                         src={player.headshot.href}
                                         alt={player.displayName}
@@ -510,12 +510,12 @@ export default function TryTradePreview({
                                       <span className="font-medium text-sm truncate min-w-0 flex-1">
                                         {player.displayName}
                                       </span>
-                                      <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
+                                      <span className="text-xs text-on-surface-variant whitespace-nowrap shrink-0">
                                         {player.position?.abbreviation || "Unknown"}
                                         {player.age ? `, Age: ${player.age}` : ""}
                                       </span>
                                     </div>
-                                    <div className="text-xs text-muted-foreground">
+                                    <div className="text-xs text-on-surface-variant">
                                       {player.contract
                                         ? `Salary: ${formatM(player.contract.salary)}`
                                         : "No contract"}
@@ -528,7 +528,7 @@ export default function TryTradePreview({
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-8 w-8 shrink-0 text-muted-foreground hover:text-indigoMain"
+                                  className="h-8 w-8 shrink-0 text-on-surface-variant hover:text-indigoMain"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleOpenPlayerStats(
@@ -549,7 +549,7 @@ export default function TryTradePreview({
                       {/* Picks Sent */}
                       {info.picksSent.length > 0 && (
                         <div>
-                          <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-muted-foreground">
+                          <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-on-surface-variant">
                             <FileTextIcon className="w-4 h-4" strokeWidth={1.5} />
                             Picks Sent
                           </div>
@@ -557,7 +557,7 @@ export default function TryTradePreview({
                             {info.picksSent.map((pick, pickIndex) => (
                               <div
                                 key={pickIndex}
-                                className="group relative flex items-center justify-between p-3 rounded-md border-2 border-border bg-slate-950"
+                                className="group relative flex items-center justify-between p-3 rounded-md bg-surface-low rounded-lg"
                               >
                                 <div className="flex flex-col gap-1">
                                   <div className="font-medium text-sm">
@@ -565,7 +565,7 @@ export default function TryTradePreview({
                                     Round {pick.isSwap ? "Pick Swap" : "Pick"}
                                   </div>
                                   {pick.description && (
-                                    <div className="text-xs text-muted-foreground">
+                                    <div className="text-xs text-on-surface-variant">
                                       {pick.description}
                                     </div>
                                   )}
@@ -579,7 +579,7 @@ export default function TryTradePreview({
                       {/* No assets sent */}
                       {info.playersSent.length === 0 &&
                         info.picksSent.length === 0 && (
-                          <div className="text-center py-6 text-muted-foreground">
+                          <div className="text-center py-6 text-on-surface-variant">
                             <div className="text-sm">No assets sent</div>
                           </div>
                         )}
@@ -592,28 +592,28 @@ export default function TryTradePreview({
                   <div className="text-sm font-semibold mb-2">
                     Updated Team Cap Info
                   </div>
-                  <table className="w-full border border-border rounded text-xs">
+                  <table className="w-full rounded-lg overflow-hidden text-xs">
                     <tbody>
-                      <tr className="bg-muted/40">
-                        <td className="px-2 py-1 text-muted-foreground w-1/2">Total Cap</td>
+                      <tr className="bg-surface-high">
+                        <td className="px-2 py-1 text-on-surface-variant w-1/2">Total Cap</td>
                         <td className="px-2 py-1 font-medium w-1/2 text-right">
                           {formatM(info.team.totalCapAllocation || 0)}
                         </td>
                       </tr>
                       <tr className="bg-background">
-                        <td className="px-2 py-1 text-muted-foreground w-1/2">Cap Space</td>
+                        <td className="px-2 py-1 text-on-surface-variant w-1/2">Cap Space</td>
                         <td className="px-2 py-1 font-medium w-1/2 text-right">
                           {formatM(calculateUpdatedTaxValue(info.team.capSpace || 0, info.capDifference))}
                         </td>
                       </tr>
-                      <tr className="bg-muted/40">
-                        <td className="px-2 py-1 text-muted-foreground w-1/2">1st Apron Space</td>
+                      <tr className="bg-surface-high">
+                        <td className="px-2 py-1 text-on-surface-variant w-1/2">1st Apron Space</td>
                         <td className="px-2 py-1 font-medium w-1/2 text-right">
                           {formatM(calculateUpdatedTaxValue(info.team.firstApronSpace || 0, info.capDifference))}
                         </td>
                       </tr>
                       <tr className="bg-background">
-                        <td className="px-2 py-1 text-muted-foreground w-1/2">2nd Apron Space</td>
+                        <td className="px-2 py-1 text-on-surface-variant w-1/2">2nd Apron Space</td>
                         <td className="px-2 py-1 font-medium w-1/2 text-right">
                           {formatM(calculateUpdatedTaxValue(info.team.secondApronSpace || 0, info.capDifference))}
                         </td>
@@ -627,7 +627,7 @@ export default function TryTradePreview({
         </div>
         {!isValid && (
           <div
-            className="flex items-center gap-2 py-3 px-4 rounded-md border border-orange-500/50 bg-orange-500/10 text-orange-500
+            className="flex items-center gap-2 py-3 px-4 rounded-lg bg-surface-high border-l-2 border-orange-400 text-orange-400
           justify-center w-full md:w-fit md:mx-0 md:justify-start"
           >
             <AlertCircle className="w-4 h-4 shrink-0" />

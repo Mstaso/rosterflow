@@ -147,17 +147,17 @@ export function SavedTradesClient({
   ) => {
     if (trades.length === 0) {
       return (
-        <div className="text-center py-16 border rounded-lg bg-muted/20">
-          <BookmarkIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+        <div className="text-center py-16 rounded-xl bg-surface-low">
+          <BookmarkIcon className="mx-auto h-12 w-12 text-on-surface-variant mb-4" />
           <h3 className="text-lg font-semibold mb-2">{emptyMessage}</h3>
-          <p className="text-muted-foreground mb-4">{emptySubtext}</p>
+          <p className="text-on-surface-variant mb-4">{emptySubtext}</p>
           <Button onClick={() => router.push("/")}>Go to Trade Machine</Button>
         </div>
       );
     }
 
     return (
-      <div className="space-y-4">
+      <div className="space-y-3">
         {trades.map((trade) => (
           <TradeCard
             key={trade.id}
@@ -270,7 +270,7 @@ export function SavedTradesClient({
                     {isPending ? (
                       <Loader2Icon className="h-4 w-4 animate-spin" />
                     ) : (
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-sm text-on-surface-variant">
                         Page {userTradesPagination.currentPage} of{" "}
                         {userTradesPagination.totalPages}
                       </span>
@@ -325,7 +325,7 @@ export function SavedTradesClient({
                     {isPending ? (
                       <Loader2Icon className="h-4 w-4 animate-spin" />
                     ) : (
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-sm text-on-surface-variant">
                         Page {upvotedTradesPagination.currentPage} of{" "}
                         {upvotedTradesPagination.totalPages}
                       </span>
@@ -352,7 +352,7 @@ export function SavedTradesClient({
             <TabsContent value="all-trades">
               {/* Sort controls */}
               <div className="flex items-center gap-2 mb-4">
-                <span className="text-sm text-muted-foreground">Sort by:</span>
+                <span className="text-sm text-on-surface-variant">Sort by:</span>
                 <div className="flex gap-1">
                   <Button
                     variant={sortBy === "recent" ? "secondary" : "ghost"}
@@ -407,7 +407,7 @@ export function SavedTradesClient({
                     {isPending ? (
                       <Loader2Icon className="h-4 w-4 animate-spin" />
                     ) : (
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-sm text-on-surface-variant">
                         Page {allTradesPagination.currentPage} of{" "}
                         {allTradesPagination.totalPages}
                       </span>
@@ -435,7 +435,7 @@ export function SavedTradesClient({
           <>
             {/* Sort controls */}
             <div className="flex items-center gap-2 mb-4">
-              <span className="text-sm text-muted-foreground">Sort by:</span>
+              <span className="text-sm text-on-surface-variant">Sort by:</span>
               <div className="flex gap-1">
                 <Button
                   variant={sortBy === "recent" ? "secondary" : "ghost"}
@@ -488,7 +488,7 @@ export function SavedTradesClient({
                   {isPending ? (
                     <Loader2Icon className="h-4 w-4 animate-spin" />
                   ) : (
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-sm text-on-surface-variant">
                       Page {allTradesPagination.currentPage} of{" "}
                       {allTradesPagination.totalPages}
                     </span>
