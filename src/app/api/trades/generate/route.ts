@@ -135,56 +135,147 @@ TRADE REALISM RULES:
 - A player can only be traded to ONE team — never send the same player to multiple teams
 - A draft pick can only be traded to ONE team — never send the same pick to multiple teams
 - Only use players listed above
+- Use player names EXACTLY as they appear in the roster data — do not abbreviate, add suffixes, or change spelling
+- Use exact team names as shown in the data (e.g. "Brooklyn Nets", not "Nets" or "BKN")
+- Format picks exactly as "2026 R1" or "2027 R2" (year + space + R + round number)
 - You SHOULD add additional players or picks beyond the selected assets when it makes the trade more realistic, improves salary matching, or balances value. Don't just swap the selected assets 1-for-1 if a real GM would include sweeteners or salary filler.
 - Use player stats (ppg/rpg/apg) to judge value. A 15ppg starter is worth more than a 5ppg bench player at the same salary.
 - Contenders should not give up key contributors (high ppg) without getting equivalent win-now help back.
 - Rebuilding teams should prioritize getting picks and young players.
-- 2-5 teams per trade${hasDestinations ? "\n- Respect destination preferences when possible" : ""}
-- Pick [val:X] indicates estimated value (1-100). Use this to assess trade fairness — higher value picks are worth more.
+- ALL teams listed above MUST appear in every scenario — do not drop any team
+- Pick [val:X] indicates estimated value (1-100). Use this to assess trade fairness — higher value picks are worth more.${hasDestinations ? "\n- You MUST follow the destination preferences listed above. These are required, not suggestions." : ""}
 
-VARIETY: Make each scenario meaningfully different — vary which additional players/picks are included, try different team pairings if 3+ teams are involved, and mix approaches (e.g. one pick-heavy deal, one player-for-player swap, one three-team trade).${manualTradeExclusion}
+VARIETY: Make each scenario meaningfully different — vary which additional players/picks are included and mix approaches (e.g. one pick-heavy deal, one player-for-player swap), but always include ALL listed teams.${manualTradeExclusion}
 
-Respond with ONLY a JSON array. Each scenario:
+Respond with ONLY a JSON array. Each scenario lists only what each team GIVES and where it goes (the "to" field). Do NOT include a "receives" section — it will be derived automatically.
 [
   {
     "teams": [
       {
         "teamName": "Team Name",
         "gives": {
-          "players": [{"name": "Player Name", "type": "player"}],
-          "picks": [{"name": "2026 R1", "type": "pick"}]
-        },
-        "receives": {
-          "players": [{"name": "Player Name", "type": "player", "from": "Other Team"}],
-          "picks": [{"name": "2026 R1", "type": "pick", "from": "Other Team"}]
+          "players": [{"name": "Player Name", "type": "player", "to": "Other Team"}],
+          "picks": [{"name": "2026 R1", "type": "pick", "to": "Other Team"}]
         }
       }
     ]
   }
 ]`;
 
-    // Validate that no player or pick appears in multiple teams' gives/receives
+    // Build receives from gives — eliminates mismatch bugs
+    function reconstructReceives(trade: any): any {
+      if (!trade?.teams || !Array.isArray(trade.teams)) return trade;
+
+      // Save any AI-provided receives as fallback before overwriting
+      const originalReceives = new Map<string, any>();
+      for (const team of trade.teams) {
+        if (team.receives && (team.receives.players?.length > 0 || team.receives.picks?.length > 0)) {
+          originalReceives.set(team.teamName, structuredClone(team.receives));
+        }
+      }
+
+      // Initialize empty receives for all teams
+      for (const team of trade.teams) {
+        team.receives = { players: [], picks: [] };
+      }
+
+      // Normalize: move any picks mistakenly placed in gives.players to gives.picks
+      for (const team of trade.teams) {
+        if (team.gives?.players) {
+          const actualPlayers: any[] = [];
+          for (const item of team.gives.players) {
+            if (item.type === "pick") {
+              if (!team.gives.picks) team.gives.picks = [];
+              team.gives.picks.push(item);
+            } else {
+              actualPlayers.push(item);
+            }
+          }
+          team.gives.players = actualPlayers;
+        }
+      }
+
+      // Helper: find destination team for an asset, inferring if "to" is missing
+      function findDestination(asset: any, sourceTeam: any): any {
+        // If "to" is provided, use it
+        if (asset.to) {
+          return trade.teams.find((t: any) => t.teamName === asset.to);
+        }
+        // For 2-team trades, the destination is the other team
+        if (trade.teams.length === 2) {
+          return trade.teams.find((t: any) => t.teamName !== sourceTeam.teamName);
+        }
+        // Multi-team trade with no "to" — can't infer
+        return null;
+      }
+
+      // For each team's gives, add to the destination team's receives
+      for (const team of trade.teams) {
+        for (const player of team.gives?.players || []) {
+          const destTeam = findDestination(player, team);
+          if (destTeam) {
+            destTeam.receives.players.push({
+              name: player.name,
+              type: "player",
+              from: team.teamName,
+            });
+          } else {
+            console.log(`[reconstruct] WARNING: could not determine destination for player "${player.name}" from ${team.teamName}`);
+          }
+        }
+        for (const pick of team.gives?.picks || []) {
+          const destTeam = findDestination(pick, team);
+          if (destTeam) {
+            destTeam.receives.picks.push({
+              name: pick.name,
+              type: "pick",
+              from: team.teamName,
+            });
+          } else {
+            console.log(`[reconstruct] WARNING: could not determine destination for pick "${pick.name}" from ${team.teamName}`);
+          }
+        }
+      }
+
+      // Fallback: for multi-team trades, if reconstruction left a team with empty
+      // receives but the AI had provided receives, use the AI's version
+      if (trade.teams.length > 2) {
+        for (const team of trade.teams) {
+          const hasReconstructed = team.receives.players.length > 0 || team.receives.picks.length > 0;
+          if (!hasReconstructed && originalReceives.has(team.teamName)) {
+            console.log(`[reconstruct] Using AI-provided receives for ${team.teamName} (reconstruction failed)`);
+            team.receives = originalReceives.get(team.teamName);
+          }
+        }
+      }
+
+      // Clean up: remove "to" from gives (client doesn't expect it)
+      for (const team of trade.teams) {
+        if (team.gives?.players) {
+          team.gives.players = team.gives.players.map((p: any) => ({
+            name: p.name,
+            type: p.type,
+          }));
+        }
+        if (team.gives?.picks) {
+          team.gives.picks = team.gives.picks.map((p: any) => ({
+            name: p.name,
+            type: p.type,
+          }));
+        }
+      }
+
+      return trade;
+    }
+
+    // Validate trade: no duplicate gives, and every team gives/receives something
     function isValidTrade(trade: any): boolean {
       if (!trade?.teams || !Array.isArray(trade.teams)) return false;
 
-      const receivedPlayers = new Set<string>();
       const givenPlayers = new Set<string>();
-      const receivedPicks = new Set<string>();
       const givenPicks = new Set<string>();
 
       for (const team of trade.teams) {
-        // Check received players
-        for (const player of team.receives?.players || []) {
-          const name = player.name?.toLowerCase().trim();
-          if (!name) continue;
-          if (receivedPlayers.has(name)) {
-            console.log(`[trade-validation] REJECTED: player "${player.name}" received by multiple teams`);
-            return false;
-          }
-          receivedPlayers.add(name);
-        }
-
-        // Check given players
         for (const player of team.gives?.players || []) {
           const name = player.name?.toLowerCase().trim();
           if (!name) continue;
@@ -195,18 +286,6 @@ Respond with ONLY a JSON array. Each scenario:
           givenPlayers.add(name);
         }
 
-        // Check received picks
-        for (const pick of team.receives?.picks || []) {
-          const name = pick.name?.toLowerCase().trim();
-          if (!name) continue;
-          if (receivedPicks.has(name)) {
-            console.log(`[trade-validation] REJECTED: pick "${pick.name}" received by multiple teams`);
-            return false;
-          }
-          receivedPicks.add(name);
-        }
-
-        // Check given picks
         for (const pick of team.gives?.picks || []) {
           const name = pick.name?.toLowerCase().trim();
           if (!name) continue;
@@ -216,11 +295,19 @@ Respond with ONLY a JSON array. Each scenario:
           }
           givenPicks.add(name);
         }
+
+        // Every team must give something
+        const givesCount = (team.gives?.players?.length || 0) + (team.gives?.picks?.length || 0);
+        if (givesCount === 0) {
+          console.log(`[trade-validation] REJECTED: ${team.teamName} gives nothing`);
+          return false;
+        }
       }
 
       return true;
     }
 
+    console.log("been hit generate prompt", prompt);
     // Stream the response using SSE
     const stream = await openai.chat.completions.create({
       model: "gpt-5.4-mini",
@@ -332,10 +419,11 @@ Respond with ONLY a JSON array. Each scenario:
                   currentTradeStart = -1;
 
                   try {
-                    const trade = JSON.parse(tradeJson);
+                    let trade = JSON.parse(tradeJson);
                     if (!isValidTrade(trade)) {
                       console.log(`[trade-validation] Skipping invalid trade scenario ${tradeIndex}`);
                     } else {
+                      trade = reconstructReceives(trade);
                       controller.enqueue(
                         encoder.encode(
                           `data: ${JSON.stringify({ type: "trade", trade, index: tradeIndex })}\n\n`
@@ -370,11 +458,12 @@ Respond with ONLY a JSON array. Each scenario:
               const trades = Array.isArray(parsed)
                 ? parsed
                 : parsed.trades || parsed.scenarios || [];
-              for (const trade of trades) {
+              for (let trade of trades) {
                 if (!isValidTrade(trade)) {
                   console.log(`[trade-validation] Skipping invalid trade scenario ${tradeIndex} (full parse)`);
                   continue;
                 }
+                trade = reconstructReceives(trade);
                 controller.enqueue(
                   encoder.encode(
                     `data: ${JSON.stringify({ type: "trade", trade, index: tradeIndex })}\n\n`

@@ -60,13 +60,28 @@ export function getTeamOutlookContext(involvedTeams: Team[]) {
       const name = team.displayName || team.name;
       const r = team.record;
       if (!r) return `${name}: record unknown`;
-      const winPct = r.winPercentage ?? (r.wins / (r.wins + r.losses));
+
+      // Handle legacy string format (e.g. "41-41")
+      let wins: number, losses: number, winPct: number, confRank: number | string;
+      if (typeof r === "string") {
+        const parts = r.split("-").map(Number);
+        wins = parts[0] ?? 41;
+        losses = parts[1] ?? 41;
+        winPct = wins / (wins + losses);
+        confRank = "?";
+      } else {
+        wins = r.wins ?? 41;
+        losses = r.losses ?? 41;
+        winPct = r.winPercentage ?? wins / (wins + losses);
+        confRank = r.conferenceRank ?? "?";
+      }
+
       let outlook = "mid-tier";
       if (winPct >= 0.6) outlook = "contender (win-now)";
       else if (winPct >= 0.5) outlook = "playoff team";
       else if (winPct >= 0.4) outlook = "fringe playoff";
       else outlook = "rebuilding (future-focused)";
-      return `${name}: ${r.wins}-${r.losses} (${outlook}, conf rank #${r.conferenceRank ?? "?"})`;
+      return `${name}: ${wins}-${losses} (${outlook}, conf rank #${confRank})`;
     })
     .join("\n");
 }
