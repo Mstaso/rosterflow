@@ -70,6 +70,7 @@ model Player {
   experience    Json // Contains years
   contract      Json // Contains detailed contract info
   status        Json // Contains id, name, type, abbreviation
+  statistics    Json? // Contains points, rebounds, assists, etc.
 
   // Team relationship
   teamId Int

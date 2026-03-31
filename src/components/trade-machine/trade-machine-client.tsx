@@ -52,7 +52,7 @@ export default function TradeMachineClient({
     assets: SelectedAsset[];
     activeTab: string;
   } | null>(null);
-
+  console.log("been hit assets", selectedAssets);
   // Initialize from URL params (for editing saved trades)
   React.useEffect(() => {
     if (hasInitialized || initialTeamIds.length === 0) return;
@@ -276,7 +276,6 @@ export default function TradeMachineClient({
         method: "POST",
         body: JSON.stringify(tradePayload),
       });
-
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to generate trades");
@@ -323,6 +322,7 @@ export default function TradeMachineClient({
                 return [...prev, ...newTeams];
               });
             } else if (event.type === "trade" && event.trade) {
+              console.log("been hit trade", event.trade);
               setGeneratedTrades((prev) => [...prev, event.trade]);
               // Stop showing the full-page loader after first trade arrives
               setLoadingGeneratedTrades(false);

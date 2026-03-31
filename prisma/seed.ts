@@ -139,12 +139,71 @@ async function fetchTeamRecord(teamId: string) {
     });
 
     const data = await response.json();
-    return data.team?.record?.items[0]?.summary
-      ? data.team?.record?.items[0]?.summary
-      : "41-41";
+    const recordItem = data.team?.record?.items?.[0];
+
+    if (!recordItem) {
+      return { wins: 41, losses: 41, winPercentage: 0.5, conferenceRank: 15, divisionRank: 5 };
+    }
+
+    // Parse stats array into a keyed object
+    const statsMap: Record<string, number> = {};
+    for (const stat of recordItem.stats || []) {
+      statsMap[stat.name] = stat.value;
+    }
+
+    return {
+      wins: statsMap.wins ?? 41,
+      losses: statsMap.losses ?? 41,
+      winPercentage: statsMap.winPercent ?? 0.5,
+      conferenceRank: statsMap.playoffSeed ?? 15,
+      divisionRank: statsMap.divisionRank ?? 5,
+    };
   } catch (error) {
     console.error(`Error fetching record for team ${teamId}:`, error);
-    return [];
+    return { wins: 41, losses: 41, winPercentage: 0.5, conferenceRank: 15, divisionRank: 5 };
+  }
+}
+
+async function fetchPlayerStats(espnId: string): Promise<any> {
+  try {
+    const url = `https://site.web.api.espn.com/apis/common/v3/sports/basketball/nba/athletes/${espnId}/stats`;
+    const response = await fetch(url, {
+      headers: {
+        Accept: "application/json",
+        "User-Agent": "Mozilla/5.0 (compatible; RosterFlows/1.0)",
+      },
+    });
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    const avgCategory = data.categories?.find((c: any) => c.name === "averages");
+    if (!avgCategory) return null;
+
+    const labels: string[] = avgCategory.labels || [];
+    // Get current season stats (last entry in statistics array)
+    const seasons = avgCategory.statistics || [];
+    const currentSeason = seasons.length > 0 ? seasons[seasons.length - 1] : null;
+
+    if (!currentSeason?.stats) return null;
+
+    const statMap: Record<string, string> = {};
+    for (let i = 0; i < labels.length; i++) {
+      statMap[labels[i]] = currentSeason.stats[i];
+    }
+
+    return {
+      points: parseFloat(statMap["PTS"] || "0"),
+      rebounds: parseFloat(statMap["REB"] || "0"),
+      assists: parseFloat(statMap["AST"] || "0"),
+      steals: parseFloat(statMap["STL"] || "0"),
+      blocks: parseFloat(statMap["BLK"] || "0"),
+      fieldGoalPercentage: parseFloat(statMap["FG%"] || "0"),
+      threePointPercentage: parseFloat(statMap["3P%"] || "0"),
+      freeThrowPercentage: parseFloat(statMap["FT%"] || "0"),
+    };
+  } catch (error) {
+    return null;
   }
 }
 
@@ -260,6 +319,9 @@ async function seedPlayers(teams: any[]) {
         player.contract.yearsRemaing !== 0
       ) {
         try {
+          // Fetch player stats from ESPN
+          const stats = await fetchPlayerStats(player.id.toString());
+
           const playerData = {
             espnId: player.id.toString(),
             firstName: player.firstName,
@@ -282,13 +344,18 @@ async function seedPlayers(teams: any[]) {
             experience: player.experience || { years: 0 },
             contract: player.contract || null,
             status: player.status || null,
+            statistics: stats,
             teamId: findTeam.id,
           };
 
           await prisma.player.create({
             data: playerData,
           });
-          console.log(`  ✅ ${playerData.displayName}`);
+          const statsStr = stats ? `${stats.points}ppg/${stats.rebounds}rpg/${stats.assists}apg` : "no stats";
+          console.log(`  ✅ ${playerData.displayName} (${statsStr})`);
+
+          // Small delay to avoid hammering ESPN API
+          await new Promise((resolve) => setTimeout(resolve, 100));
         } catch (error) {
           console.error(`Failed to add player ${player.displayName}:`, error);
         }
