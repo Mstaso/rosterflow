@@ -52,7 +52,6 @@ export default function TradeMachineClient({
     assets: SelectedAsset[];
     activeTab: string;
   } | null>(null);
-  console.log("been hit assets", selectedAssets);
   // Initialize from URL params (for editing saved trades)
   React.useEffect(() => {
     if (hasInitialized || initialTeamIds.length === 0) return;
@@ -230,6 +229,8 @@ export default function TradeMachineClient({
     setSelectedTeams([]);
     setSelectedTeamIds([]);
     setActiveTab("");
+    setGeneratedTrades([]);
+    setShowTradeContainer(false);
   };
 
   const [isStreamingTrades, setIsStreamingTrades] = useState(false);
@@ -322,7 +323,6 @@ export default function TradeMachineClient({
                 return [...prev, ...newTeams];
               });
             } else if (event.type === "trade" && event.trade) {
-              console.log("been hit trade", event.trade);
               setGeneratedTrades((prev) => [...prev, event.trade]);
               // Stop showing the full-page loader after first trade arrives
               setLoadingGeneratedTrades(false);
@@ -501,10 +501,10 @@ export default function TradeMachineClient({
             {generatedTrades.length > 0 && (
               <Button
                 onClick={() => setShowTradeContainer(true)}
-                variant="success"
+                variant="outline"
                 className="w-full sm:w-auto"
               >
-                <UsersIcon className="h-4 w-4" strokeWidth={1.5} />
+                <UsersIcon className="h-4 w-4 text-primary" strokeWidth={1.5} />
                 <span>View Generated Trades ({generatedTrades.length})</span>
               </Button>
             )}
@@ -692,16 +692,16 @@ export default function TradeMachineClient({
                   />
                 ))}
                 {selectedTeams.length === 1 && (
-                  <div className="flex flex-col border rounded-lg overflow-hidden">
-                    <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-muted rounded-lg bg-muted/5 m-4">
+                  <div className="flex flex-col rounded-xl overflow-hidden bg-surface-low">
+                    <div className="flex flex-col items-center justify-center p-6 rounded-xl bg-surface-container m-4">
                       <UsersIcon
-                        className="w-12 h-12 text-muted-foreground mb-3"
+                        className="w-12 h-12 text-on-surface-variant mb-3"
                         strokeWidth={1.5}
                       />
                       <h3 className="text-lg font-semibold text-foreground mb-1">
                         Add Another Team
                       </h3>
-                      <p className="text-sm text-muted-foreground text-center mb-4">
+                      <p className="text-sm text-on-surface-variant text-center mb-4">
                         Generate a trade by selecting a player/pick or expand
                         your trade by adding more teams
                       </p>
@@ -717,10 +717,10 @@ export default function TradeMachineClient({
               </div>
             </>
           ) : (
-            <div className="text-center p-8 border rounded-lg bg-muted/50">
-              <LightbulbIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <div className="text-center p-8 rounded-xl bg-surface-low">
+              <LightbulbIcon className="mx-auto h-12 w-12 text-on-surface-variant mb-4" />
               <h3 className="text-lg font-semibold mb-2">No Teams Selected</h3>
-              <p className="text-muted-foreground mb-4">
+              <p className="text-on-surface-variant mb-4">
                 Add teams to start building your trade.
               </p>
             </div>

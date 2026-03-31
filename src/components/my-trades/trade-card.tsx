@@ -48,6 +48,7 @@ function formatDate(date: Date) {
   )}`;
 }
 
+
 interface TradeCardProps {
   trade: TradeWithAssets;
   currentUserId: string | null;
@@ -76,7 +77,7 @@ export function TradeCard({
 
   return (
     <Card
-      className="overflow-hidden cursor-pointer transition-colors hover:border-indigoMain/50 "
+      className="overflow-hidden cursor-pointer transition-all duration-200 hover:bg-surface-high"
       onClick={onClick}
     >
       <CardHeader className="pb-3 w-full">
@@ -89,8 +90,8 @@ export function TradeCard({
               className={cn(
                 "h-7 w-7 rounded-md transition-all duration-200",
                 userVote === 1
-                  ? "text-orange-500 bg-orange-500/10 hover:bg-orange-500/20 scale-110"
-                  : "text-muted-foreground hover:text-orange-500 hover:bg-orange-500/10 hover:scale-110"
+                  ? "text-primary bg-primary/10 hover:bg-primary/20 scale-110"
+                  : "text-on-surface-variant hover:text-primary hover:bg-primary/10 hover:scale-110"
               )}
               disabled={isVoting}
               onClick={(e) => onVote(trade.id, 1, e)}
@@ -105,9 +106,8 @@ export function TradeCard({
             <span
               className={cn(
                 "text-sm font-semibold tabular-nums transition-colors duration-200",
-                score > 0 && "text-orange-500",
-                score < 0 && "text-blue-500",
-                score === 0 && "text-muted-foreground"
+                score > 0 && "text-primary",
+                score <= 0 && "text-on-surface-variant"
               )}
             >
               {score}
@@ -118,8 +118,8 @@ export function TradeCard({
               className={cn(
                 "h-7 w-7 rounded-md transition-all duration-200",
                 userVote === -1
-                  ? "text-blue-500 bg-blue-500/10 hover:bg-blue-500/20 scale-110"
-                  : "text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 hover:scale-110"
+                  ? "text-on-surface-variant bg-surface-high hover:bg-surface-highest scale-110"
+                  : "text-on-surface-variant hover:text-on-surface-variant hover:bg-surface-high hover:scale-110"
               )}
               disabled={isVoting}
               onClick={(e) => onVote(trade.id, -1, e)}
@@ -151,11 +151,11 @@ export function TradeCard({
                     </Badge>
                   )}
                 </div>
-                <div className="flex items-center gap-2 mt-1.5 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 mt-1.5 text-xs text-on-surface-variant">
                   <span>{formatDate(trade.createdAt)}</span>
-                  <span className="text-muted-foreground/50">·</span>
+                  <span className="text-on-surface-variant/40">·</span>
                   {trade.salaryValid ? (
-                    <span className="flex items-center gap-1 text-green-500">
+                    <span className="flex items-center gap-1 text-primary">
                       <CheckCircleIcon className="h-3 w-3" />
                       Valid
                     </span>
@@ -169,17 +169,17 @@ export function TradeCard({
               </div>
             </div>
 
-            <p className="hidden sm:block text-sm text-muted-foreground mt-3 mb-4 line-clamp-2">
+            <p className="hidden sm:block text-sm text-on-surface-variant mt-3 mb-4 line-clamp-2">
               {trade.description}
             </p>
           </div>
         </div>
         {/* Trade movements */}
         <div className="space-y-2 mt-3 sm:mt-0">
-          {movements.map((movement, idx) => (
+          {movements.map((movement, i) => (
             <div
-              key={idx}
-              className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-muted/30"
+              key={i}
+              className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-surface-low"
             >
               {/* From team */}
               <div className="flex items-center gap-2 min-w-0">
@@ -190,8 +190,8 @@ export function TradeCard({
                       (movement.from.teamLogo as { href: string }).href
                     }
                     alt={movement.from.teamDisplayName}
-                    width={28}
-                    height={28}
+                    width={24}
+                    height={24}
                     className="object-contain flex-shrink-0"
                   />
                 )}
@@ -200,7 +200,7 @@ export function TradeCard({
                 </span>
               </div>
 
-              <ArrowRightIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <ArrowRightIcon className="h-3.5 w-3.5 text-on-surface-variant/50 flex-shrink-0" />
 
               {/* To team */}
               <div className="flex items-center gap-2 min-w-0">
@@ -211,8 +211,8 @@ export function TradeCard({
                       (movement.to.teamLogo as { href: string }).href
                     }
                     alt={movement.to.teamDisplayName}
-                    width={28}
-                    height={28}
+                    width={24}
+                    height={24}
                     className="object-contain flex-shrink-0"
                   />
                 )}
@@ -224,13 +224,13 @@ export function TradeCard({
               {/* Assets */}
               <div className="flex-1 flex flex-wrap gap-1.5 justify-end">
                 {movement.assets.map((asset) => (
-                  <Badge key={asset.id} variant="outline" className="text-xs">
+                  <span key={asset.id} className="text-xs text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-md">
                     {asset.type === "player" && asset.playerName
                       ? asset.playerName
                       : asset.type === "pick" && asset.pickYear
                       ? `${asset.pickYear} R${asset.pickRound}`
                       : "Unknown"}
-                  </Badge>
+                  </span>
                 ))}
               </div>
             </div>

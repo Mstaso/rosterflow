@@ -11,7 +11,7 @@
     display: none;
   }
 }
- 
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -36,33 +36,59 @@
     --radius: 0.5rem;
     --indigoMain: 243 75% 59%;
     --indigoMain-foreground: 0 0% 100%;
+
+    /* Surface hierarchy (light mode fallback) */
+    --surface: 0 0% 100%;
+    --surface-container-low: 210 40% 97%;
+    --surface-container: 210 40% 94%;
+    --surface-container-high: 210 40% 90%;
+    --surface-container-highest: 210 40% 86%;
+    --surface-variant: 210 30% 92%;
+    --on-surface: 222.2 84% 4.9%;
+    --on-surface-variant: 215.4 16.3% 46.9%;
+    --outline-variant: 214.3 31.8% 80%;
+    --primary-dim: 243 40% 50%;
   }
- 
+
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --indigoMain: 243 75% 59%;
+    /* Kinetic Ledger: Deep navy foundation */
+    --background: 218 50% 6%;
+    --foreground: 225 50% 92%;
+    --card: 218 33% 11%;
+    --card-foreground: 225 50% 92%;
+    --popover: 220 41% 9%;
+    --popover-foreground: 225 50% 92%;
+    --primary: 230 80% 62%;
+    --primary-foreground: 225 50% 92%;
+    --secondary: 220 30% 14%;
+    --secondary-foreground: 225 50% 92%;
+    --muted: 220 30% 14%;
+    --muted-foreground: 220 15% 55%;
+    --accent: 220 30% 14%;
+    --accent-foreground: 225 50% 92%;
+    --destructive: 0 55% 45%;
+    --destructive-foreground: 225 50% 92%;
+    --border: 220 20% 18%;
+    --input: 220 41% 9%;
+    --ring: 230 80% 62%;
+    --indigoMain: 230 80% 62%;
     --indigoMain-foreground: 0 0% 100%;
+
+    /* Surface hierarchy — "frosted carbon fiber" stack */
+    --surface: 218 50% 6%;
+    --surface-container-low: 220 41% 9%;
+    --surface-container: 218 33% 11%;
+    --surface-container-high: 217 30% 13.5%;
+    --surface-container-highest: 218 28% 17%;
+    --surface-variant: 220 25% 15%;
+    --on-surface: 225 50% 92%;
+    --on-surface-variant: 220 15% 55%;
+    --outline-variant: 220 20% 25%;
+    --primary-dim: 230 50% 45%;
+    --primary-container: 230 60% 50%;
   }
 }
- 
+
 @layer base {
   * {
     @apply border-border;
@@ -70,7 +96,7 @@
   body {
     @apply bg-background text-foreground;
   }
-} 
+}
 
 @layer utilities {
   .font-supermolot {
@@ -81,5 +107,32 @@
     font-style: italic;
     letter-spacing: 0.06em;
     text-transform: uppercase;
+  }
+
+  /* Ghost border utility — design system compliant */
+  .ghost-border {
+    border: 1px solid hsl(var(--outline-variant) / 0.15);
+  }
+
+  /* Interactive glow for selected/active states */
+  .glow-primary {
+    box-shadow: 0 0 16px -4px hsl(var(--primary) / 0.1);
+  }
+
+  /* Ambient shadow for floating elements */
+  .shadow-ambient {
+    box-shadow: 0 8px 32px -4px hsl(218 50% 4% / 0.08);
+  }
+
+  /* Glass effect for modals/popovers */
+  .glass {
+    background: hsl(var(--surface-variant) / 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* Gradient CTA */
+  .gradient-primary {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-container, var(--primary))));
   }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Undo2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Undo2, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import type { Team, TradeInfo, TradeScenario } from "~/types";
 import TradeCard from "./trade-card";
@@ -44,11 +44,18 @@ export default function TradeContainer({
           <Button
             onClick={onBack}
             variant="ghost"
-            className="text-muted-foreground p-0 h-auto hover:text-white hover:bg-transparent justify-start sm:justify-center"
+            className="text-on-surface-variant p-0 h-auto hover:text-white hover:bg-transparent justify-start sm:justify-center"
           >
             <Undo2 className="h-4 w-4 text-indigoMain" />
             Back to Trade Generator
           </Button>
+
+          {!hasTrades && isStreaming && (
+            <div className="flex items-center gap-2 py-2 px-3 rounded-lg bg-surface-container text-on-surface-variant">
+              <Loader2 className="w-4 h-4 animate-spin text-indigoMain" />
+              <span className="text-sm">Generating trade scenarios...</span>
+            </div>
+          )}
 
           {hasTrades && (
             <div className="flex items-center gap-1.5">
@@ -57,7 +64,7 @@ export default function TradeContainer({
                 size="icon"
                 onClick={() => setCurrentTradeIndex((i) => Math.max(i - 1, 0))}
                 disabled={currentTradeIndex === 0}
-                className="h-9 w-9 text-muted-foreground hover:text-white hover:bg-muted/40 disabled:opacity-30"
+                className="h-9 w-9 text-on-surface-variant hover:text-white hover:bg-surface-high disabled:opacity-30"
               >
                 <ChevronLeft className="h-5 w-5" />
               </Button>
@@ -70,7 +77,7 @@ export default function TradeContainer({
                     className={`h-2.5 rounded-full transition-all duration-300 ${
                       index === currentTradeIndex
                         ? "w-7 bg-indigoMain"
-                        : "w-2.5 bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                        : "w-2.5 bg-on-surface-variant/30 hover:bg-on-surface-variant/50"
                     }`}
                   />
                 ))}
@@ -91,12 +98,12 @@ export default function TradeContainer({
                   )
                 }
                 disabled={currentTradeIndex === tradesData.length - 1}
-                className="h-9 w-9 text-muted-foreground hover:text-white hover:bg-muted/40 disabled:opacity-30"
+                className="h-9 w-9 text-on-surface-variant hover:text-white hover:bg-surface-high disabled:opacity-30"
               >
                 <ChevronRight className="h-5 w-5" />
               </Button>
 
-              <span className="text-xs text-muted-foreground ml-1 tabular-nums">
+              <span className="text-xs text-on-surface-variant ml-1 tabular-nums">
                 {currentTradeIndex + 1}/{tradesData.length}
                 {isStreaming && "+"}
               </span>

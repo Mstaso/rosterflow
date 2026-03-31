@@ -86,7 +86,7 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-gray-800 bg-background/50 backdrop-blur-sm">
+    <footer className="bg-surface-low">
       <div className="container mx-auto px-4 md:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand Section */}
@@ -101,7 +101,7 @@ export function Footer() {
               />
               <span className="font-supermolot">Roster Flows</span>
             </Link>
-            <p className="text-muted-foreground text-sm max-w-md mb-6">
+            <p className="text-on-surface-variant text-sm max-w-md mb-6">
               Create realistic NBA trades with AI-powered analysis. Our trade
               machine validates salary cap compliance, analyzes trade value, and
               generates smart trade suggestions.
@@ -112,7 +112,7 @@ export function Footer() {
                 <a
                   key={social.name}
                   href={social.href}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-on-surface-variant hover:text-foreground transition-colors"
                   aria-label={social.name}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -134,7 +134,7 @@ export function Footer() {
                   <li key={link.name}>
                     <Link
                       href={link.href}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      className="text-sm text-on-surface-variant hover:text-foreground transition-colors"
                     >
                       {link.name}
                     </Link>
@@ -146,12 +146,12 @@ export function Footer() {
         </div>
 
         {/* Bottom Section */}
-        <div className="mt-12 pt-8 border-t border-gray-800">
+        <div className="mt-12 pt-8 border-t border-outline-variant/15">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-on-surface-variant">
               © {currentYear} Roster Flows. All rights reserved.
             </p>
-            <p className="text-xs text-muted-foreground/60">
+            <p className="text-xs text-on-surface-variant/60">
               Not affiliated with the NBA or any NBA team. All team names,
               logos, and player information are property of their respective
               owners.

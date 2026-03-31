@@ -5,31 +5,31 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "~/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all duration-150 ease-in-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:bg-muted disabled:text-muted-foreground/70 disabled:border disabled:border-muted-foreground/30 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow hover:bg-primary/90",
+          "bg-primary text-primary-foreground shadow hover:bg-primary/90 disabled:bg-surface-high disabled:text-on-surface-variant/40",
         destructive:
-          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 disabled:bg-surface-high disabled:text-on-surface-variant/40",
         outline:
-          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
+          "ghost-border bg-surface-container shadow-sm hover:bg-surface-high hover:text-foreground disabled:bg-surface-container disabled:text-on-surface-variant/40",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+          "bg-surface-high text-secondary-foreground shadow-sm hover:bg-surface-highest disabled:text-on-surface-variant/40",
+        ghost: "hover:bg-surface-high hover:text-foreground disabled:text-on-surface-variant/40",
+        link: "text-primary underline-offset-4 hover:underline disabled:text-on-surface-variant/40",
         indigo:
-          "bg-indigoMain text-white hover:bg-indigoMain/80",
+          "gradient-primary text-white hover:opacity-90 shadow-sm disabled:opacity-100 disabled:bg-surface-container disabled:bg-none disabled:text-on-surface-variant/40 disabled:shadow-none",
         success:
-          "bg-emerald-600 text-white hover:bg-emerald-700",
+          "bg-emerald-600/90 text-white hover:bg-emerald-600 disabled:bg-surface-high disabled:text-on-surface-variant/40",
         edit:
-          "border border-white/50 text-white bg-transparent hover:bg-white/10",
+          "ghost-border text-foreground bg-transparent hover:bg-surface-high disabled:text-on-surface-variant/40",
       },
       size: {
         default: "h-9 px-4 py-2",
-        sm: "h-8 rounded-md px-3 text-xs",
-        lg: "h-10 rounded-md px-8",
+        sm: "h-8 rounded-lg px-3 text-xs",
+        lg: "h-10 rounded-lg px-8",
         icon: "h-9 w-9",
       },
     },

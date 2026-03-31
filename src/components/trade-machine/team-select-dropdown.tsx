@@ -57,7 +57,7 @@ export function TeamSelectDropdown({
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
-            className="w-full md:w-auto border-indigoMain relative z-50 flex items-center justify-center gap-2"
+            className="w-full md:w-auto relative z-50 flex items-center justify-center gap-2"
             disabled={maxTeamsReached || isLoading}
           >
             {isLoading ? (
@@ -67,7 +67,7 @@ export function TeamSelectDropdown({
               </>
             ) : (
               <>
-                <PlusIcon className="h-4 w-4" strokeWidth={1.5} />
+                <PlusIcon className="h-4 w-4 text-primary" strokeWidth={1.5} />
                 <span>Add Team</span>
                 <ChevronDownIcon className="h-4 w-4" strokeWidth={1.5} />
               </>
@@ -76,7 +76,7 @@ export function TeamSelectDropdown({
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="start"
-          className="w-[calc(100vw-2rem)] md:w-auto max-h-[60vh] md:max-h-96 overflow-y-auto border-indigoMain relative z-50"
+          className="w-[calc(100vw-2rem)] md:w-auto max-h-[60vh] md:max-h-96 overflow-y-auto relative z-50"
           sideOffset={5}
         >
           <div className="h-[80vh] md:h-auto overflow-y-auto">

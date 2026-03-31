@@ -53,18 +53,15 @@ export default function FAQPage() {
         ]}
       />
       <div className="flex flex-col min-h-screen">
-        <Navbar />
+        <Navbar subtitle={<h1>FAQ</h1>} />
         <section className="mx-auto w-full max-w-3xl px-4 py-12 flex-grow">
-          <h1 className="mb-6 text-xl font-semibold tracking-tight">
-            Frequently Asked Questions
-          </h1>
-          <div className="divide-y divide-border">
+          <div className="space-y-3">
             {faqs.map((faq) => (
-              <details key={faq.question} className="group py-4">
+              <details key={faq.question} className="group py-4 px-5 rounded-xl bg-surface-low">
                 <summary className="flex cursor-pointer list-none items-center justify-between font-medium transition-colors hover:text-primary [&::-webkit-details-marker]:hidden">
                   {faq.question}
                   <svg
-                    className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180"
+                    className="h-4 w-4 shrink-0 text-on-surface-variant transition-transform duration-200 group-open:rotate-180"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
                     fill="none"
@@ -76,7 +73,7 @@ export default function FAQPage() {
                     <path d="m6 9 6 6 6-6" />
                   </svg>
                 </summary>
-                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                <p className="mt-3 text-sm leading-relaxed text-on-surface-variant">
                   {faq.answer}
                 </p>
               </details>

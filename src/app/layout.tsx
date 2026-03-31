@@ -92,28 +92,28 @@ export default function RootLayout({
         baseTheme: dark,
         variables: {
           fontFamily: "Inter, system-ui, sans-serif",
-          colorBackground: "hsl(222.2 84% 4.9%)",
-          colorInputBackground: "hsl(217.2 32.6% 17.5%)",
-          colorPrimary: "hsl(243 75% 59%)",
-          colorText: "hsl(210 40% 98%)",
-          colorTextSecondary: "hsl(215 20.2% 65.1%)",
-          colorDanger: "hsl(0 62.8% 30.6%)",
+          colorBackground: "hsl(218 50% 6%)",
+          colorInputBackground: "hsl(220 41% 9%)",
+          colorPrimary: "hsl(230 80% 62%)",
+          colorText: "hsl(225 50% 92%)",
+          colorTextSecondary: "hsl(220 15% 55%)",
+          colorDanger: "hsl(0 55% 45%)",
           borderRadius: "0.5rem",
         },
         elements: {
           card: {
-            backgroundColor: "hsl(222.2 84% 4.9%)",
-            borderColor: "hsl(217.2 32.6% 17.5%)",
+            backgroundColor: "hsl(220 41% 9%)",
+            borderColor: "hsl(220 20% 18% / 0.15)",
           },
           userButtonPopoverCard: {
-            backgroundColor: "hsl(222.2 84% 4.9%)",
-            borderColor: "hsl(217.2 32.6% 17.5%)",
+            backgroundColor: "hsl(220 41% 9%)",
+            borderColor: "hsl(220 20% 18% / 0.15)",
           },
           userButtonPopoverActionButton: {
-            color: "hsl(210 40% 98%)",
+            color: "hsl(225 50% 92%)",
           },
           userButtonPopoverActionButtonIcon: {
-            color: "hsl(215 20.2% 65.1%)",
+            color: "hsl(220 15% 55%)",
           },
           userButtonPopoverFooter: {
             display: "none",
