@@ -239,11 +239,22 @@ export default function TradeCard({
         )}
       </div>
       <div ref={captureRef}>
-      <div className="flex flex-col md:flex-row gap-4 justify-center mb-4">
+      <div className={`flex flex-col gap-4 mb-4 md:grid ${
+        TradesWithInfo.length > 3
+          ? "md:overflow-x-auto md:pb-4"
+          : ""
+      }`}
+        style={{
+          gridTemplateColumns:
+            TradesWithInfo.length <= 3
+              ? `repeat(${TradesWithInfo.length}, 1fr)`
+              : `repeat(${TradesWithInfo.length}, minmax(320px, 1fr))`,
+        }}
+      >
         {TradesWithInfo.map((tradeInfo, index) => (
           <Card
             key={index}
-            className="flex flex-col h-auto overflow-hidden border-indigoMain bg-gradient-to-br from-background via-background/95 to-muted/80 md:flex-1"
+            className="flex flex-col h-auto overflow-hidden border-indigoMain bg-gradient-to-br from-background via-background/95 to-muted/80"
           >
             <CardHeader className="flex flex-row items-center justify-center space-y-0 pb-2 pt-4 px-4 bg-muted/60">
               <div className="flex items-center justify-center gap-2 min-w-0 w-full">
