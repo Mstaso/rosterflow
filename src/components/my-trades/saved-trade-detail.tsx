@@ -368,6 +368,52 @@ export function SavedTradeDetail({
 
   const teamsInfo = groupAssetsByTargetTeam();
 
+  // Validate salary rules (same logic as generated trade card)
+  const getSalaryRationale = (): string => {
+    if (trade.salaryValid) return "";
+
+    for (const info of teamsInfo) {
+      const { tradeTeam, capDifference, outgoingSalary, incomingSalary } = info;
+      if (outgoingSalary === 0 && incomingSalary === 0) continue;
+
+      const secondApronSpace = tradeTeam.secondApronSpace || 0;
+      const firstApronSpace = tradeTeam.firstApronSpace || 0;
+      const capSpace = tradeTeam.capSpace || 0;
+
+      const postTradeSecondApronSpace = secondApronSpace - capDifference;
+      const postTradeFirstApronSpace = firstApronSpace - capDifference;
+
+      const isOverSecondApron = secondApronSpace < 0;
+      const wouldCrossSecondApron = secondApronSpace >= 0 && postTradeSecondApronSpace < 0;
+
+      if ((isOverSecondApron || wouldCrossSecondApron) && capDifference > 0) {
+        const excess = (capDifference / 1000000).toFixed(1);
+        return `${tradeTeam.teamDisplayName} (2nd apron): must send $${excess}M more or receive $${excess}M less`;
+      }
+
+      const isOverFirstApron = firstApronSpace < 0;
+      const wouldCrossFirstApron = firstApronSpace >= 0 && postTradeFirstApronSpace < 0;
+      const maxAllowedFirstApron = outgoingSalary * 1.1 + 100000;
+
+      if ((isOverFirstApron || wouldCrossFirstApron) && incomingSalary > maxAllowedFirstApron) {
+        const excess = ((incomingSalary - maxAllowedFirstApron) / 1000000).toFixed(1);
+        return `${tradeTeam.teamDisplayName} (1st apron): incoming exceeds limit by $${excess}M — need $${(maxAllowedFirstApron / 1000000).toFixed(1)}M max`;
+      }
+
+      if (capSpace < 0 && firstApronSpace >= 0) {
+        const maxAllowedOverCap = outgoingSalary * 1.25 + 100000;
+        if (incomingSalary > maxAllowedOverCap) {
+          const excess = ((incomingSalary - maxAllowedOverCap) / 1000000).toFixed(1);
+          return `${tradeTeam.teamDisplayName} (over cap): incoming exceeds limit by $${excess}M — need $${(maxAllowedOverCap / 1000000).toFixed(1)}M max`;
+        }
+      }
+    }
+
+    return "Salary rules not met";
+  };
+
+  const salaryRationale = getSalaryRationale();
+
   // Calculate updated tax value after trade
   const calculateUpdatedTaxValue = (
     currentValue: number,
@@ -524,9 +570,9 @@ export function SavedTradeDetail({
                       <span className="text-sm font-medium">Valid trade - Salary rules satisfied</span>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2 py-1.5 px-3 rounded-lg bg-surface-high border-l-2 border-destructive text-destructive">
-                      <XCircleIcon className="h-3.5 w-3.5" />
-                      <span className="text-sm font-medium">Invalid trade - Salary rules not satisfied</span>
+                    <div className="flex items-center gap-2 py-1.5 px-3 rounded-lg bg-surface-high border-l-2 border-orange-400 text-orange-400">
+                      <XCircleIcon className="h-3.5 w-3.5 shrink-0" />
+                      <span className="text-sm font-medium">{salaryRationale}</span>
                     </div>
                   )}
                 </div>
@@ -569,8 +615,8 @@ export function SavedTradeDetail({
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button
-                        variant="destructive"
-                        className="w-full sm:w-auto"
+                        variant="outline"
+                        className="w-full sm:w-auto text-red-400 hover:bg-red-500/10 hover:text-red-400"
                         disabled={isDeleting}
                       >
                         <TrashIcon className="h-4 w-4 mr-2" />
