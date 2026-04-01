@@ -25,7 +25,7 @@ export function computePlayerRating(player: Player): { rating: number; tier: Pla
   const assistsValue = s.assists * 1.5;
   const reboundsValue = s.rebounds * 1.2;
   const stocksValue = (s.steals + s.blocks) * 2.0;
-  const turnoverPenalty = (s.turnovers ?? 0) * -1.5;
+  const turnoverPenalty = (s.turnovers ?? 0) * -0.8;
 
   let baseProduction = pointsValue + assistsValue + reboundsValue + stocksValue + turnoverPenalty;
 
@@ -53,18 +53,19 @@ export function computePlayerRating(player: Player): { rating: number; tier: Pla
     baseProduction *= 0.85;
   }
 
-  // Age adjustment
+  // Age adjustment — mild tiebreaker, not a cliff
+  // Production stats already capture decline naturally
   let ageAdj = 0;
   const age = player.age;
   if (age <= 22) ageAdj = 5;
   else if (age <= 27) ageAdj = 3;
   else if (age <= 30) ageAdj = 0;
-  else if (age <= 32) ageAdj = -3;
-  else if (age <= 34) ageAdj = -5;
-  else ageAdj = -8;
+  else if (age <= 32) ageAdj = -2;
+  else if (age <= 34) ageAdj = -3;
+  else ageAdj = -4;
 
   const raw = baseProduction * efficiencyMultiplier + ageAdj;
-  const rating = Math.max(1, Math.min(99, Math.round(raw * 1.3)));
+  const rating = Math.max(1, Math.min(99, Math.round(raw * 1.8)));
   return { rating, tier: getTier(rating) };
 }
 
@@ -78,8 +79,8 @@ export function computeContractValue(player: Player, rating: number): ContractVa
 
   if (salary <= 0) return "fair";
 
-  // Estimated market value based on rating: rating^2 * 5500 + 2M
-  const estimatedMarket = rating * rating * 5500 + 2_000_000;
+  // Estimated market value based on rating: rating^2 * 7000 + 2M
+  const estimatedMarket = rating * rating * 7000 + 2_000_000;
   const ratio = estimatedMarket / salary;
 
   // Expiring contracts are valuable regardless of overpay
