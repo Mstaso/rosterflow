@@ -3,6 +3,7 @@ import { db } from "../lib/db";
 interface DraftPick {
   round: number;
   year: number;
+  sequence?: number;
 }
 
 export async function getNBATeams() {
@@ -16,10 +17,9 @@ export async function getNBATeamWithRosterAndDraftPicks(teamId: number) {
     // Sort draft picks by round, then year
     if (team.draftPicks) {
       team.draftPicks.sort((a: DraftPick, b: DraftPick) => {
-        if (a.round !== b.round) {
-          return a.round - b.round;
-        }
-        return a.year - b.year;
+        if (a.round !== b.round) return a.round - b.round;
+        if (a.year !== b.year) return a.year - b.year;
+        return (a.sequence ?? 0) - (b.sequence ?? 0);
       });
     }
 

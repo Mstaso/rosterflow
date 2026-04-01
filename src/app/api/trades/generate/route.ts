@@ -31,8 +31,8 @@ const generateTradeSchema = z.object({
     teamId: z.number(),
     targetTeamId: z.number().optional(),
   })).min(1),
-  teams: z.array(z.any()).min(2),
-  additionalTeams: z.array(z.any()).optional(),
+  teams: z.array(z.any()).min(1),
+  additionalTeams: z.array(z.any()).nullable().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -56,6 +56,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const parsed = generateTradeSchema.safeParse(body);
     if (!parsed.success) {
+      console.log("[generate] Zod validation errors:", JSON.stringify(parsed.error.flatten()));
       return NextResponse.json(
         { success: false, error: "Selected assets and team information required" },
         { status: 400 }
@@ -356,12 +357,12 @@ Respond with ONLY a JSON array. Each scenario lists only what each team GIVES an
           content: prompt,
         },
       ],
-      response_format: { type: "json_object" },
       temperature: 0.7,
       max_completion_tokens: 5500,
       stream: true,
     });
 
+    console.log("been hit generate prompt", prompt);
     const encoder = new TextEncoder();
 
     const readableStream = new ReadableStream({

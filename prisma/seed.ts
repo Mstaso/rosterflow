@@ -387,6 +387,7 @@ interface EnrichedPick {
   description: string;
   estimatedValue: number;
   isProtected: boolean;
+  splitIndex: number; // 0 for non-split or first split, 1, 2... for additional splits
 }
 
 async function enrichPicksWithLLM(
@@ -400,7 +401,7 @@ async function enrichPicksWithLLM(
     description: p.description,
   }));
 
-  const prompt = `You are an NBA draft pick evaluator. Given the following draft picks owned by the ${teamName} (current record: ${record}), do two things for each pick:
+  const prompt = `You are an NBA draft pick evaluator. Given the following draft picks owned by the ${teamName} (current record: ${record}), do three things:
 
 1. **Simplify the description** into a short, consistent format. Examples:
    - "Own" → "Own pick"
@@ -417,6 +418,21 @@ async function enrichPicksWithLLM(
    - Swap rights are generally less valuable than outright picks
    - Use the team's current record to inform how good/bad the team is
 
+3. **Detect and split multi-destination picks**: If a single entry describes multiple DISTINCT picks going to DIFFERENT destination teams, output separate entries for each pick. Set "splitIndex" to 0, 1, 2... for each. Give each split entry its own description and value estimate.
+
+   SPLIT these (multiple picks, different destinations):
+   - "two most favorable of DEN, OKC and LAC to OKC then other to LAC" → split into 2 entries: one "To OKC (more favorable of DEN/OKC/LAC)", one "To LAC (remaining of DEN/OKC/LAC)"
+   - "Most favorable to POR; second most favorable to WAS" → split into 2 entries, one per destination
+   - "one to MEM, other to BRK" → split into 2 entries
+
+   DO NOT split these (single pick, conditional ownership):
+   - "More favorable of ATL and SAN" → one pick, just conditional on draft position
+   - "via BOS to MEM to POR" → one pick, trade chain
+   - "Own or swap for HOU" → one pick with swap option
+   - "if PHL conveys 1st round pick to OKC in 2026" → conditional, one pick
+
+   Split pick descriptions must NOT start with "Own".
+
 Here are the picks:
 ${JSON.stringify(picksForPrompt, null, 2)}
 
@@ -425,7 +441,8 @@ Respond with ONLY a JSON array (no markdown, no explanation) where each element 
 - "round": number
 - "description": string (simplified)
 - "estimatedValue": number (1-100)
-- "isProtected": boolean`;
+- "isProtected": boolean
+- "splitIndex": number (0 for non-split picks or the first of a split group, 1 for the second, etc.)`;
 
   try {
     const response = await openai.chat.completions.create({
@@ -446,24 +463,32 @@ Respond with ONLY a JSON array (no markdown, no explanation) where each element 
     if (!content) throw new Error("Empty response from GPT");
 
     const parsed = JSON.parse(content);
-    const enrichedPicks: EnrichedPick[] = (parsed.picks || parsed).map(
-      (p: any, i: number) => ({
-        year: p.year || parseInt(picks[i].year),
-        round: p.round || picks[i].round,
-        originalDescription: picks[i].description,
-        description: p.description || picks[i].description,
-        estimatedValue: Math.min(100, Math.max(1, p.estimatedValue || 50)),
-        isProtected:
-          p.isProtected ??
-          picks[i].description.toLowerCase().includes("protected"),
-      })
-    );
+    const rawResults: any[] = parsed.picks || parsed;
+
+    // The LLM may return more entries than input (due to splits), so we can't
+    // index by i to get the original description. Instead, match by year+round.
+    const origByYearRound = new Map<string, string>();
+    for (const p of picks) {
+      origByYearRound.set(`${parseInt(p.year)}-${p.round}`, p.description);
+    }
+
+    const enrichedPicks: EnrichedPick[] = rawResults.map((p: any) => ({
+      year: p.year,
+      round: p.round,
+      originalDescription: origByYearRound.get(`${p.year}-${p.round}`) ?? "",
+      description: p.description || "",
+      estimatedValue: Math.min(100, Math.max(1, p.estimatedValue || 50)),
+      isProtected:
+        p.isProtected ??
+        (origByYearRound.get(`${p.year}-${p.round}`) ?? "").toLowerCase().includes("protected"),
+      splitIndex: p.splitIndex ?? 0,
+    }));
 
     return enrichedPicks;
   } catch (error) {
     console.error(`  ⚠️ LLM enrichment failed for ${teamName}, using defaults`);
     console.error(error);
-    // Fallback: return picks with default values
+    // Fallback: return picks with default values (no splitting on error)
     return picks.map((p) => ({
       year: parseInt(p.year),
       round: p.round,
@@ -471,6 +496,7 @@ Respond with ONLY a JSON array (no markdown, no explanation) where each element 
       description: p.description,
       estimatedValue: p.round === 1 ? 55 : 25,
       isProtected: p.description.toLowerCase().includes("protected"),
+      splitIndex: 0,
     }));
   }
 }
@@ -530,7 +556,7 @@ async function seedDraftPicks(
   let totalPicks = 0;
 
   for (const { teamId, teamName, pick } of allPicksToInsert) {
-    const pickKey = `${pick.year}-${pick.round}-${teamId}`;
+    const pickKey = `${pick.year}-${pick.round}-${teamId}-${pick.splitIndex}`;
 
     if (createdPicks.has(pickKey)) {
       continue;
@@ -541,6 +567,7 @@ async function seedDraftPicks(
         data: {
           year: pick.year,
           round: pick.round,
+          sequence: pick.splitIndex,
           teamId,
           isSwap: false,
           isProtected: pick.isProtected,
@@ -551,8 +578,9 @@ async function seedDraftPicks(
 
       createdPicks.add(pickKey);
       totalPicks++;
+      const splitTag = pick.splitIndex > 0 ? ` [split #${pick.splitIndex}]` : "";
       console.log(
-        `  ✅ ${teamName}: ${pick.year} R${pick.round} (value: ${pick.estimatedValue}) - ${pick.description}`
+        `  ✅ ${teamName}: ${pick.year} R${pick.round}${splitTag} (value: ${pick.estimatedValue}) - ${pick.description}`
       );
     } catch (error) {
       console.error(

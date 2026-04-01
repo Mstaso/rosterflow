@@ -92,6 +92,7 @@ model DraftPick {
   id          Int     @id @default(autoincrement())
   year        Int
   round       Int
+  sequence    Int     @default(0) // distinguishes split picks with same year/round/team
   isProtected    Boolean @default(false)
   isSwap         Boolean @default(false)
   description    String?
@@ -105,7 +106,7 @@ model DraftPick {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([teamId, year, round])
+  @@unique([teamId, year, round, sequence])
   @@index([teamId])
 }
 

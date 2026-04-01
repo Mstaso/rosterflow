@@ -168,6 +168,7 @@ export type DraftPick = {
   id: number;
   year: number;
   round: number;
+  sequence?: number;
   teamId: number;
   isProtected: boolean;
   isSwap: boolean;
