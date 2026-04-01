@@ -201,6 +201,15 @@ async function fetchPlayerStats(espnId: string): Promise<any> {
       fieldGoalPercentage: parseFloat(statMap["FG%"] || "0"),
       threePointPercentage: parseFloat(statMap["3P%"] || "0"),
       freeThrowPercentage: parseFloat(statMap["FT%"] || "0"),
+      minutesPerGame: parseFloat(statMap["MIN"] || "0"),
+      gamesPlayed: parseFloat(statMap["GP"] || "0"),
+      turnovers: parseFloat(statMap["TO"] || "0"),
+      fieldGoalAttempts: parseFloat(statMap["FGA"] || "0"),
+      fieldGoalsMade: parseFloat(statMap["FGM"] || "0"),
+      threePointAttempts: parseFloat(statMap["3PA"] || "0"),
+      threePointMade: parseFloat(statMap["3PM"] || "0"),
+      freeThrowAttempts: parseFloat(statMap["FTA"] || "0"),
+      freeThrowsMade: parseFloat(statMap["FTM"] || "0"),
     };
   } catch (error) {
     return null;

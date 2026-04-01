@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { z } from "zod";
 import { env } from "~/env";
 import type { SelectedAsset, Team } from "~/types";
 import {
@@ -7,6 +8,7 @@ import {
   getDestinationInfo,
   getRosterContext,
   getSalaryMatchingContext,
+  getStepienContext,
   getTeamOutlookContext,
   setupAdditionalTeamsForTrade,
 } from "~/lib/server-utils";
@@ -20,6 +22,17 @@ export const dynamic = "force-dynamic";
 
 const openai = new OpenAI({
   apiKey: env.OPENAI_API_KEY,
+});
+
+const generateTradeSchema = z.object({
+  selectedAssets: z.array(z.object({
+    id: z.number(),
+    type: z.enum(["player", "pick"]),
+    teamId: z.number(),
+    targetTeamId: z.number().optional(),
+  })).min(1),
+  teams: z.array(z.any()).min(2),
+  additionalTeams: z.array(z.any()).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -41,24 +54,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { selectedAssets, teams, additionalTeams } = body;
-
-    if (
-      !selectedAssets ||
-      !Array.isArray(selectedAssets) ||
-      selectedAssets.length === 0 ||
-      !teams
-    ) {
+    const parsed = generateTradeSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        {
-          success: false,
-          error: "Selected assets and team information required",
-        },
+        { success: false, error: "Selected assets and team information required" },
         { status: 400 }
       );
     }
+    const { selectedAssets, teams, additionalTeams } = parsed.data;
 
-    const involvedTeams = teams;
+    const involvedTeams = [...teams];
 
     if (involvedTeams.length > 5) {
       return NextResponse.json(
@@ -80,13 +85,14 @@ export async function POST(request: NextRequest) {
       teamsAddedToTrade = teamWithRosterAndPicks;
     }
 
-    const rosterContext = getRosterContext(involvedTeams);
+    const rosterContext = getRosterContext(involvedTeams, selectedAssets);
     const teamOutlookContext = getTeamOutlookContext(involvedTeams);
     const assetsDescription = getAssetsByTeam(selectedAssets, involvedTeams);
     const salaryMatchingContext = getSalaryMatchingContext(
       selectedAssets,
       involvedTeams
     );
+    const stepienContext = getStepienContext(involvedTeams);
 
     const hasDestinations = selectedAssets.some(
       (asset: any) => asset.targetTeamId
@@ -144,7 +150,7 @@ ${assetsDescription}${destinationInfo}
 
 ${salaryMatchingContext}
 
-ROSTERS & PICKS (players with salary ≥$2M, pick value 1-100 scale):
+ROSTERS & PICKS (top players by rating, pick value 1-100):
 ${rosterContext}
 
 SALARY MATCHING INSTRUCTIONS:
@@ -153,7 +159,7 @@ SALARY MATCHING INSTRUCTIONS:
 - Add up total outgoing salary, then apply the formula to get the valid incoming range
 - Make sure each team's total incoming salary falls within their valid range
 - SECOND APRON teams: one-for-one only (cannot combine multiple players' salaries)
-
+${stepienContext}
 TRADE REALISM RULES:
 - Every asset received must be given by another team (balanced trades)
 - A player can only be traded to ONE team — never send the same player to multiple teams
@@ -163,9 +169,14 @@ TRADE REALISM RULES:
 - Use exact team names as shown in the data (e.g. "Brooklyn Nets", not "Nets" or "BKN")
 - Format picks exactly as "2026 R1" or "2027 R2" (year + space + R + round number)
 - You SHOULD add additional players or picks beyond the selected assets when it makes the trade more realistic, improves salary matching, or balances value. Don't just swap the selected assets 1-for-1 if a real GM would include sweeteners or salary filler.
-- Use player stats (ppg/rpg/apg) to judge value. A 15ppg starter is worth more than a 5ppg bench player at the same salary.
-- Contenders should not give up key contributors (high ppg) without getting equivalent win-now help back.
-- Rebuilding teams should prioritize getting picks and young players.
+- Use [rating:X] to judge player value — total ratings traded should be roughly balanced for each side. A team giving up a [rating:80 All-Star] should get back comparable combined value.
+- Use [contract: tag] to assess trade incentives:
+  • "elite value" / "good value" = team-friendly deal, premium trade asset
+  • "fair" = market rate, neutral
+  • "overpaid" / "negative" = team may need to attach picks or young assets to move this player
+  • "expiring" = valuable for cap relief even if overpaid
+- Contenders should not give up key contributors (high rating) without getting equivalent win-now help back.
+- Rebuilding teams should prioritize getting picks, young players, and "elite value" / "good value" contracts.
 ${teamParticipationRule}
 - Pick [val:X] indicates estimated value (1-100). Use this to assess trade fairness — higher value picks are worth more.${hasDestinations ? "\n- You MUST follow the destination preferences listed above. These are required, not suggestions." : ""}
 
@@ -345,8 +356,9 @@ Respond with ONLY a JSON array. Each scenario lists only what each team GIVES an
           content: prompt,
         },
       ],
+      response_format: { type: "json_object" },
       temperature: 0.7,
-      max_completion_tokens: 4000,
+      max_completion_tokens: 5500,
       stream: true,
     });
 
