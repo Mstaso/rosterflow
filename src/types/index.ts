@@ -55,6 +55,16 @@ export type Statistics = {
   fieldGoalPercentage: number;
   threePointPercentage: number;
   freeThrowPercentage: number;
+  // Extended stats for player rating computation
+  minutesPerGame?: number;
+  gamesPlayed?: number;
+  turnovers?: number;
+  fieldGoalAttempts?: number;
+  fieldGoalsMade?: number;
+  threePointAttempts?: number;
+  threePointMade?: number;
+  freeThrowAttempts?: number;
+  freeThrowsMade?: number;
 };
 
 export type BirthPlace = {

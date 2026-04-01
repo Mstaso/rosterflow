@@ -3,6 +3,95 @@ import type { DraftPick, Player, SelectedAsset, Team } from "~/types";
 
 const MIN_SALARY_THRESHOLD = 2_000_000; // Filter out players under $2M
 
+// --- Player Rating System (1-99 scale) ---
+
+type PlayerTier = "Superstar" | "All-Star" | "Starter" | "Rotation" | "Bench" | "Deep Bench";
+
+function getTier(rating: number): PlayerTier {
+  if (rating >= 85) return "Superstar";
+  if (rating >= 72) return "All-Star";
+  if (rating >= 58) return "Starter";
+  if (rating >= 42) return "Rotation";
+  if (rating >= 25) return "Bench";
+  return "Deep Bench";
+}
+
+export function computePlayerRating(player: Player): { rating: number; tier: PlayerTier } {
+  const s = player.statistics;
+  if (!s) return { rating: 25, tier: "Bench" };
+
+  // Base production score
+  const pointsValue = s.points * 1.0;
+  const assistsValue = s.assists * 1.5;
+  const reboundsValue = s.rebounds * 1.2;
+  const stocksValue = (s.steals + s.blocks) * 2.0;
+  const turnoverPenalty = (s.turnovers ?? 0) * -1.5;
+
+  let baseProduction = pointsValue + assistsValue + reboundsValue + stocksValue + turnoverPenalty;
+
+  // Efficiency multiplier using true shooting %
+  let efficiencyMultiplier = 1.0;
+  const fga = s.fieldGoalAttempts ?? 0;
+  const fta = s.freeThrowAttempts ?? 0;
+  if (fga + fta > 0) {
+    const tsa = fga + 0.44 * fta; // true shooting attempts
+    const ts = tsa > 0 ? s.points / (2 * tsa) : 0;
+    const leagueAvgTS = 0.575;
+    efficiencyMultiplier = Math.max(0.7, Math.min(1.15, 0.85 + (ts - leagueAvgTS) * 2.0));
+  }
+
+  // Minutes scaling — low-minute players get docked
+  const min = s.minutesPerGame ?? 0;
+  if (min > 0 && min < 32) {
+    const minutesScale = min < 15 ? 0.8 : 0.8 + ((min - 15) / 17) * 0.2;
+    baseProduction *= minutesScale;
+  }
+
+  // Games played filter — small sample discount
+  const gp = s.gamesPlayed ?? 0;
+  if (gp > 0 && gp < 20) {
+    baseProduction *= 0.85;
+  }
+
+  // Age adjustment
+  let ageAdj = 0;
+  const age = player.age;
+  if (age <= 22) ageAdj = 5;
+  else if (age <= 27) ageAdj = 3;
+  else if (age <= 30) ageAdj = 0;
+  else if (age <= 32) ageAdj = -3;
+  else if (age <= 34) ageAdj = -5;
+  else ageAdj = -8;
+
+  const raw = baseProduction * efficiencyMultiplier + ageAdj;
+  const rating = Math.max(1, Math.min(99, Math.round(raw * 1.3)));
+  return { rating, tier: getTier(rating) };
+}
+
+// --- Contract Value Tags ---
+
+export type ContractValueTag = "elite value" | "good value" | "fair" | "overpaid" | "negative" | "expiring";
+
+export function computeContractValue(player: Player, rating: number): ContractValueTag {
+  const salary = player.contract?.salary ?? 0;
+  const yearsRemaining = player.contract?.yearsRemaining ?? 0;
+
+  if (salary <= 0) return "fair";
+
+  // Estimated market value based on rating: rating^2 * 5500 + 2M
+  const estimatedMarket = rating * rating * 5500 + 2_000_000;
+  const ratio = estimatedMarket / salary;
+
+  // Expiring contracts are valuable regardless of overpay
+  if (yearsRemaining <= 1 && ratio < 0.8) return "expiring";
+
+  if (ratio > 2.0) return "elite value";
+  if (ratio > 1.3) return "good value";
+  if (ratio > 0.8) return "fair";
+  if (ratio > 0.5) return "overpaid";
+  return "negative";
+}
+
 export async function setupAdditionalTeamsForTrade(additionalTeams: Team[]) {
   const teamWithRosterAndPicks = await Promise.all(
     additionalTeams.map(async (team: Team) => {
@@ -26,6 +115,9 @@ function getPlayerCompact(player: Player) {
   if (s) {
     line += ` | ${s.points}ppg/${s.rebounds}rpg/${s.assists}apg`;
   }
+  const { rating, tier } = computePlayerRating(player);
+  const contractTag = computeContractValue(player, rating);
+  line += ` | [rating:${rating} ${tier}] [contract: ${contractTag}]`;
   return line;
 }
 
@@ -86,16 +178,37 @@ export function getTeamOutlookContext(involvedTeams: Team[]) {
     .join("\n");
 }
 
-export function getRosterContext(involvedTeams: Team[]) {
+const MAX_PLAYERS_PER_TEAM = 10;
+
+export function getRosterContext(involvedTeams: Team[], selectedAssets?: SelectedAsset[]) {
+  const selectedPlayerIds = new Set(
+    (selectedAssets || []).filter(a => a.type === "player").map(a => a.id)
+  );
+
   let rosterContext = "";
   involvedTeams.forEach((team: any) => {
     const teamName = team.displayName || team.name;
 
-    // Filter to trade-relevant players (above salary threshold)
+    // Filter to trade-relevant players, sort by rating, cap at top N
     const relevantPlayers = (team.players || []).filter(isTradeRelevantPlayer);
+    const withRatings = relevantPlayers.map((p: Player) => ({
+      player: p,
+      rating: computePlayerRating(p).rating,
+    }));
+    withRatings.sort((a: { rating: number }, b: { rating: number }) => b.rating - a.rating);
 
-    const playersInfo = relevantPlayers
-      .map((player: Player) => getPlayerCompact(player))
+    const top = withRatings.slice(0, MAX_PLAYERS_PER_TEAM);
+    const topIds = new Set(top.map((wr: { player: Player }) => wr.player.id));
+
+    // Always include selected asset players even if below cutoff
+    for (const wr of withRatings) {
+      if (!topIds.has(wr.player.id) && selectedPlayerIds.has(wr.player.id)) {
+        top.push(wr);
+      }
+    }
+
+    const playersInfo = top
+      .map((wr: { player: Player }) => getPlayerCompact(wr.player))
       .join("; ");
 
     const picksFormatted = (team.draftPicks || [])
@@ -105,6 +218,52 @@ export function getRosterContext(involvedTeams: Team[]) {
     rosterContext += `${teamName}: ${playersInfo} || Picks: ${picksFormatted}\n`;
   });
   return rosterContext;
+}
+
+export function getStepienContext(involvedTeams: Team[]): string {
+  const warnings: string[] = [];
+
+  for (const team of involvedTeams) {
+    const teamName = (team as any).displayName || (team as any).name;
+    const firstRoundPicks = ((team as any).draftPicks || []).filter(
+      (p: DraftPick) => p.round === 1
+    );
+
+    // Identify which first-round picks the team owns (vs acquired via trade)
+    // Picks with description "Own" or empty are the team's own picks
+    const ownPickYears = new Set<number>();
+
+    for (const pick of firstRoundPicks) {
+      const desc = (pick.description ?? "").trim();
+      if (desc === "" || desc.toLowerCase() === "own" || desc.toLowerCase().startsWith("own")) {
+        ownPickYears.add(pick.year);
+      }
+    }
+
+    // Check years 2025-2031: if team doesn't own their R1 in year Y,
+    // the adjacent years' R1 picks can't be traded (Stepien rule)
+    for (let y = 2025; y <= 2031; y++) {
+      if (!ownPickYears.has(y)) {
+        // This year's R1 is not owned — check adjacent years
+        if (ownPickYears.has(y - 1)) {
+          warnings.push(
+            `${teamName} cannot trade their ${y - 1} R1 pick (they do not control their ${y} R1)`
+          );
+        }
+        if (ownPickYears.has(y + 1)) {
+          warnings.push(
+            `${teamName} cannot trade their ${y + 1} R1 pick (they do not control their ${y} R1)`
+          );
+        }
+      }
+    }
+  }
+
+  if (warnings.length === 0) return "";
+  // Deduplicate warnings
+  const unique = [...new Set(warnings)];
+  return "\nSTEPIEN RULE (teams cannot trade first-round picks in consecutive years):\n" +
+    unique.map(w => `- ${w}`).join("\n") + "\n";
 }
 
 export function getCapContext(involvedTeams: Team[]) {
