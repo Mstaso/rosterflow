@@ -8,14 +8,48 @@ import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Trade Details",
-  description: "View detailed NBA trade analysis and breakdown.",
-  robots: {
-    index: true,
-    follow: true,
-  },
-};
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://rosterflows.com";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const tradeId = parseInt(id, 10);
+
+  if (isNaN(tradeId)) {
+    return { title: "Trade Not Found" };
+  }
+
+  const trade = await getTradeById(tradeId);
+
+  if (!trade) {
+    return { title: "Trade Not Found" };
+  }
+
+  const teamNames = trade.tradeTeams
+    .map((t) => t.teamDisplayName)
+    .join(", ");
+  const title = `${teamNames} Trade — NBA Trade Analysis`;
+  const description = trade.description
+    ? `${trade.title}. ${trade.description}`
+    : `${trade.title}. AI-powered NBA trade analysis between ${teamNames} with salary cap validation.`;
+
+  return {
+    title,
+    description,
+    robots: { index: true, follow: true },
+    alternates: {
+      canonical: `${siteUrl}/my-trades/${id}`,
+    },
+    openGraph: {
+      title: `${title} | Roster Flows`,
+      description,
+      url: `${siteUrl}/my-trades/${id}`,
+    },
+  };
+}
 
 export default async function TradeDetailPage({
   params,

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getNBATeams } from "~/actions/nbaTeams";
 import { Navbar } from "~/components/layout/navbar";
 import { Footer } from "~/components/layout/footer";
@@ -68,6 +69,14 @@ export default async function TradeMachinePage({
             initialAssets={initialAssets}
           />
         </div>
+
+        <section className="mx-auto w-full max-w-3xl px-4 py-12 text-center text-sm text-on-surface-variant">
+          <p>
+            Browse trades created by the community in{" "}
+            <Link href="/my-trades" className="text-primary hover:underline">Community Trades</Link>, or check out our{" "}
+            <Link href="/faq" className="text-primary hover:underline">FAQ</Link> to learn how the trade machine works.
+          </p>
+        </section>
 
         <Footer />
       </div>

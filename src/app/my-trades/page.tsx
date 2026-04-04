@@ -11,6 +11,8 @@ import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://rosterflows.com";
+
 export const metadata: Metadata = {
   title: "Community Trades - NBA Trade Ideas",
   description:
@@ -18,6 +20,9 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+  },
+  alternates: {
+    canonical: `${siteUrl}/my-trades`,
   },
 };
 

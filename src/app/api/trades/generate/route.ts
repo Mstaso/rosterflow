@@ -106,9 +106,6 @@ export async function POST(request: NextRequest) {
     // Generate manual first trade (algorithmic, instant result)
     let manualTrade: ReturnType<typeof generateManualTrade> = null;
     let manualTradeExclusion = "";
-    console.log("[manual-trade] Attempting manual trade generation...");
-    console.log("[manual-trade] Selected assets:", JSON.stringify(selectedAssets.map((a: SelectedAsset) => ({ id: a.id, type: a.type, teamId: a.teamId, targetTeamId: a.targetTeamId }))));
-    console.log("[manual-trade] Involved teams:", involvedTeams.map((t: Team) => `${t.displayName} (id:${t.id})`).join(", "));
     manualTrade = generateManualTrade(selectedAssets, involvedTeams);
     if (manualTrade) {
       console.log("[manual-trade] SUCCESS - generated trade with", manualTrade.teams.length, "teams");

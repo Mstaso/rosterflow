@@ -10,7 +10,13 @@ const config = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "a.espncdn.com",
+        pathname: "/i/**",
+      },
+    ],
   },
 };
 
