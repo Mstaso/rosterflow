@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Navbar } from "~/components/layout/navbar";
 import { Footer } from "~/components/layout/footer";
 import { FAQJsonLd, BreadcrumbJsonLd } from "~/components/seo/json-ld";
@@ -55,11 +56,12 @@ export default function FAQPage() {
       <div className="flex flex-col min-h-screen">
         <Navbar subtitle={<h1>FAQ</h1>} />
         <section className="mx-auto w-full max-w-3xl px-4 py-12 flex-grow">
+          <h2 className="text-xl font-semibold mb-6">Common Questions About Our NBA Trade Machine</h2>
           <div className="space-y-3">
             {faqs.map((faq) => (
               <details key={faq.question} className="group py-4 px-5 rounded-xl bg-surface-low">
                 <summary className="flex cursor-pointer list-none items-center justify-between font-medium transition-colors hover:text-primary [&::-webkit-details-marker]:hidden">
-                  {faq.question}
+                  <h3 className="text-left">{faq.question}</h3>
                   <svg
                     className="h-4 w-4 shrink-0 text-on-surface-variant transition-transform duration-200 group-open:rotate-180"
                     xmlns="http://www.w3.org/2000/svg"
@@ -79,6 +81,11 @@ export default function FAQPage() {
               </details>
             ))}
           </div>
+          <p className="mt-8 text-sm text-on-surface-variant">
+            Ready to try it?{" "}
+            <Link href="/" className="text-primary hover:underline">Build a trade</Link> or browse what others have created in{" "}
+            <Link href="/my-trades" className="text-primary hover:underline">Community Trades</Link>.
+          </p>
         </section>
         <Footer />
       </div>
