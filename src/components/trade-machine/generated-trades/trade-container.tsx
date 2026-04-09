@@ -41,14 +41,16 @@ export default function TradeContainer({
     <div className="flex-grow">
       <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6">
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Button
-            onClick={onBack}
-            variant="ghost"
-            className="text-on-surface-variant p-0 h-auto hover:text-white hover:bg-transparent justify-start sm:justify-center"
-          >
-            <Undo2 className="h-4 w-4 text-indigoMain" />
-            Back to Trade Generator
-          </Button>
+          {!(isStreaming && !hasTrades) && (
+            <Button
+              onClick={onBack}
+              variant="ghost"
+              className="text-on-surface-variant p-0 h-auto hover:text-white hover:bg-transparent justify-start sm:justify-center"
+            >
+              <Undo2 className="h-4 w-4 text-indigoMain" />
+              Back to Trade Generator
+            </Button>
+          )}
 
           {!hasTrades && isStreaming && (
             <div className="flex items-center gap-2 py-2 px-3 rounded-lg bg-surface-container text-on-surface-variant">

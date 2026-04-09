@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { env } from "~/env";
 import type { SelectedAsset, Team } from "~/types";
@@ -20,8 +20,8 @@ import { tradeGenerateLimiter, getClientIp } from "~/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
-const openai = new OpenAI({
-  apiKey: env.OPENAI_API_KEY,
+const anthropic = new Anthropic({
+  apiKey: env.ANTHROPIC_API_KEY,
 });
 
 const generateTradeSchema = z.object({
@@ -46,9 +46,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!env.OPENAI_API_KEY) {
+    if (!env.ANTHROPIC_API_KEY) {
       return NextResponse.json(
-        { success: false, error: "OpenAI API key not configured" },
+        { success: false, error: "Anthropic API key not configured" },
         { status: 500 }
       );
     }
@@ -341,25 +341,19 @@ Respond with ONLY a JSON array. Each scenario lists only what each team GIVES an
     }
 
     // Stream the response using SSE
-    const stream = await openai.chat.completions.create({
-      model: "gpt-5.4-mini",
+    const stream = anthropic.messages.stream({
+      model: "claude-sonnet-4-6",
+      system: "You are an expert NBA trade analyst and salary cap specialist. Generate realistic trade scenarios that a real front office would consider — weigh team windows (contending vs rebuilding), player production (stats), age curves, and contract value. Use only the provided roster data. Respond with valid JSON only — no markdown, no explanations.",
       messages: [
-        {
-          role: "system",
-          content:
-            "You are an expert NBA trade analyst and salary cap specialist. Generate realistic trade scenarios that a real front office would consider — weigh team windows (contending vs rebuilding), player production (stats), age curves, and contract value. Use only the provided roster data. Respond with valid JSON only — no markdown, no explanations.",
-        },
         {
           role: "user",
           content: prompt,
         },
       ],
       temperature: 0.7,
-      max_completion_tokens: 5500,
-      stream: true,
+      max_tokens: 5500,
     });
 
-    console.log("been hit generate prompt", prompt);
     const encoder = new TextEncoder();
 
     const readableStream = new ReadableStream({
@@ -393,8 +387,9 @@ Respond with ONLY a JSON array. Each scenario lists only what each team GIVES an
         let scanPos = 0; // Where we left off scanning
 
         try {
-          for await (const chunk of stream) {
-            const content = chunk.choices[0]?.delta?.content;
+          for await (const event of stream) {
+            if (event.type !== "content_block_delta" || event.delta.type !== "text_delta") continue;
+            const content = event.delta.text;
             if (!content) continue;
 
             accumulated += content;
@@ -535,7 +530,7 @@ Respond with ONLY a JSON array. Each scenario lists only what each team GIVES an
       },
     });
   } catch (error) {
-    console.error("Error generating trades with OpenAI:", error);
+    console.error("Error generating trades with Anthropic:", error);
     return NextResponse.json(
       {
         success: false,

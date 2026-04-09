@@ -24,7 +24,7 @@ const buttonVariants = cva(
         success:
           "bg-emerald-600/90 text-white hover:bg-emerald-600 disabled:bg-surface-high disabled:text-on-surface-variant/40",
         edit:
-          "ghost-border text-foreground bg-transparent hover:bg-surface-high disabled:text-on-surface-variant/40",
+          "ghost-border text-foreground bg-surface-container hover:bg-surface-high disabled:text-on-surface-variant/40",
       },
       size: {
         default: "h-9 px-4 py-2",
