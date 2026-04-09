@@ -10,6 +10,7 @@ import {
   XIcon,
   ArrowLeftRight,
   UserCircleIcon,
+  NewspaperIcon,
 } from "lucide-react";
 import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { UserButton } from "@clerk/nextjs";
@@ -45,6 +46,11 @@ export function Navbar({ subtitle }: NavbarProps) {
       href: "/",
       label: "Trade Machine",
       icon: ArrowLeftRight,
+    },
+    {
+      href: "/rumor-mill",
+      label: "Rumor Mill",
+      icon: NewspaperIcon,
     },
     {
       href: "/my-trades",

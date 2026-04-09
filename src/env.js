@@ -12,6 +12,7 @@ export const env = createEnv({
       .enum(["development", "test", "production"])
       .default("development"),
     OPENAI_API_KEY: z.string().min(1),
+    CRON_SECRET: z.string().min(1).optional(),
   },
 
   /**

@@ -18,6 +18,7 @@ import { Button } from "~/components/ui/button";
 import { SnapshotButton } from "~/components/ui/snapshot-button";
 import { PlayerStatsModal } from "~/components/player-stats-modal";
 import { useTradeSnapshot } from "~/hooks/use-trade-snapshot";
+import TradeAnalysisPanel from "../trade-analysis-panel";
 
 export default function TradeCard({
   trade,
@@ -703,6 +704,15 @@ export default function TradeCard({
                   </tbody>
                 </table>
               </div>
+
+              {/* Trade Analysis Panel */}
+              {tradeInfo.team && (
+                <TradeAnalysisPanel
+                  tradeInfo={tradeInfo}
+                  allTradeInfos={TradesWithInfo}
+                  team={tradeInfo.team}
+                />
+              )}
             </CardContent>
           </Card>
         ))}

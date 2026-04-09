@@ -19,6 +19,8 @@ import type { SelectedAsset, Team, Player, DraftPick } from "~/types";
 import SaveTradeModal from "./save-trade-modal";
 import { PlayerStatsModal } from "~/components/player-stats-modal";
 import { useTradeSnapshot } from "~/hooks/use-trade-snapshot";
+import TradeAnalysisPanel from "./trade-analysis-panel";
+import type { TradeInfo } from "~/types";
 
 interface TryTradePreviewProps {
   selectedTeams: Team[];
@@ -117,6 +119,21 @@ export default function TryTradePreview({
   };
 
   const tradeInfo = buildTradeInfo();
+
+  // Adapt TeamTradeInfo to TradeInfo for the analysis panel
+  const toEnrichedPicks = (picks: DraftPick[]) =>
+    picks.map((p) => ({ name: `${p.year} R${p.round}`, type: "pick" as const, from: "", draftPick: p }));
+
+  const tradeInfoForAnalysis: TradeInfo[] = tradeInfo.map((info) => ({
+    team: info.team,
+    playersReceived: info.playersReceived,
+    picksReceived: toEnrichedPicks(info.picksReceived),
+    playersSent: info.playersSent,
+    picksSent: toEnrichedPicks(info.picksSent),
+    outGoingSalary: info.outgoingSalary,
+    inComingSalary: info.incomingSalary,
+    capDifference: info.capDifference,
+  }));
 
   // Validate trade salary rules
   const validateTrade = (): { isValid: boolean; message: string } => {
@@ -621,6 +638,15 @@ export default function TryTradePreview({
                     </tbody>
                   </table>
                 </div>
+
+                {/* Trade Analysis Panel */}
+                {tradeInfoForAnalysis[index] && (
+                  <TradeAnalysisPanel
+                    tradeInfo={tradeInfoForAnalysis[index]}
+                    allTradeInfos={tradeInfoForAnalysis}
+                    team={info.team}
+                  />
+                )}
               </CardContent>
             </Card>
           ))}

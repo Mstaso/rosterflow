@@ -239,3 +239,60 @@ model TradeAsset {
   @@index([draftPickId])
   @@index([tradeId, type])
 }
+
+// ── Rumor Mill ──────────────────────────────────────────────
+
+// Individual rumor items from RSS feeds or Reddit
+model RumorItem {
+  id          Int       @id @default(autoincrement())
+  externalId  String    @unique // RSS guid or Reddit fullname (t3_xxx)
+  source      String // "hoopsrumors" | "hoopshype" | "reddit"
+  sourceType  String // "insider" | "fan"
+  title       String
+  summary     String    @db.Text // First ~300 chars, plain text
+  url         String
+  author      String?
+  publishedAt DateTime
+  redditScore Int? // Upvote count (Reddit only)
+  extractedAt DateTime? // Null until entity extraction runs
+
+  entities RumorEntity[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([publishedAt(sort: Desc)])
+  @@index([sourceType])
+}
+
+// Extracted player/team mentions within a rumor
+model RumorEntity {
+  id         Int    @id @default(autoincrement())
+  rumorId    Int
+  entityType String // "player" | "team"
+  entityName String // Display name for UI
+
+  playerId Int?
+  teamId   Int?
+
+  rumor RumorItem @relation(fields: [rumorId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([rumorId, entityType, playerId, teamId])
+  @@index([rumorId])
+  @@index([playerId])
+  @@index([teamId])
+}
+
+// Cron execution log for debugging and idempotency
+model RumorFetchLog {
+  id           Int      @id @default(autoincrement())
+  source       String
+  status       String // "success" | "error"
+  itemsFetched Int      @default(0)
+  itemsNew     Int      @default(0)
+  errorMessage String?
+  executedAt   DateTime @default(now())
+  durationMs   Int      @default(0)
+}
