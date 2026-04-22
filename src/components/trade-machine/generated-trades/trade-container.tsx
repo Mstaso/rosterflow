@@ -53,7 +53,7 @@ export default function TradeContainer({
           )}
 
           {!hasTrades && isStreaming && (
-            <div className="flex items-center gap-2 py-2 px-3 rounded-lg bg-surface-container text-on-surface-variant">
+            <div className="flex items-center gap-2 py-2 px-3 rounded-lg text-on-surface-variant">
               <Loader2 className="w-4 h-4 animate-spin text-indigoMain" />
               <span className="text-sm">Generating trade scenarios...</span>
             </div>
