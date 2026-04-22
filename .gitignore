@@ -44,3 +44,6 @@ yarn-error.log*
 
 # idea files
 .idea
+
+# eval harness output (local only)
+/eval-results
