@@ -262,7 +262,7 @@ export default function TradeMachineClient({
       const copyOfNbaTeams = [...nbaTeams];
       randomTeamsForMockTrades = copyOfNbaTeams
         .sort(() => 0.5 - Math.random())
-        .slice(0, 3);
+        .slice(0, 2);
     }
 
     const tradePayload = {
