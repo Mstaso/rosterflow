@@ -32,7 +32,7 @@ export function RumorMillClient({
   const [page, setPage] = useState(1);
 
   const [sourceType, setSourceType] = useState<"insider" | "fan" | null>(null);
-  const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
+  const [activeFilter, setActiveFilter] = useState<ActiveFilter | null>(null);
 
   const [isPending, startTransition] = useTransition();
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -41,20 +41,17 @@ export function RumorMillClient({
     (
       newPage: number,
       newSource: "insider" | "fan" | null,
-      filters: ActiveFilter[],
+      filter: ActiveFilter | null,
       append: boolean
     ) => {
-      const playerFilter = filters.find((f) => f.type === "player");
-      const teamFilter = filters.find((f) => f.type === "team");
-
       if (append) setIsLoadingMore(true);
 
       startTransition(async () => {
         const result = await getRumors({
           page: newPage,
           sourceType: newSource,
-          playerId: playerFilter?.id ?? null,
-          teamId: teamFilter?.id ?? null,
+          playerId: filter?.type === "player" ? filter.id : null,
+          teamId: filter?.type === "team" ? filter.id : null,
         });
 
         if (append) {
@@ -74,60 +71,40 @@ export function RumorMillClient({
   const handleSourceChange = useCallback(
     (newSource: "insider" | "fan" | null) => {
       setSourceType(newSource);
-      fetchRumors(1, newSource, activeFilters, false);
+      fetchRumors(1, newSource, activeFilter, false);
     },
-    [activeFilters, fetchRumors]
+    [activeFilter, fetchRumors]
   );
 
-  const toggleEntityFilter = useCallback(
+  // Select an entity as the filter, or toggle it off if already active.
+  // Only one filter is active at a time — clicking a different entity replaces the current one.
+  const selectEntityFilter = useCallback(
     (type: "player" | "team", id: number, name: string) => {
-      setActiveFilters((prev) => {
-        const existing = prev.find((f) => f.type === type && f.id === id);
-        let next: ActiveFilter[];
-        if (existing) {
-          // Toggle off — remove this filter
-          next = prev.filter((f) => !(f.type === type && f.id === id));
-        } else {
-          // Toggle on — replace existing filter of same type
-          const filtered = prev.filter((f) => f.type !== type);
-          next = [...filtered, { type, id, name }];
-        }
-        fetchRumors(1, sourceType, next, false);
-        return next;
-      });
+      const isSame =
+        activeFilter?.type === type && activeFilter?.id === id;
+      const next: ActiveFilter | null = isSame ? null : { type, id, name };
+      setActiveFilter(next);
+      fetchRumors(1, sourceType, next, false);
     },
-    [sourceType, fetchRumors]
+    [activeFilter, sourceType, fetchRumors]
   );
 
-  const removeFilter = useCallback(
-    (filter: ActiveFilter) => {
-      setActiveFilters((prev) => {
-        const next = prev.filter(
-          (f) => !(f.type === filter.type && f.id === filter.id)
-        );
-        fetchRumors(1, sourceType, next, false);
-        return next;
-      });
-    },
-    [sourceType, fetchRumors]
-  );
-
-  const clearFilters = useCallback(() => {
-    setActiveFilters([]);
-    fetchRumors(1, sourceType, [], false);
+  const clearFilter = useCallback(() => {
+    setActiveFilter(null);
+    fetchRumors(1, sourceType, null, false);
   }, [sourceType, fetchRumors]);
 
   const handleLoadMore = useCallback(() => {
     if (page < totalPages) {
-      fetchRumors(page + 1, sourceType, activeFilters, true);
+      fetchRumors(page + 1, sourceType, activeFilter, true);
     }
-  }, [page, totalPages, sourceType, activeFilters, fetchRumors]);
+  }, [page, totalPages, sourceType, activeFilter, fetchRumors]);
 
   const handleEntityClick = useCallback(
     (entityType: string, id: number, name: string) => {
-      toggleEntityFilter(entityType as "player" | "team", id, name);
+      selectEntityFilter(entityType as "player" | "team", id, name);
     },
-    [toggleEntityFilter]
+    [selectEntityFilter]
   );
 
   return (
@@ -136,23 +113,23 @@ export function RumorMillClient({
       <BuzzScoreSection
         players={buzzPlayers}
         teams={buzzTeams}
-        onBuzzClick={toggleEntityFilter}
+        onBuzzClick={selectEntityFilter}
+        activeFilter={activeFilter}
       />
 
       {/* Filters */}
       <FilterBar
         sourceType={sourceType}
         onSourceChange={handleSourceChange}
-        activeFilters={activeFilters}
-        onRemoveFilter={removeFilter}
-        onClearFilters={clearFilters}
+        activeFilter={activeFilter}
+        onClearFilter={clearFilter}
       />
 
       {/* Results count */}
       <div className="flex items-center justify-between">
         <p className="text-xs text-on-surface-variant/40">
           {total} rumor{total !== 1 ? "s" : ""}
-          {activeFilters.length > 0 || sourceType ? " matching filters" : ""}
+          {activeFilter || sourceType ? " matching filters" : ""}
         </p>
         {isPending && !isLoadingMore && (
           <Loader2Icon className="h-4 w-4 text-primary animate-spin" />
@@ -167,6 +144,7 @@ export function RumorMillClient({
               key={rumor.id}
               rumor={rumor}
               onEntityClick={handleEntityClick}
+              activeFilter={activeFilter}
             />
           ))}
         </div>
@@ -175,12 +153,12 @@ export function RumorMillClient({
           <p className="text-sm text-on-surface-variant/50">
             {isPending ? "Loading rumors..." : "No rumors found."}
           </p>
-          {activeFilters.length > 0 && !isPending && (
+          {activeFilter && !isPending && (
             <button
-              onClick={clearFilters}
+              onClick={clearFilter}
               className="text-xs text-primary hover:text-primary/80 transition-colors"
             >
-              Clear filters
+              Clear filter
             </button>
           )}
         </div>

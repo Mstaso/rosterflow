@@ -4,6 +4,8 @@ export interface RedditRumorItem {
   sourceType: "fan";
   title: string;
   summary: string;
+  /** Full selftext, used only for entity extraction. Not persisted. */
+  fullText: string;
   url: string;
   author: string | null;
   publishedAt: Date;
@@ -65,7 +67,8 @@ async function fetchRedditEndpoint(url: string): Promise<RedditPost[]> {
 
 function postToRumor(post: RedditPost): RedditRumorItem {
   const d = post.data;
-  const summary = (d.selftext ?? "").slice(0, 300).trim();
+  const fullText = (d.selftext ?? "").trim();
+  const summary = fullText.slice(0, 300).trim();
 
   return {
     externalId: d.name, // t3_xxx format
@@ -73,6 +76,7 @@ function postToRumor(post: RedditPost): RedditRumorItem {
     sourceType: "fan",
     title: d.title,
     summary,
+    fullText,
     url: `https://www.reddit.com${d.permalink}`,
     author: d.author ?? null,
     publishedAt: new Date(d.created_utc * 1000),
@@ -90,6 +94,7 @@ const REDDIT_SOURCES = [
       "https://www.reddit.com/r/nba/hot.json?limit=50",
     ],
     requireTradeKeyword: true,
+    minScore: 50,
   },
   // r/nbatradeideas — entire sub is trade content
   {
@@ -98,6 +103,7 @@ const REDDIT_SOURCES = [
       "https://www.reddit.com/r/nbatradeideas/new.json?limit=25",
     ],
     requireTradeKeyword: false,
+    minScore: 5,
   },
 ];
 
@@ -107,6 +113,7 @@ export async function fetchRedditRumors(): Promise<RedditRumorItem[]> {
       fetchRedditEndpoint(url).then((posts) => ({
         posts,
         requireTradeKeyword: source.requireTradeKeyword,
+        minScore: source.minScore,
       }))
     )
   );
@@ -122,12 +129,13 @@ export async function fetchRedditRumors(): Promise<RedditRumorItem[]> {
       continue;
     }
 
-    const { posts, requireTradeKeyword } = result.value;
+    const { posts, requireTradeKeyword, minScore } = result.value;
     for (const post of posts) {
       if (seen.has(post.data.name)) continue;
       seen.add(post.data.name);
 
       if (requireTradeKeyword && !isTradeRelated(post.data.title)) continue;
+      if (post.data.score < minScore) continue;
 
       rumors.push(postToRumor(post));
     }

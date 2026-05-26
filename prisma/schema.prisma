@@ -255,6 +255,8 @@ model RumorItem {
   publishedAt DateTime
   redditScore Int? // Upvote count (Reddit only)
   extractedAt DateTime? // Null until entity extraction runs
+  rumorType   String? // "trade_rumor" | "trade_idea" | "news"
+  isTradeRelevant Boolean @default(true)
 
   entities RumorEntity[]
 

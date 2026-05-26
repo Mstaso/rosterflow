@@ -25,12 +25,14 @@ interface TradeMachineClientProps {
   nbaTeams: Team[];
   initialTeamIds?: number[];
   initialAssets?: SelectedAsset[];
+  autoGenerate?: boolean;
 }
 
 export default function TradeMachineClient({
   nbaTeams,
   initialTeamIds = [],
   initialAssets = [],
+  autoGenerate = false,
 }: TradeMachineClientProps) {
   const posthog = usePostHog();
   const [selectedTeams, setSelectedTeams] = useState<Team[]>([]);
@@ -352,6 +354,22 @@ export default function TradeMachineClient({
       setShowTradeContainer(false);
     }
   };
+
+  // Auto-generate trades when navigating from rumor mill with autoGenerate=true
+  const autoGenerateTriggeredRef = React.useRef(false);
+  React.useEffect(() => {
+    if (
+      autoGenerate &&
+      hasInitialized &&
+      selectedAssets.length > 0 &&
+      !showTradeContainer &&
+      !autoGenerateTriggeredRef.current
+    ) {
+      autoGenerateTriggeredRef.current = true;
+      handleGenerateTrade();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoGenerate, hasInitialized, selectedAssets.length, showTradeContainer]);
 
   const isTradeButtonActive = selectedAssets.length > 0;
 

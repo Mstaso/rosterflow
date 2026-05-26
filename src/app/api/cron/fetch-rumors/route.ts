@@ -23,16 +23,23 @@ export async function GET(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    // Fetch from all sources in parallel
     const [rssRumors, redditRumors] = await Promise.all([
       fetchAllRSSRumors(),
       fetchRedditRumors(),
     ]);
 
-    let totalFetched = rssRumors.length + redditRumors.length;
+    const allFetched = [...rssRumors, ...redditRumors];
+    const totalFetched = allFetched.length;
+
+    // Map externalId → fullText so we can extract with the full body even though
+    // we only persist the truncated summary.
+    const fullTextByExternalId = new Map<string, string>();
+    for (const r of allFetched) {
+      fullTextByExternalId.set(r.externalId, r.fullText);
+    }
+
     let totalNew = 0;
 
-    // Upsert RSS rumors
     for (const rumor of rssRumors) {
       const existing = await db.rumorItem.findUnique({
         where: { externalId: rumor.externalId },
@@ -54,7 +61,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Upsert Reddit rumors (update score for existing)
     for (const rumor of redditRumors) {
       const existing = await db.rumorItem.findUnique({
         where: { externalId: rumor.externalId },
@@ -82,7 +88,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Run entity extraction on unprocessed items (max 30 per run)
+    // Run entity extraction + classification on unprocessed items (max 30 per run)
     const unextracted = await db.rumorItem.findMany({
       where: { extractedAt: null },
       orderBy: { publishedAt: "desc" },
@@ -90,7 +96,6 @@ export async function GET(request: NextRequest) {
     });
 
     if (unextracted.length > 0) {
-      // Load player and team reference data once
       const players: PlayerRef[] = await db.player.findMany({
         select: { id: true, displayName: true, lastName: true, teamId: true },
       });
@@ -104,9 +109,14 @@ export async function GET(request: NextRequest) {
       });
 
       for (const rumor of unextracted) {
-        const entities = await extractEntities(
+        // Prefer the freshly-fetched fullText; fall back to the persisted summary
+        // for items ingested by an older code version.
+        const body =
+          fullTextByExternalId.get(rumor.externalId) ?? rumor.summary;
+
+        const { entities, rumorType, isTradeRelevant } = await extractEntities(
           rumor.title,
-          rumor.summary,
+          body,
           players,
           teams
         );
@@ -126,7 +136,11 @@ export async function GET(request: NextRequest) {
 
         await db.rumorItem.update({
           where: { id: rumor.id },
-          data: { extractedAt: new Date() },
+          data: {
+            extractedAt: new Date(),
+            rumorType,
+            isTradeRelevant,
+          },
         });
       }
     }
@@ -142,7 +156,6 @@ export async function GET(request: NextRequest) {
 
     const durationMs = Date.now() - startTime;
 
-    // Log the fetch
     await db.rumorFetchLog.create({
       data: {
         source: "all",

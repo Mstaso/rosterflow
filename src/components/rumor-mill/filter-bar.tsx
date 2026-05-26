@@ -11,9 +11,8 @@ export interface ActiveFilter {
 interface FilterBarProps {
   sourceType: "insider" | "fan" | null;
   onSourceChange: (type: "insider" | "fan" | null) => void;
-  activeFilters: ActiveFilter[];
-  onRemoveFilter: (filter: ActiveFilter) => void;
-  onClearFilters: () => void;
+  activeFilter: ActiveFilter | null;
+  onClearFilter: () => void;
 }
 
 const SOURCE_OPTIONS = [
@@ -25,9 +24,8 @@ const SOURCE_OPTIONS = [
 export function FilterBar({
   sourceType,
   onSourceChange,
-  activeFilters,
-  onRemoveFilter,
-  onClearFilters,
+  activeFilter,
+  onClearFilter,
 }: FilterBarProps) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -51,30 +49,25 @@ export function FilterBar({
         })}
       </div>
 
-      {/* Active filter chips */}
-      {activeFilters.length > 0 && (
-        <div className="flex items-center gap-2 flex-wrap">
-          {activeFilters.map((filter) => (
-            <span
-              key={`${filter.type}-${filter.id}`}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-container text-xs text-on-surface-variant"
-            >
-              {filter.name}
-              <button
-                onClick={() => onRemoveFilter(filter)}
-                className="text-on-surface-variant/40 hover:text-on-surface transition-colors"
-                aria-label={`Remove ${filter.name} filter`}
-              >
-                <XIcon className="h-3 w-3" />
-              </button>
+      {/* Active filter pill */}
+      {activeFilter && (
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] uppercase tracking-wider text-on-surface-variant/50 font-medium">
+            Filtering by
+          </span>
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-primary/10 text-primary ring-1 ring-primary/30 text-xs font-medium">
+            <span className="text-[10px] uppercase tracking-wider opacity-70">
+              {activeFilter.type}
             </span>
-          ))}
-          <button
-            onClick={onClearFilters}
-            className="text-[11px] text-primary-dim/60 hover:text-primary transition-colors"
-          >
-            Clear all
-          </button>
+            {activeFilter.name}
+            <button
+              onClick={onClearFilter}
+              className="text-primary/60 hover:text-primary transition-colors -mr-1"
+              aria-label={`Clear ${activeFilter.name} filter`}
+            >
+              <XIcon className="h-3.5 w-3.5" />
+            </button>
+          </span>
         </div>
       )}
     </div>

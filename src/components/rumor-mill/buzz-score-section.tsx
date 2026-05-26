@@ -3,21 +3,25 @@
 import Image from "next/image";
 import { FlameIcon } from "lucide-react";
 import type { BuzzItem } from "~/actions/rumors";
+import type { ActiveFilter } from "./filter-bar";
 
 interface BuzzScoreSectionProps {
   players: BuzzItem[];
   teams: BuzzItem[];
   onBuzzClick: (type: "player" | "team", id: number, name: string) => void;
+  activeFilter: ActiveFilter | null;
 }
 
 function BuzzPill({
   item,
   rank,
   onClick,
+  isActive,
 }: {
   item: BuzzItem;
   rank: number;
   onClick: () => void;
+  isActive: boolean;
 }) {
   const isHot = rank < 3;
   const imageUrl =
@@ -26,7 +30,11 @@ function BuzzPill({
   return (
     <button
       onClick={onClick}
-      className="group flex items-center gap-2.5 px-3 py-2 rounded-lg bg-surface-container hover:bg-surface-high transition-colors shrink-0"
+      className={`group flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors shrink-0 ${
+        isActive
+          ? "bg-primary/15 ring-1 ring-primary/40"
+          : "bg-surface-container hover:bg-surface-high"
+      }`}
     >
       {/* Avatar / Logo */}
       <div className="relative h-8 w-8 rounded-full bg-surface-highest overflow-hidden shrink-0">
@@ -47,7 +55,13 @@ function BuzzPill({
 
       {/* Name + count */}
       <div className="flex flex-col items-start">
-        <span className="text-xs font-medium text-on-surface leading-tight group-hover:text-primary transition-colors whitespace-nowrap">
+        <span
+          className={`text-xs font-medium leading-tight transition-colors whitespace-nowrap ${
+            isActive
+              ? "text-primary"
+              : "text-on-surface group-hover:text-primary"
+          }`}
+        >
           {item.name}
         </span>
         <span className="text-[10px] text-on-surface-variant/50 leading-tight">
@@ -67,7 +81,11 @@ export function BuzzScoreSection({
   players,
   teams,
   onBuzzClick,
+  activeFilter,
 }: BuzzScoreSectionProps) {
+  const isPillActive = (type: "player" | "team", id: number) =>
+    activeFilter?.type === type && activeFilter.id === id;
+
   const hasData = players.length > 0 || teams.length > 0;
 
   if (!hasData) {
@@ -86,19 +104,20 @@ export function BuzzScoreSection({
         Trending This Week
       </h2>
 
-      <div className="flex gap-6 overflow-x-auto pb-2 scrollbar-thin">
+      <div className="flex flex-col gap-4">
         {/* Players */}
         {players.length > 0 && (
-          <div className="flex flex-col gap-2 shrink-0">
+          <div className="flex flex-col gap-2">
             <span className="text-[10px] uppercase tracking-wider text-primary-dim/60 font-medium">
               Players
             </span>
-            <div className="flex gap-2">
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
               {players.map((player, i) => (
                 <BuzzPill
                   key={player.id}
                   item={player}
                   rank={i}
+                  isActive={isPillActive("player", player.id)}
                   onClick={() =>
                     onBuzzClick("player", player.id, player.name)
                   }
@@ -108,23 +127,19 @@ export function BuzzScoreSection({
           </div>
         )}
 
-        {/* Divider */}
-        {players.length > 0 && teams.length > 0 && (
-          <div className="w-px bg-outline-variant/15 self-stretch shrink-0 my-2" />
-        )}
-
         {/* Teams */}
         {teams.length > 0 && (
-          <div className="flex flex-col gap-2 shrink-0">
+          <div className="flex flex-col gap-2">
             <span className="text-[10px] uppercase tracking-wider text-primary-dim/60 font-medium">
               Teams
             </span>
-            <div className="flex gap-2">
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
               {teams.map((team, i) => (
                 <BuzzPill
                   key={team.id}
                   item={team}
                   rank={i}
+                  isActive={isPillActive("team", team.id)}
                   onClick={() =>
                     onBuzzClick("team", team.id, team.name)
                   }

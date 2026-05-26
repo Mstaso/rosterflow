@@ -48,6 +48,8 @@ export default async function TradeMachinePage({
     }
   }
 
+  const autoGenerate = params.autoGenerate === "true";
+
   return (
     <main className="bg-background text-foreground">
       <BreadcrumbJsonLd
@@ -67,6 +69,7 @@ export default async function TradeMachinePage({
             nbaTeams={nbaTeams || []}
             initialTeamIds={initialTeamIds}
             initialAssets={initialAssets}
+            autoGenerate={autoGenerate}
           />
         </div>
 

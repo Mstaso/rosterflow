@@ -8,10 +8,12 @@ import {
   SearchIcon,
 } from "lucide-react";
 import type { RumorWithEntities } from "~/actions/rumors";
+import type { ActiveFilter } from "./filter-bar";
 
 interface RumorCardProps {
   rumor: RumorWithEntities;
   onEntityClick: (entityType: string, id: number, name: string) => void;
+  activeFilter: ActiveFilter | null;
 }
 
 function formatRelativeTime(dateString: string): string {
@@ -38,6 +40,8 @@ function getSourceLabel(source: string): string {
       return "HoopsRumors";
     case "espn":
       return "ESPN";
+    case "yahoo":
+      return "Yahoo Sports";
     case "reddit":
       return "r/nba";
     default:
@@ -45,8 +49,12 @@ function getSourceLabel(source: string): string {
   }
 }
 
+// Trade machine enforces a maximum of 5 teams per trade.
+const MAX_TEAMS_FOR_TRADE = 5;
+
 function buildTradeLink(
-  entities: RumorWithEntities["entities"]
+  entities: RumorWithEntities["entities"],
+  rumorType: string | null
 ): { href: string; label: string; variant: "primary" | "ghost" } | null {
   const playerEntities = entities.filter(
     (e) => e.entityType === "player" && e.playerId
@@ -55,27 +63,48 @@ function buildTradeLink(
     (e) => e.entityType === "team" && e.teamId
   );
 
-  // Collect unique team IDs (from team entities + players' current teams)
-  const teamIds = new Set<number>();
-  teamEntities.forEach((e) => {
-    if (e.teamId) teamIds.add(e.teamId);
-  });
-  playerEntities.forEach((e) => {
-    if (e.playerTeamId) teamIds.add(e.playerTeamId);
-  });
+  // Collect unique team IDs with priority:
+  //   1. Explicit team entities (strongest signal — author named the team)
+  //   2. Players' current teams (derived)
+  // Cap at 5 to respect the trade machine's team limit.
+  const orderedTeamIds: number[] = [];
+  const seen = new Set<number>();
+  const addTeam = (id: number | null | undefined) => {
+    if (id == null || seen.has(id)) return;
+    if (orderedTeamIds.length >= MAX_TEAMS_FOR_TRADE) return;
+    seen.add(id);
+    orderedTeamIds.push(id);
+  };
+  teamEntities.forEach((e) => addTeam(e.teamId));
+  playerEntities.forEach((e) => addTeam(e.playerTeamId));
+
+  // Total unique teams referenced in the rumor (uncapped) — used to detect
+  // sprawling "notes" posts where no coherent trade scenario exists.
+  const totalUniqueTeamsReferenced = new Set<number>();
+  teamEntities.forEach((e) => e.teamId && totalUniqueTeamsReferenced.add(e.teamId));
+  playerEntities.forEach(
+    (e) => e.playerTeamId && totalUniqueTeamsReferenced.add(e.playerTeamId)
+  );
+  const isSprawlingNotesPost =
+    totalUniqueTeamsReferenced.size > MAX_TEAMS_FOR_TRADE;
 
   const hasMultipleEntities =
-    (playerEntities.length >= 1 && teamIds.size >= 2) ||
-    teamIds.size >= 2 ||
+    (playerEntities.length >= 1 && orderedTeamIds.length >= 2) ||
+    orderedTeamIds.length >= 2 ||
     (playerEntities.length >= 1 && teamEntities.length >= 1);
 
+  const isTradeContent =
+    rumorType === "trade_rumor" || rumorType === "trade_idea";
+
   if (hasMultipleEntities) {
+    const keptTeamIds = new Set(orderedTeamIds);
     const params = new URLSearchParams();
-    params.set("teamIds", Array.from(teamIds).join(","));
+    params.set("teamIds", orderedTeamIds.join(","));
 
     if (playerEntities.length > 0) {
+      // Only include player assets whose current team made it into the kept set
       const assets = playerEntities
-        .filter((e) => e.playerTeamId)
+        .filter((e) => e.playerTeamId && keptTeamIds.has(e.playerTeamId))
         .map((e) => ({
           id: e.playerId!,
           type: "player" as const,
@@ -86,17 +115,28 @@ function buildTradeLink(
       }
     }
 
+    // Auto-generate trades for trade-specific content — but only when the rumor
+    // has a bounded set of teams (not a sprawling notes-style post).
+    if (isTradeContent && !isSprawlingNotesPost) {
+      params.set("autoGenerate", "true");
+      return {
+        href: `/?${params.toString()}`,
+        label: "Generate Trade",
+        variant: "primary",
+      };
+    }
+
     return {
       href: `/?${params.toString()}`,
-      label: "Generate Trade",
-      variant: "primary",
+      label: "Explore Trades",
+      variant: "ghost",
     };
   }
 
-  if (teamIds.size === 1 || playerEntities.length === 1) {
+  if (orderedTeamIds.length === 1 || playerEntities.length === 1) {
     const params = new URLSearchParams();
-    if (teamIds.size > 0) {
-      params.set("teamIds", Array.from(teamIds).join(","));
+    if (orderedTeamIds.length > 0) {
+      params.set("teamIds", orderedTeamIds.join(","));
     }
     return {
       href: `/?${params.toString()}`,
@@ -108,9 +148,16 @@ function buildTradeLink(
   return null;
 }
 
-export function RumorCard({ rumor, onEntityClick }: RumorCardProps) {
+export function RumorCard({ rumor, onEntityClick, activeFilter }: RumorCardProps) {
   const isInsider = rumor.sourceType === "insider";
-  const tradeLink = buildTradeLink(rumor.entities);
+  const tradeLink = buildTradeLink(rumor.entities, rumor.rumorType);
+
+  const isEntityActive = (entity: RumorWithEntities["entities"][number]) => {
+    if (!activeFilter) return false;
+    const entityId =
+      entity.entityType === "player" ? entity.playerId : entity.teamId;
+    return activeFilter.type === entity.entityType && activeFilter.id === entityId;
+  };
 
   return (
     <article className="group relative bg-surface-container rounded-xl p-6 pt-5 transition-colors duration-200 hover:bg-surface-high/60">
@@ -174,23 +221,30 @@ export function RumorCard({ rumor, onEntityClick }: RumorCardProps) {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         {/* Entity chips */}
         <div className="flex items-center gap-1.5 flex-wrap">
-          {rumor.entities.map((entity) => (
-            <button
-              key={entity.id}
-              onClick={() =>
-                onEntityClick(
-                  entity.entityType,
-                  (entity.entityType === "player"
-                    ? entity.playerId
-                    : entity.teamId)!,
-                  entity.entityName
-                )
-              }
-              className="inline-flex items-center px-2.5 py-1 rounded-md bg-surface-high text-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-highest transition-colors"
-            >
-              {entity.entityName}
-            </button>
-          ))}
+          {rumor.entities.map((entity) => {
+            const active = isEntityActive(entity);
+            return (
+              <button
+                key={entity.id}
+                onClick={() =>
+                  onEntityClick(
+                    entity.entityType,
+                    (entity.entityType === "player"
+                      ? entity.playerId
+                      : entity.teamId)!,
+                    entity.entityName
+                  )
+                }
+                className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs transition-colors ${
+                  active
+                    ? "bg-primary/15 text-primary ring-1 ring-primary/40"
+                    : "bg-surface-high text-on-surface-variant hover:text-on-surface hover:bg-surface-highest"
+                }`}
+              >
+                {entity.entityName}
+              </button>
+            );
+          })}
         </div>
 
         {/* Action button */}

@@ -7,6 +7,8 @@ export interface RSSRumorItem {
   sourceType: "insider";
   title: string;
   summary: string;
+  /** Full stripped description, used only for entity extraction. Not persisted. */
+  fullText: string;
   url: string;
   author: string | null;
   publishedAt: Date;
@@ -30,6 +32,10 @@ const RSS_FEEDS = [
   {
     url: "https://www.espn.com/espn/rss/nba/news",
     source: "espn",
+  },
+  {
+    url: "https://sports.yahoo.com/nba/rss/",
+    source: "yahoo",
   },
 ] as const;
 
@@ -94,7 +100,8 @@ async function fetchSingleFeed(
     })
     .map((item) => {
       const rawSummary = item.description ?? "";
-      const summary = stripHtml(rawSummary).slice(0, 300);
+      const fullText = stripHtml(rawSummary);
+      const summary = fullText.slice(0, 300);
       const guid = extractGuid(item.guid) || item.link || "";
 
       return {
@@ -103,6 +110,7 @@ async function fetchSingleFeed(
         sourceType: "insider" as const,
         title: stripHtml(item.title ?? ""),
         summary,
+        fullText,
         url: item.link ?? guid,
         author: item["dc:creator"] ?? item.creator ?? null,
         publishedAt: item.pubDate ? new Date(item.pubDate) : new Date(),

@@ -14,19 +14,27 @@ const PAGE_SIZE = 20;
 export async function getRumors(filters: RumorFilters = {}) {
   const { page = 1, sourceType, playerId, teamId } = filters;
 
-  const where: Record<string, unknown> = {};
+  const where: Record<string, unknown> = {
+    isTradeRelevant: true,
+  };
 
   if (sourceType) {
     where.sourceType = sourceType;
   }
 
-  if (playerId || teamId) {
-    where.entities = {
-      some: {
-        ...(playerId ? { playerId } : {}),
-        ...(teamId ? { teamId } : {}),
-      },
-    };
+  // Single entity filter: match rumors that have at least one matching entity.
+  // Only one of playerId or teamId is active at a time (client-enforced).
+  // Guarded here so combining them would still produce a valid "A AND B" query
+  // via separate `some` clauses, instead of the buggy "single entity matches both".
+  if (playerId && teamId) {
+    where.AND = [
+      { entities: { some: { playerId } } },
+      { entities: { some: { teamId } } },
+    ];
+  } else if (playerId) {
+    where.entities = { some: { playerId } };
+  } else if (teamId) {
+    where.entities = { some: { teamId } };
   }
 
   const [rumors, total] = await Promise.all([
@@ -117,7 +125,7 @@ export async function getBuzzScores(): Promise<{
     where: {
       entityType: "player",
       playerId: { not: null },
-      rumor: { publishedAt: { gte: sevenDaysAgo } },
+      rumor: { publishedAt: { gte: sevenDaysAgo }, isTradeRelevant: true },
     },
     _count: { id: true },
     orderBy: { _count: { id: "desc" } },
@@ -130,7 +138,7 @@ export async function getBuzzScores(): Promise<{
     where: {
       entityType: "team",
       teamId: { not: null },
-      rumor: { publishedAt: { gte: sevenDaysAgo } },
+      rumor: { publishedAt: { gte: sevenDaysAgo }, isTradeRelevant: true },
     },
     _count: { id: true },
     orderBy: { _count: { id: "desc" } },
