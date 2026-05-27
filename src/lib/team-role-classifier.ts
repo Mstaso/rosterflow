@@ -17,7 +17,11 @@
  */
 
 import type { DraftPick, Player, SelectedAsset, Team } from "~/types";
-import { computePlayerRating } from "~/lib/server-utils";
+import {
+  computePlayerRating,
+  isContender,
+  isRebuilding,
+} from "~/lib/server-utils";
 
 export type TeamRole =
   | "PRINCIPAL_SELLER"
@@ -46,22 +50,6 @@ const HEADLINER_PICK_VAL = 75;
 
 /** Facilitators must not receive a player above this rating. */
 export const FACILITATOR_MAX_INCOMING_RATING = 78;
-
-/** Rough contender / rebuilder classification — mirrors prompt outlook. */
-function teamWinPct(team: Team): number {
-  const r: any = (team as any).record;
-  if (!r) return 0.5;
-  if (typeof r === "string") {
-    const [w, l] = r.split("-").map(Number);
-    return (w ?? 0) / Math.max(1, (w ?? 0) + (l ?? 0));
-  }
-  if (typeof r.winPercentage === "number") return r.winPercentage;
-  const w = r.wins ?? 0;
-  const l = r.losses ?? 0;
-  return w / Math.max(1, w + l);
-}
-const isContender = (t: Team) => teamWinPct(t) >= 0.6;
-const isRebuilding = (t: Team) => teamWinPct(t) < 0.4;
 
 interface AssetValue {
   asset: SelectedAsset;

@@ -49,6 +49,19 @@ export const db = {
         orderBy: { fullName: "asc" },
       });
     },
+
+    async getAllWithRosters() {
+      if (!prisma) {
+        throw new Error("Database not available");
+      }
+      return prisma.team.findMany({
+        include: {
+          players: true,
+          draftPicks: true,
+        },
+        orderBy: { displayName: "asc" },
+      });
+    },
   },
 
   players: {
