@@ -11,7 +11,6 @@ import {
   getAssetsByTeam,
   getDestinationInfo,
   getRosterContext,
-  getStepienContext,
   getTeamOutlookContext,
   setupAdditionalTeamsForTrade,
   getCapTier,
@@ -26,6 +25,10 @@ import {
   FACILITATOR_MAX_INCOMING_RATING,
 } from "~/lib/team-role-classifier";
 import { refineTradeSalary } from "~/lib/trade-refinement";
+import {
+  formatSuggestedPackagesContext,
+  type FitPartner,
+} from "~/lib/target-asset-scorer";
 
 export const TRADE_SYSTEM_PROMPT =
   "You are an expert NBA trade analyst and salary cap specialist. Generate realistic trade scenarios that a real front office would consider — weigh team windows (contending vs rebuilding), player production (stats), age curves, and contract value. Use only the provided roster data. Respond with valid JSON only — no markdown, no explanations.";
@@ -38,6 +41,12 @@ export interface BuildPromptInput {
   selectedAssets: SelectedAsset[];
   teams: Team[];
   additionalTeams?: Team[] | null;
+  /**
+   * Pre-scored fit packages for auto-added partners. When present, rendered
+   * into the prompt as starter suggestions (not mandates) so the LLM anchors
+   * on the assets we selected the partner team for.
+   */
+  suggestedPackages?: FitPartner[] | null;
 }
 
 export interface BuildPromptResult {
@@ -56,7 +65,7 @@ export interface BuildPromptResult {
 export async function buildTradePrompt(
   input: BuildPromptInput
 ): Promise<BuildPromptResult> {
-  const { selectedAssets, teams, additionalTeams } = input;
+  const { selectedAssets, teams, additionalTeams, suggestedPackages } = input;
 
   const involvedTeams: Team[] = [...teams];
   let teamsAddedToTrade: Team[] = [];
@@ -73,7 +82,12 @@ export async function buildTradePrompt(
   const rosterContext = getRosterContext(involvedTeams, selectedAssets);
   const teamOutlookContext = getTeamOutlookContext(involvedTeams);
   const assetsDescription = getAssetsByTeam(selectedAssets, involvedTeams);
-  const stepienContext = getStepienContext(involvedTeams);
+  // Stepien-blocked own R1s are filtered out of getRosterContext directly,
+  // so the LLM never sees them and we don't need a "do not trade these" block.
+  const suggestedPackagesContext =
+    suggestedPackages && suggestedPackages.length > 0
+      ? formatSuggestedPackagesContext(suggestedPackages)
+      : "";
 
   // Minimal cap-tier tags — exact matching math is handled post-generation by
   // the refiner. We only surface SECOND_APRON because it's a structural (not
@@ -170,12 +184,12 @@ ${capTierTags}
 
 ROSTERS & PICKS (top players by rating, pick value 1-100):
 ${rosterContext}
-
+${suggestedPackagesContext ? `\n${suggestedPackagesContext}` : ""}
 SALARY MATCHING:
 - Rough salary balance is handled automatically after generation — small mismatches will be fixed by adding a filler player. Do not obsess over exact cap math.
 - Focus your attention on FIT and VALUE: who should acquire this player, what they realistically pay, which contracts make sense together.
 - Keep each team's outgoing salary roughly in the same order of magnitude as their incoming salary — don't pair a $40M star with a $2M minimum-contract return.${hasSecondApron ? "\n- SECOND_APRON teams (see TEAM CAP TIERS above) cannot aggregate salaries — they must do a one-for-one swap where incoming ≤ outgoing." : ""}
-${stepienContext}
+
 TRADE REALISM RULES:
 - Every asset received must be given by another team (balanced trades)
 - A player can only be traded to ONE team — never send the same player to multiple teams

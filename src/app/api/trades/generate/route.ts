@@ -10,6 +10,9 @@ import {
   TRADE_MAX_TOKENS,
 } from "~/lib/trade-generator";
 import { tradeGenerateLimiter, getClientIp } from "~/lib/rate-limit";
+import { pickFitPartners, type FitPartner } from "~/lib/target-asset-scorer";
+import { db } from "~/lib/db";
+import type { Player, Team } from "~/types";
 
 export const dynamic = "force-dynamic";
 
@@ -64,9 +67,47 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { prompt, system, manualTrade, teamsAddedToTrade, involvedTeams } =
-      await buildTradePrompt({ selectedAssets, teams, additionalTeams });
+    // Fit-based partner selection: when the user offered exactly one player
+    // from one team and didn't pick partners themselves, score the league for
+    // plausible target assets and use the owning teams as partners. This
+    // replaces the prior client-side Math.random() shuffle.
+    let resolvedAdditionalTeams: Team[] | null = additionalTeams ?? null;
+    let suggestedPackages: FitPartner[] | null = null;
+    const onlySingleAsset = selectedAssets.length === 1;
+    const onlySingleTeam = teams.length === 1;
+    const noClientPartners = !additionalTeams || additionalTeams.length === 0;
+    const offeredAsset = selectedAssets[0];
 
+    if (
+      onlySingleAsset &&
+      onlySingleTeam &&
+      noClientPartners &&
+      offeredAsset?.type === "player"
+    ) {
+      const sellerTeam = teams[0] as Team;
+      const offered = (sellerTeam.players ?? []).find(
+        (p: Player) => p.id === offeredAsset.id
+      );
+      if (offered) {
+        const allTeams = (await db.teams.getAllWithRosters()) as unknown as Team[];
+        const otherTeams = allTeams.filter((t) => t.id !== sellerTeam.id);
+        const partners = pickFitPartners(offered, sellerTeam, otherTeams);
+        if (partners.length > 0) {
+          resolvedAdditionalTeams = partners.map((p) => p.team);
+          suggestedPackages = partners;
+        }
+      }
+    }
+
+    const { prompt, system, manualTrade, teamsAddedToTrade, involvedTeams } =
+      await buildTradePrompt({
+        selectedAssets,
+        teams,
+        additionalTeams: resolvedAdditionalTeams,
+        suggestedPackages,
+      });
+
+      console.log("[generate] prompt:", prompt);
     // Stream the response using SSE
     const stream = anthropic.messages.stream({
       model: TRADE_MODEL,

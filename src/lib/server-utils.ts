@@ -212,7 +212,17 @@ export function getRosterContext(involvedTeams: Team[], selectedAssets?: Selecte
       .map((wr: { player: Player }) => getPlayerCompact(wr.player))
       .join("; ");
 
-    const picksFormatted = (team.draftPicks || [])
+    // Drop Stepien-blocked own R1s from the prompt so the LLM can't propose
+    // trading them. Acquired R1s (description starting with another team)
+    // are unaffected — those move freely.
+    const blockedYears = getOwnStepienBlockedYears(team);
+    const tradablePicks = (team.draftPicks || []).filter((pick: DraftPick) => {
+      if (pick.round !== 1) return true;
+      if (!blockedYears.has(pick.year)) return true;
+      if (!isOwnPick(pick)) return true;
+      return false;
+    });
+    const picksFormatted = tradablePicks
       .map((pick: DraftPick) => getPickCompact(pick))
       .join("; ");
 
@@ -221,47 +231,61 @@ export function getRosterContext(involvedTeams: Team[], selectedAssets?: Selecte
   return rosterContext;
 }
 
+/**
+ * True if a draft pick is the team's OWN future pick (vs one acquired from
+ * another team via a prior trade). Own picks are subject to the Stepien rule.
+ */
+export function isOwnPick(pick: DraftPick): boolean {
+  const desc = (pick.description ?? "").trim().toLowerCase();
+  return desc === "" || desc === "own" || desc.startsWith("own");
+}
+
+/**
+ * Years in which a team's OWN first-round pick is un-tradable under the
+ * Stepien rule (no consecutive future R1s). Returns only blocked years for
+ * picks the team actually still holds — acquired picks from other teams are
+ * unaffected.
+ */
+export function getOwnStepienBlockedYears(team: Team): Set<number> {
+  const blocked = new Set<number>();
+  const r1Picks = ((team as any).draftPicks || []).filter(
+    (p: DraftPick) => p.round === 1
+  );
+  const ownYears = new Set<number>();
+  for (const pick of r1Picks) {
+    if (isOwnPick(pick)) ownYears.add(pick.year);
+  }
+  for (let y = 2025; y <= 2031; y++) {
+    if (ownYears.has(y)) continue;
+    if (ownYears.has(y - 1)) blocked.add(y - 1);
+    if (ownYears.has(y + 1)) blocked.add(y + 1);
+  }
+  return blocked;
+}
+
 export function getStepienContext(involvedTeams: Team[]): string {
+  // Stepien-blocked picks are filtered out of getRosterContext so the LLM
+  // never sees them. This function is retained as a defense-in-depth backstop
+  // — if a pick slips through the filter, the warning still surfaces.
   const warnings: string[] = [];
 
   for (const team of involvedTeams) {
     const teamName = (team as any).displayName || (team as any).name;
-    const firstRoundPicks = ((team as any).draftPicks || []).filter(
-      (p: DraftPick) => p.round === 1
+    const blockedYears = getOwnStepienBlockedYears(team);
+    const r1Picks = ((team as any).draftPicks || []).filter(
+      (p: DraftPick) => p.round === 1 && isOwnPick(p)
     );
-
-    // Identify which first-round picks the team owns (vs acquired via trade)
-    // Picks with description "Own" or empty are the team's own picks
-    const ownPickYears = new Set<number>();
-
-    for (const pick of firstRoundPicks) {
-      const desc = (pick.description ?? "").trim();
-      if (desc === "" || desc.toLowerCase() === "own" || desc.toLowerCase().startsWith("own")) {
-        ownPickYears.add(pick.year);
-      }
-    }
-
-    // Check years 2025-2031: if team doesn't own their R1 in year Y,
-    // the adjacent years' R1 picks can't be traded (Stepien rule)
-    for (let y = 2025; y <= 2031; y++) {
-      if (!ownPickYears.has(y)) {
-        // This year's R1 is not owned — check adjacent years
-        if (ownPickYears.has(y - 1)) {
-          warnings.push(
-            `${teamName} cannot trade their ${y - 1} R1 pick (they do not control their ${y} R1)`
-          );
-        }
-        if (ownPickYears.has(y + 1)) {
-          warnings.push(
-            `${teamName} cannot trade their ${y + 1} R1 pick (they do not control their ${y} R1)`
-          );
-        }
-      }
+    const stillVisibleBlocked = r1Picks.filter((p: DraftPick) =>
+      blockedYears.has(p.year)
+    );
+    for (const pick of stillVisibleBlocked) {
+      warnings.push(
+        `${teamName} cannot trade their ${pick.year} R1 pick (Stepien — no consecutive future R1s)`
+      );
     }
   }
 
   if (warnings.length === 0) return "";
-  // Deduplicate warnings
   const unique = [...new Set(warnings)];
   return "\nSTEPIEN RULE (teams cannot trade first-round picks in consecutive years):\n" +
     unique.map(w => `- ${w}`).join("\n") + "\n";
@@ -291,6 +315,25 @@ export function getCapContext(involvedTeams: Team[]) {
 export type CapTier = "UNDER_CAP" | "OVER_CAP" | "FIRST_APRON" | "SECOND_APRON";
 
 export { MIN_SALARY_THRESHOLD };
+
+// --- Team orientation (contender vs rebuilder) ---
+// Shared across role classifier + target-asset scorer so thresholds stay in sync.
+
+export function teamWinPct(team: Team): number {
+  const r: any = (team as any).record;
+  if (!r) return 0.5;
+  if (typeof r === "string") {
+    const [w, l] = r.split("-").map(Number);
+    return (w ?? 0) / Math.max(1, (w ?? 0) + (l ?? 0));
+  }
+  if (typeof r.winPercentage === "number") return r.winPercentage;
+  const w = r.wins ?? 0;
+  const l = r.losses ?? 0;
+  return w / Math.max(1, w + l);
+}
+
+export const isContender = (t: Team) => teamWinPct(t) >= 0.6;
+export const isRebuilding = (t: Team) => teamWinPct(t) < 0.4;
 
 export function getCapTier(team: any): CapTier {
   if ((team.secondApronSpace || 0) < 0) return "SECOND_APRON";

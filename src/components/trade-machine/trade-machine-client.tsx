@@ -256,20 +256,14 @@ export default function TradeMachineClient({
       assets_count: selectedAssets.length,
     });
 
-    let randomTeamsForMockTrades: Team[] = [];
-
-    if (selectedTeams.length === 1) {
-      const copyOfNbaTeams = [...nbaTeams];
-      randomTeamsForMockTrades = copyOfNbaTeams
-        .sort(() => 0.5 - Math.random())
-        .slice(0, 2);
-    }
-
+    // Partner-team selection moved server-side: when the user offers a single
+    // player from a single team, the API scores the league for plausible
+    // trade partners and adds them automatically. Client always sends
+    // additionalTeams: null and lets the server decide.
     const tradePayload = {
       teams: selectedTeams,
       selectedAssets: selectedAssets,
-      additionalTeams:
-        randomTeamsForMockTrades.length > 0 ? randomTeamsForMockTrades : null,
+      additionalTeams: null,
     };
 
     try {
