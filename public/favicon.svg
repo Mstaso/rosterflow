@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 32" fill="none">
   <defs>
     <linearGradient id="indigoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="hsl(243, 75%, 65%)" />
-      <stop offset="100%" stop-color="hsl(243, 75%, 53%)" />
+      <stop offset="0%" stop-color="hsl(195, 55%, 65%)" />
+      <stop offset="100%" stop-color="hsl(195, 50%, 50%)" />
     </linearGradient>
   </defs>
   

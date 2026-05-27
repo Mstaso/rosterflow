@@ -565,12 +565,12 @@ export function SavedTradeDetail({
                 </div>
                 <div className="flex items-center gap-1 mt-4">
                   {trade.salaryValid ? (
-                    <div className="flex items-center gap-2 py-1.5 px-3 rounded-lg bg-surface-high border-l-2 border-primary text-primary">
+                    <div className="flex items-center gap-2 py-1.5 px-3 rounded-lg bg-primary/10 text-primary">
                       <CheckCircleIcon className="h-3.5 w-3.5" />
                       <span className="text-sm font-medium">Valid trade - Salary rules satisfied</span>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2 py-1.5 px-3 rounded-lg bg-surface-high border-l-2 border-orange-400 text-orange-400">
+                    <div className="flex items-center gap-2 py-1.5 px-3 rounded-lg bg-warning/10 text-warning">
                       <XCircleIcon className="h-3.5 w-3.5 shrink-0" />
                       <span className="text-sm font-medium">{salaryRationale}</span>
                     </div>

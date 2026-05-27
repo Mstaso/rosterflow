@@ -254,7 +254,7 @@ export default function TryTradePreview({
             <SnapshotButton onClick={capture} isCapturing={isCapturing} />
           </div>
           {isValid && (
-            <div className="flex items-center gap-2 py-2 px-3 rounded-lg bg-surface-high border-l-2 border-primary text-primary w-full md:w-auto justify-center md:justify-end">
+            <div className="flex items-center gap-2 py-2 px-3 rounded-lg bg-primary/10 text-primary w-full md:w-auto justify-center md:justify-end">
               <CheckCircle className="w-4 h-4 shrink-0" />
               <div className="text-sm font-medium">
                 Valid trade - Salary rules satisfied
@@ -627,7 +627,7 @@ export default function TryTradePreview({
         </div>
         {!isValid && (
           <div
-            className="flex items-center gap-2 py-3 px-4 rounded-lg bg-surface-high border-l-2 border-orange-400 text-orange-400
+            className="flex items-center gap-2 py-3 px-4 rounded-lg bg-warning/10 text-warning
           justify-center w-full md:w-fit md:mx-0 md:justify-start"
           >
             <AlertCircle className="w-4 h-4 shrink-0" />

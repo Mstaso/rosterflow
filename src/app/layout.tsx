@@ -94,7 +94,7 @@ export default function RootLayout({
           fontFamily: "Inter, system-ui, sans-serif",
           colorBackground: "hsl(218 50% 6%)",
           colorInputBackground: "hsl(220 41% 9%)",
-          colorPrimary: "hsl(230 80% 62%)",
+          colorPrimary: "hsl(195 50% 60%)",
           colorText: "hsl(225 50% 92%)",
           colorTextSecondary: "hsl(220 15% 55%)",
           colorDanger: "hsl(0 55% 45%)",
