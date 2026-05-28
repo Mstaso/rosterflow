@@ -56,8 +56,25 @@ In this system, light is the architect. We don't use structural boxes; we use to
 *   **Tertiary:** Transparent background, `primary` text. Use for low-priority navigation like "Back to Generator."
 
 ### Trade Cards & Player Lists
-*   **Prohibition on Dividers:** Never use horizontal lines to separate players in a list. Use `0.5rem` (Spacing 2.5) of vertical white space or a subtle background alternate (zebra striping) using `surface-container-low` and `surface-container`.
+*   **Prohibition on Dividers:** Never use horizontal lines to separate players in a list. Use `0.5rem` (Spacing 2.5) of vertical white space.
 *   **Player Avatars:** Should sit within `surface-container-highest` containers with `md` (0.75rem) rounded corners.
+
+### Standardized Trade-Result View Conventions
+
+The per-team card layout used in `trade-card.tsx`, `try-trade-preview.tsx`, and `saved-trade-detail.tsx` follows these patterns. Mirror them when extending.
+
+*   **CardHeader (team identity):** Asymmetric padding `pt-6 pb-4 px-5` on `bg-surface-container`. Logo 36px, name `text-lg font-semibold tracking-tight`. No subtitle row, no chip strip below the name — keep the masthead quiet.
+*   **Stats strip (Out / In / Delta):** `bg-surface-low`, three-column grid. Labels are editorial eyebrows: `font-supermolot text-[10px] tracking-[0.22em] text-on-surface-variant`. Values are `text-sm font-medium tabular-nums`. Delta tints `text-warning` (taking on cap) or `text-primary` (relief) with a leading `+`/`-` sign.
+*   **Data rows inside CardContent (`bg-surface-container`):** Player and pick rows go on `bg-surface-high` — *higher* elevation than the container they sit in (depth-up rule). `p-2.5 rounded-lg`. No double-rounded utility classes. Section labels use the same editorial eyebrow as the stats strip; one word ("Players" / "Picks") — direction is carried by the parent tab.
+*   **Player row internals:** Position/age sit inline next to the name (not pushed to the right of the row). Salary, years, and "from/to" team abbreviation merge onto one editorial line with `·` separators. Avatar bumped to 44px (`w-11 h-11`) inside the `surface-highest` ring.
+*   **Updated Cap Position table:** No zebra striping, no borders, no `<table>`. Single contained `<dl>` on `bg-surface-high`, rows separated by `space-y-2` whitespace alone. Each row is a `flex justify-between` with `dt` (on-surface-variant) and `dd` (font-medium tabular-nums).
+
+### Navigation
+
+*   **Masthead, not breadcrumb:** Page-level qualifiers (a `subtitle` prop on the navbar) stack *under* the wordmark in editorial type, never separated by a slash divider. The slash + uppercase breadcrumb is a dev-tool pattern (Vercel, GitHub) and reads wrong on a sports product.
+*   **Editorial labels over icons:** Desktop nav uses text-only labels in `font-supermolot text-[11px] tracking-[0.22em]`. Mobile flyout may keep icons for touch affordance; desktop reads like a magazine masthead.
+*   **Active link indicator:** 2px primary underline pinned to the nav baseline (`absolute inset-x-0 bottom-0 h-[2px] bg-primary`). Not a pill, not a `bg-surface-high` fill. Tab-style underline is the editorial convention; the side-stripe and pill patterns are banned.
+*   **Signed-out auth affordance:** Always labeled ("Sign In" in the editorial type), never an anonymous icon-only button.
 
 ### Status Chips (Trade Validation)
 *   **The Success Bar:** For a valid trade, use a container of `surface-container-high` with a 2px left-accent border of `primary`. Do not fill the entire bar with bright green; keep it sophisticated.

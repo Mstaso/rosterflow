@@ -1,10 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Badge } from "~/components/ui/badge";
 import { Skeleton } from "~/components/ui/skeleton";
-import { XIcon } from "lucide-react";
-import { Button } from "~/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetDescription,
+} from "~/components/ui/sheet";
 import Image from "next/image";
 import type { Player } from "~/types";
 
@@ -13,6 +16,7 @@ interface PlayerStatsModalProps {
   espnId?: number;
   isOpen: boolean;
   onClose: () => void;
+  /** Optional override; otherwise derived from fetched athlete team. */
   teamColor?: string;
   teamAltColor?: string;
 }
@@ -38,7 +42,33 @@ type AthleteInfo = {
   position?: string;
   teamColor?: string;
   teamAltColor?: string;
+  teamAbbreviation?: string;
+  teamDisplayName?: string;
 };
+
+const DEFAULT_VISIBLE_SEASONS = 5;
+
+// Minimal shape of the ESPN stats-categories payload. The endpoint returns
+// more fields; we narrow to what the table needs so the `any` escape hatch
+// goes away and so an upstream rename surfaces at compile time.
+type EspnStatsCategory = {
+  sortKey: string;
+  labels?: string[];
+  displayNames?: string[];
+  totals?: string[];
+  statistics?: Array<{
+    season?: { displayName?: string };
+    teamSlug?: string;
+    stats?: string[];
+  }>;
+};
+
+// Brand-aligned default header tint when ESPN doesn't surface team colors
+// or the player passed in doesn't carry them. Derived from the project's
+// `--primary` (teal) and a deeper companion to keep the gradient on-brand
+// rather than reaching for the legacy pre-pivot indigo.
+const DEFAULT_PRIMARY_HEX = "1e556c";
+const DEFAULT_SECONDARY_HEX = "0d2a3a";
 
 export function PlayerStatsModal({
   player,
@@ -52,16 +82,19 @@ export function PlayerStatsModal({
   const [athleteInfo, setAthleteInfo] = useState<AthleteInfo | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showAllSeasons, setShowAllSeasons] = useState(false);
 
-  // Determine team colors with fallbacks (props > fetched > defaults)
-  const primaryColor = teamColor || athleteInfo?.teamColor || "6366f1";
-  const secondaryColor = teamAltColor || athleteInfo?.teamAltColor || "1e1b4b";
+  const primaryColor =
+    teamColor || athleteInfo?.teamColor || DEFAULT_PRIMARY_HEX;
+  const secondaryColor =
+    teamAltColor || athleteInfo?.teamAltColor || DEFAULT_SECONDARY_HEX;
 
   useEffect(() => {
     if (!isOpen) {
       setPerGameStats(null);
       setAthleteInfo(null);
       setError(null);
+      setShowAllSeasons(false);
       return;
     }
 
@@ -75,28 +108,29 @@ export function PlayerStatsModal({
       setError(null);
 
       try {
-        // Fetch both stats and athlete info in parallel
         const [statsResponse, athleteResponse] = await Promise.all([
           fetch(`/api/espn/athlete/${espnId}`),
-          fetch(`https://site.api.espn.com/apis/common/v3/sports/basketball/nba/athletes/${espnId}`),
+          fetch(
+            `https://site.api.espn.com/apis/common/v3/sports/basketball/nba/athletes/${espnId}`
+          ),
         ]);
 
-        // Process stats
         if (statsResponse.ok) {
           const result = await statsResponse.json();
 
           if (result.success && result.data?.categories) {
-            const averagesCategory = result.data.categories.find(
-              (cat: any) => cat.sortKey === "averages"
-            );
+            const averagesCategory = (
+              result.data.categories as EspnStatsCategory[]
+            ).find((cat) => cat.sortKey === "averages");
 
             if (averagesCategory) {
-              const labels: string[] = averagesCategory.labels || averagesCategory.displayNames || [];
+              const labels: string[] =
+                averagesCategory.labels || averagesCategory.displayNames || [];
 
               const seasons: SeasonStats[] = [];
-              if (averagesCategory.statistics && Array.isArray(averagesCategory.statistics)) {
+              if (Array.isArray(averagesCategory.statistics)) {
                 for (const seasonData of averagesCategory.statistics) {
-                  if (seasonData?.stats && Array.isArray(seasonData.stats)) {
+                  if (Array.isArray(seasonData?.stats)) {
                     seasons.push({
                       season: seasonData.season?.displayName || "",
                       teamSlug: seasonData.teamSlug || "",
@@ -120,15 +154,12 @@ export function PlayerStatsModal({
           }
         }
 
-        // Process athlete info (height, weight, jersey, team colors)
         if (athleteResponse.ok) {
           const athleteData = await athleteResponse.json();
           const athlete = athleteData.athlete;
 
           if (athlete) {
-            // Try to get team colors from athlete's team
             const athleteTeam = athlete.team;
-
             setAthleteInfo({
               displayHeight: athlete.displayHeight || "",
               displayWeight: athlete.displayWeight || "",
@@ -137,6 +168,8 @@ export function PlayerStatsModal({
               position: athlete.position?.abbreviation || "",
               teamColor: athleteTeam?.color || "",
               teamAltColor: athleteTeam?.alternateColor || "",
+              teamAbbreviation: athleteTeam?.abbreviation || "",
+              teamDisplayName: athleteTeam?.displayName || athleteTeam?.name || "",
             });
           }
         }
@@ -151,225 +184,331 @@ export function PlayerStatsModal({
     fetchPlayerData();
   }, [isOpen, espnId]);
 
-  // Get key stats for the header (current season)
+  // Read a single stat value from the current season row, used by the
+  // inline editorial summary line. Returns null when the label isn't
+  // present so the summary can skip missing fields gracefully.
   const getStatValue = (label: string) => {
     if (!perGameStats || perGameStats.seasons.length === 0) return null;
     const index = perGameStats.labels.indexOf(label);
     if (index === -1) return null;
     const currentSeason = perGameStats.seasons[perGameStats.seasons.length - 1];
-    if (!currentSeason) return null;
-    return currentSeason.stats[index] || null;
+    return currentSeason?.stats[index] || null;
   };
 
-  const keyStats = [
-    { label: "PTS", value: getStatValue("PTS") },
-    { label: "REB", value: getStatValue("REB") },
-    { label: "AST", value: getStatValue("AST") },
-    { label: "FG%", value: getStatValue("FG%") },
-  ].filter(s => s.value !== null);
+  const pts = getStatValue("PTS");
+  const reb = getStatValue("REB");
+  const ast = getStatValue("AST");
+  const fgp = getStatValue("FG%");
+  const gp = getStatValue("GP");
 
-  // Don't render anything if not open
-  if (!isOpen) return null;
+  // Editorial one-liner under the player name. Reads like a sentence
+  // rather than a hero-metric grid, which keeps the modal off the
+  // banned SaaS-cliché template and lets the dense Season History table
+  // below carry the real signal.
+  const buildSummaryLine = () => {
+    const parts: string[] = [];
+    if (pts) parts.push(`${pts} pts`);
+    if (reb) parts.push(`${reb} reb`);
+    if (ast) parts.push(`${ast} ast`);
+    if (fgp) parts.push(`${fgp}% FG`);
+    if (gp) parts.push(`${gp} games`);
+    return parts.join(" · ");
+  };
+
+  const summaryLine = perGameStats ? buildSummaryLine() : "";
+
+  const displayName =
+    player?.displayName ||
+    [player?.firstName, player?.lastName].filter(Boolean).join(" ") ||
+    "Player";
+
+  const position = athleteInfo?.position || player?.position?.abbreviation;
+  const height = athleteInfo?.displayHeight || player?.displayHeight;
+  const weight = athleteInfo?.displayWeight || player?.displayWeight;
+  const jersey = athleteInfo?.jersey || player?.jersey;
+  const hasAge = !!player?.age && player.age > 0;
+  const headshotSrc = athleteInfo?.headshot || player?.headshot?.href;
+  const teamAbbr = athleteInfo?.teamAbbreviation?.toLowerCase();
+  const teamLogoSrc = teamAbbr
+    ? `https://a.espncdn.com/i/teamlogos/nba/500/${teamAbbr}.png`
+    : null;
+
+  // Cap the visible season rows so the table doesn't dominate the panel
+  // with 12+ years of history. Career row always shows. "Show all" toggle
+  // appears below the table when there are more seasons hidden.
+  const allSeasons = perGameStats
+    ? [...perGameStats.seasons].reverse()
+    : [];
+  const visibleSeasons = showAllSeasons
+    ? allSeasons
+    : allSeasons.slice(0, DEFAULT_VISIBLE_SEASONS);
+  const hiddenSeasonsCount = allSeasons.length - visibleSeasons.length;
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-[100] bg-black/80 animate-in fade-in-0"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div className="fixed left-[50%] top-[50%] z-[101] w-full max-w-2xl translate-x-[-50%] translate-y-[-50%] animate-in fade-in-0 zoom-in-95 px-4">
-        <div className="bg-surface-low glass ghost-border rounded-xl shadow-ambient overflow-hidden">
-          {/* Header with team colors */}
-          <div
-            className="relative"
-            style={{
-              background: `linear-gradient(135deg, #${primaryColor} 0%, #${secondaryColor} 100%)`,
-            }}
-          >
-            <div className="absolute inset-0 bg-black/20" />
-
-            {/* Close button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-3 right-3 z-10 h-8 w-8 rounded-full bg-black/20 hover:bg-black/40 text-white"
-              onClick={onClose}
-            >
-              <XIcon className="h-4 w-4" />
-            </Button>
-
-            <div className="relative px-5 pt-5 pb-4">
-              <div className="flex items-center gap-4">
-                {/* Player headshot */}
-                <div className="relative flex-shrink-0">
-                  {(athleteInfo?.headshot || player?.headshot?.href) ? (
-                    <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-white/30 bg-white/10 shadow-lg">
-                      <Image
-                        src={athleteInfo?.headshot || player?.headshot?.href || ""}
-                        alt={player?.displayName || "Player"}
-                        width={80}
-                        height={80}
-                        className="object-cover w-full h-full"
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center border-2 border-white/30">
-                      <span className="text-2xl font-bold text-white/80">
-                        {player?.firstName?.[0]}{player?.lastName?.[0]}
-                      </span>
-                    </div>
-                  )}
-                  {/* Jersey number badge */}
-                  {(athleteInfo?.jersey || player?.jersey) && (
-                    <div className="absolute -bottom-1 -right-1 bg-white text-black font-bold text-xs w-7 h-7 rounded-full flex items-center justify-center shadow-md">
-                      #{athleteInfo?.jersey || player?.jersey}
-                    </div>
-                  )}
-                </div>
-
-                {/* Player info */}
-                <div className="flex-1 min-w-0 text-white">
-                  <h2 className="text-xl font-bold truncate">
-                    {player?.displayName}
-                  </h2>
-                  <div className="flex items-center gap-2 mt-1 text-sm text-white/80 flex-wrap">
-                    <Badge className="bg-white/20 text-white border-0 text-xs px-2 py-0">
-                      {athleteInfo?.position || player?.position?.abbreviation}
-                    </Badge>
-                    {player?.age && (
-                      <span>Age: {player.age}</span>
-                    )}
-                    {(athleteInfo?.displayHeight || player?.displayHeight) && (
-                      <>
-                        <span className="text-white/40">·</span>
-                        <span>{athleteInfo?.displayHeight || player?.displayHeight}</span>
-                      </>
-                    )}
-                    {(athleteInfo?.displayWeight || player?.displayWeight) && (
-                      <>
-                        <span className="text-white/40">·</span>
-                        <span>{athleteInfo?.displayWeight || player?.displayWeight}</span>
-                      </>
-                    )}
-                  </div>
-                  {player?.contract && (
-                    <div className="flex items-center gap-1.5 mt-1.5 text-sm text-white/90 font-medium">
-                      <span>${(player.contract.salary / 1000000).toFixed(1)}M</span>
-                      <span className="text-white/40">·</span>
-                      <span>{player.contract.yearsRemaining} {player.contract.yearsRemaining === 1 ? "yr" : "yrs"} remaining</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Current Season Stats Banner */}
-          {perGameStats && keyStats.length > 0 && (
-            <div className="px-5 py-3 bg-surface-container">
-              <div className="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider mb-2">
-                {perGameStats.currentSeasonYear} Per Game
-              </div>
-              <div className="flex justify-between items-end">
-                {keyStats.map(({ label, value }) => (
-                  <div key={label} className="text-center flex-1">
-                    <div className="text-[10px] text-on-surface-variant uppercase mb-0.5">{label}</div>
-                    <div className="text-2xl font-bold text-foreground">{value}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
+    <Sheet
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <SheetContent
+        side="right"
+        // z-[110] sits above the navbar (z-100). Without this override
+        // the Sheet's z-50 base sits under the navbar and the player
+        // name h2 is occluded by the COMMUNITY TRADES masthead.
+        className="z-[110] w-full sm:max-w-2xl bg-surface-low border-l border-outline-variant/15 p-0 overflow-y-auto motion-reduce:transition-none"
+      >
+        {/* Header band — team-color gradient as identity wash. The team
+            colors are muted by mixing 55% team color with a deep
+            surface-dark so the band reads as branded backdrop rather
+            than a saturated billboard. The team logo lives as a large
+            translucent watermark in the bottom-right corner of the band,
+            giving instant team recognition without competing with the
+            player name or headshot. */}
+        <div
+          className="relative overflow-hidden px-5 pt-6 pb-5"
+          style={{
+            background: `linear-gradient(135deg, color-mix(in srgb, #${primaryColor} 55%, #0a0f18) 0%, color-mix(in srgb, #${secondaryColor} 55%, #0a0f18) 100%)`,
+          }}
+        >
+          {teamLogoSrc && (
+            <Image
+              src={teamLogoSrc}
+              alt=""
+              width={180}
+              height={180}
+              aria-hidden
+              className="absolute -right-6 -bottom-8 w-44 h-44 opacity-15 pointer-events-none select-none"
+            />
           )}
 
-          {/* Stats table */}
-          <div className="max-h-[35vh] overflow-y-auto">
-            {isLoading ? (
-              <div className="p-4 space-y-3">
-                <Skeleton className="h-8 w-32" />
-                <Skeleton className="h-32 w-full" />
-              </div>
-            ) : error || !espnId ? (
-              <div className="text-center py-8 text-on-surface-variant">
-                <p className="text-sm">{error || "Stats not available"}</p>
-              </div>
-            ) : !perGameStats || perGameStats.seasons.length === 0 ? (
-              <div className="text-center py-8 text-on-surface-variant">
-                <p className="text-sm">No stats available</p>
-              </div>
-            ) : (
-              <div className="p-4 pb-6">
-                <h3 className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">
-                  Season History
-                </h3>
-
-                <div className="rounded-lg overflow-hidden">
-                  <div className="overflow-x-auto max-h-[28vh] overflow-y-auto">
-                    <table className="w-full text-xs">
-                      <thead className="sticky top-0 z-10">
-                        <tr className="bg-surface-high border-b border-outline-variant/15">
-                          <th className="px-2.5 py-1.5 text-left text-[10px] font-semibold text-on-surface-variant sticky left-0 bg-surface-high">
-                            Season
-                          </th>
-                          {perGameStats.labels.map((label, i) => (
-                            <th
-                              key={i}
-                              className="px-1.5 py-1.5 text-[10px] font-semibold text-on-surface-variant text-center whitespace-nowrap bg-surface-high"
-                            >
-                              {label}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {[...perGameStats.seasons].reverse().map((season, idx) => (
-                          <tr
-                            key={idx}
-                            className={`border-b border-outline-variant/15 last:border-b-0 ${
-                              idx === 0 ? "bg-surface-high font-medium" : "hover:bg-surface-high/20"
-                            }`}
-                          >
-                            <td className={`px-2.5 py-1.5 text-[11px] whitespace-nowrap sticky left-0 ${
-                              idx === 0 ? "bg-surface-high" : "bg-background"
-                            }`}>
-                              {season.season}
-                            </td>
-                            {season.stats.map((value, i) => (
-                              <td
-                                key={i}
-                                className="px-1.5 py-1.5 text-center whitespace-nowrap"
-                              >
-                                {value}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                        {perGameStats.careerTotals.length > 0 && (
-                          <tr className="bg-surface-high font-semibold border-t-2 border-outline-variant/15">
-                            <td className="px-2.5 py-1.5 text-[11px] whitespace-nowrap sticky left-0 bg-surface-high">
-                              Career
-                            </td>
-                            {perGameStats.careerTotals.map((value, i) => (
-                              <td
-                                key={i}
-                                className="px-1.5 py-1.5 text-center whitespace-nowrap"
-                              >
-                                {value}
-                              </td>
-                            ))}
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
+          <div className="relative flex items-center gap-4">
+            <div className="relative flex-shrink-0">
+              {headshotSrc ? (
+                <div className="w-20 h-20 rounded-full overflow-hidden bg-surface-container">
+                  <Image
+                    src={headshotSrc}
+                    alt=""
+                    width={80}
+                    height={80}
+                    className="object-cover w-full h-full"
+                  />
                 </div>
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-surface-container flex items-center justify-center">
+                  <span className="text-2xl font-semibold text-on-surface">
+                    {player?.firstName?.[0]}
+                    {player?.lastName?.[0]}
+                  </span>
+                </div>
+              )}
+              {jersey && (
+                <div className="absolute -bottom-1 -right-1 bg-surface text-on-surface font-semibold text-xs w-7 h-7 rounded-full flex items-center justify-center">
+                  #{jersey}
+                </div>
+              )}
+            </div>
+
+            <div className="flex-1 min-w-0 text-on-surface">
+              <SheetTitle className="text-xl font-bold tracking-tight truncate text-on-surface">
+                {displayName}
+              </SheetTitle>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 font-supermolot text-[10px] tracking-[0.22em] text-on-surface/80">
+                {position && <span>{position}</span>}
+                {hasAge && (
+                  <>
+                    <span className="text-on-surface/40" aria-hidden>·</span>
+                    <span>AGE {player.age}</span>
+                  </>
+                )}
+                {height && (
+                  <>
+                    <span className="text-on-surface/40" aria-hidden>·</span>
+                    <span>{height}</span>
+                  </>
+                )}
+                {weight && (
+                  <>
+                    <span className="text-on-surface/40" aria-hidden>·</span>
+                    <span>{weight}</span>
+                  </>
+                )}
               </div>
-            )}
+              {player?.contract && (
+                <div className="flex items-center gap-1.5 mt-1.5 text-sm text-on-surface/90 tabular-nums">
+                  <span className="font-medium">
+                    ${(player.contract.salary / 1000000).toFixed(1)}M
+                  </span>
+                  <span className="text-on-surface/40" aria-hidden>·</span>
+                  <span>
+                    {player.contract.yearsRemaining}{" "}
+                    {player.contract.yearsRemaining === 1 ? "yr" : "yrs"}{" "}
+                    remaining
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </>
+
+        {/* Hidden SheetDescription is always rendered to satisfy Radix's
+            aria-describedby requirement; the visible per-game line is
+            shown when stats are loaded. */}
+        <SheetDescription className="sr-only">
+          Career stats and per-game averages for {displayName}.
+        </SheetDescription>
+
+        {/* Editorial per-game summary. Bumped to display scale so the
+            current-season line reads as the headline number — still
+            sentence-shaped (off the banned hero-metric grid template),
+            but large enough to be the modal's anchor stat block. */}
+        {summaryLine && perGameStats?.currentSeasonYear && (
+          <div className="px-5 py-4 bg-surface-container">
+            <div className="font-supermolot text-[10px] tracking-[0.22em] text-on-surface-variant mb-2">
+              {perGameStats.currentSeasonYear} · PER GAME
+            </div>
+            <div className="text-lg sm:text-xl font-semibold tracking-tight text-foreground tabular-nums leading-snug">
+              {summaryLine}
+            </div>
+          </div>
+        )}
+
+        {/* Stats body */}
+        <div className="px-5 pt-5 pb-6">
+          {isLoading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-32 mb-3" />
+              {[0, 1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-6 w-full" />
+              ))}
+            </div>
+          ) : error || !espnId ? (
+            <div className="text-center py-8 text-on-surface-variant">
+              <p className="text-sm">{error || "Stats not available"}</p>
+            </div>
+          ) : !perGameStats || perGameStats.seasons.length === 0 ? (
+            <div className="text-center py-8 text-on-surface-variant">
+              <p className="text-sm">No stats available</p>
+            </div>
+          ) : (
+            <>
+              <h3 className="font-supermolot text-[10px] tracking-[0.22em] text-on-surface-variant mb-3">
+                SEASON HISTORY
+              </h3>
+
+              {/* Sticky Season column. The sticky <td>/<th> get an
+                  explicit opaque background plus a right-edge shadow so
+                  scrolling stat cells disappear cleanly behind the
+                  column instead of bleeding through. The outer
+                  overflow-hidden traps any horizontal scroll inside the
+                  ring; without it the -mx-5 px-5 pattern leaks columns
+                  to the left of the sticky cell. */}
+              <div className="overflow-hidden rounded-md">
+                <div className="overflow-x-auto">
+                <table className="w-full text-xs tabular-nums border-separate border-spacing-0">
+                  <thead className="sticky top-0 z-10">
+                    <tr>
+                      <th
+                        scope="col"
+                        className="px-2.5 py-2 text-left font-supermolot text-[10px] tracking-[0.22em] text-on-surface-variant sticky left-0 z-20 bg-surface-high shadow-[4px_0_8px_-4px_rgba(0,0,0,0.55)]"
+                      >
+                        Season
+                      </th>
+                      {perGameStats.labels.map((label, i) => (
+                        <th
+                          key={i}
+                          scope="col"
+                          className="px-1.5 py-2 font-supermolot text-[10px] tracking-[0.22em] text-on-surface-variant text-center whitespace-nowrap bg-surface-high"
+                        >
+                          {label}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {visibleSeasons.map((season, idx) => {
+                      const isCurrent = idx === 0;
+                      const rowBg = isCurrent ? "bg-surface-high" : "bg-surface-low";
+                      return (
+                        <tr
+                          key={idx}
+                          className={isCurrent ? "font-medium" : ""}
+                        >
+                          <td
+                            className={`px-2.5 py-1.5 text-[11px] whitespace-nowrap sticky left-0 z-10 ${rowBg} shadow-[4px_0_8px_-4px_rgba(0,0,0,0.55)]`}
+                          >
+                            {season.season}
+                          </td>
+                          {season.stats.map((value, i) => (
+                            <td
+                              key={i}
+                              className={`px-1.5 py-1.5 text-center whitespace-nowrap ${rowBg}`}
+                            >
+                              {value}
+                            </td>
+                          ))}
+                        </tr>
+                      );
+                    })}
+                    {perGameStats.careerTotals.length > 0 && (
+                      <tr className="font-semibold">
+                        <td className="px-2.5 py-1.5 text-[11px] whitespace-nowrap sticky left-0 z-10 bg-surface-high shadow-[4px_0_8px_-4px_rgba(0,0,0,0.55)]">
+                          Career
+                        </td>
+                        {perGameStats.careerTotals.map((value, i) => (
+                          <td
+                            key={i}
+                            className="px-1.5 py-1.5 text-center whitespace-nowrap bg-surface-high"
+                          >
+                            {value}
+                          </td>
+                        ))}
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+                </div>
+              </div>
+
+              {hiddenSeasonsCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllSeasons(true)}
+                  className="mt-3 font-supermolot text-[11px] tracking-[0.22em] text-primary hover:underline"
+                >
+                  SHOW ALL {allSeasons.length} SEASONS
+                </button>
+              )}
+              {showAllSeasons && allSeasons.length > DEFAULT_VISIBLE_SEASONS && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllSeasons(false)}
+                  className="mt-3 font-supermolot text-[11px] tracking-[0.22em] text-on-surface-variant hover:text-foreground"
+                >
+                  SHOW RECENT {DEFAULT_VISIBLE_SEASONS}
+                </button>
+              )}
+
+              {/* ESPN attribution. The data isn't ours; the footer link
+                  is the honest source-of-truth pointer Alex expects and
+                  the H10 affordance the prior critique flagged missing. */}
+              {espnId && (
+                <div className="mt-4 pt-3 border-t border-outline-variant/15 flex items-center justify-between text-[11px] text-on-surface-variant">
+                  <span>Stats via ESPN</span>
+                  <a
+                    href={`https://www.espn.com/nba/player/_/id/${espnId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-supermolot tracking-[0.22em] text-primary hover:underline"
+                  >
+                    VIEW ON ESPN ↗
+                  </a>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

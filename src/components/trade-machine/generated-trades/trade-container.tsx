@@ -45,48 +45,56 @@ export default function TradeContainer({
             <Button
               onClick={onBack}
               variant="ghost"
-              className="text-on-surface-variant p-0 h-auto hover:text-white hover:bg-transparent justify-start sm:justify-center"
+              className="text-on-surface-variant p-0 h-auto hover:text-foreground hover:bg-transparent justify-start sm:justify-center"
             >
-              <Undo2 className="h-4 w-4 text-indigoMain" />
+              <Undo2 className="h-4 w-4 text-primary" />
               Back to Trade Generator
             </Button>
           )}
 
           {!hasTrades && isStreaming && (
-            <div className="flex items-center gap-2 py-2 px-3 rounded-lg text-on-surface-variant">
-              <Loader2 className="w-4 h-4 animate-spin text-indigoMain" />
-              <span className="text-sm">Generating trade scenarios...</span>
+            <div className="flex items-center gap-2.5 text-on-surface-variant">
+              <Loader2 className="w-4 h-4 animate-spin text-primary" />
+              <p className="font-supermolot text-[11px] tracking-[0.22em]">
+                Generating Scenarios
+              </p>
             </div>
           )}
 
           {hasTrades && (
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setCurrentTradeIndex((i) => Math.max(i - 1, 0))}
                 disabled={currentTradeIndex === 0}
-                className="h-9 w-9 text-on-surface-variant hover:text-white hover:bg-surface-high disabled:opacity-30"
+                aria-label="Previous scenario"
+                className="h-9 w-9 text-on-surface-variant hover:text-foreground hover:bg-surface-high disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronLeft className="h-5 w-5" />
               </Button>
 
-              <div className="flex items-center gap-2 px-2">
+              {/* Segmented progress — one bar per scenario, active bar widens
+                  and tints primary. Replaces the previous dot indicators for
+                  a more editorial "chapter marker" feel. */}
+              <div className="flex items-center gap-1.5 px-1">
                 {tradesData.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentTradeIndex(index)}
-                    className={`h-2.5 rounded-full transition-all duration-300 ${
+                    aria-label={`View scenario ${index + 1}`}
+                    aria-current={index === currentTradeIndex ? "true" : undefined}
+                    className={`h-1 rounded-full transition-all duration-300 ${
                       index === currentTradeIndex
-                        ? "w-7 bg-indigoMain"
-                        : "w-2.5 bg-on-surface-variant/30 hover:bg-on-surface-variant/50"
+                        ? "w-8 bg-primary"
+                        : "w-5 bg-on-surface-variant/25 hover:bg-on-surface-variant/50"
                     }`}
                   />
                 ))}
                 {isStreaming && (
-                  <span className="relative flex h-2.5 w-2.5 ml-0.5">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigoMain opacity-75" />
-                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-indigoMain/50" />
+                  <span className="relative inline-flex h-1.5 w-1.5 ml-1">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary/60" />
                   </span>
                 )}
               </div>
@@ -100,13 +108,15 @@ export default function TradeContainer({
                   )
                 }
                 disabled={currentTradeIndex === tradesData.length - 1}
-                className="h-9 w-9 text-on-surface-variant hover:text-white hover:bg-surface-high disabled:opacity-30"
+                aria-label="Next scenario"
+                className="h-9 w-9 text-on-surface-variant hover:text-foreground hover:bg-surface-high disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronRight className="h-5 w-5" />
               </Button>
 
-              <span className="text-xs text-on-surface-variant ml-1 tabular-nums">
-                {currentTradeIndex + 1}/{tradesData.length}
+              <span className="ml-1 font-supermolot text-[11px] tracking-[0.22em] text-on-surface-variant tabular-nums">
+                {String(currentTradeIndex + 1).padStart(2, "0")} /{" "}
+                {String(tradesData.length).padStart(2, "0")}
                 {isStreaming && "+"}
               </span>
             </div>
@@ -119,6 +129,8 @@ export default function TradeContainer({
             trade={tradesData[currentTradeIndex]!}
             involvedTeams={involvedTeams}
             onEditTrade={onEditTrade}
+            scenarioIndex={currentTradeIndex}
+            scenarioCount={tradesData.length}
           />
         ) : isStreaming ? (
           <TradeCardSkeleton />

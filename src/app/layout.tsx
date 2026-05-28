@@ -2,8 +2,7 @@ import "~/styles/globals.css";
 import { ThemeProvider } from "~/components/theme-provider";
 import { PostHogProvider } from "~/components/posthog-provider";
 import { Toaster } from "sonner";
-import { Inter } from "next/font/google";
-import { Exo_2 } from "next/font/google";
+import { Space_Grotesk } from "next/font/google";
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
@@ -11,11 +10,9 @@ import { WebsiteJsonLd, OrganizationJsonLd } from "~/components/seo/json-ld";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
-const inter = Inter({ subsets: ["latin"] });
-const logo = Exo_2({
+const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
-  weight: ["700", "800"],
-  style: ["italic", "normal"],
+  weight: ["300", "400", "500", "600", "700"],
   variable: "--font-logo",
 });
 
@@ -91,10 +88,10 @@ export default function RootLayout({
       appearance={{
         baseTheme: dark,
         variables: {
-          fontFamily: "Inter, system-ui, sans-serif",
+          fontFamily: "var(--font-logo), system-ui, sans-serif",
           colorBackground: "hsl(218 50% 6%)",
           colorInputBackground: "hsl(220 41% 9%)",
-          colorPrimary: "hsl(230 80% 62%)",
+          colorPrimary: "hsl(195 50% 60%)",
           colorText: "hsl(225 50% 92%)",
           colorTextSecondary: "hsl(220 15% 55%)",
           colorDanger: "hsl(0 55% 45%)",
@@ -128,7 +125,7 @@ export default function RootLayout({
           <WebsiteJsonLd />
           <OrganizationJsonLd />
         </head>
-        <body className={`${inter.className} ${logo.variable}`}>
+        <body className={`${spaceGrotesk.className} ${spaceGrotesk.variable}`}>
           <ThemeProvider
             attribute="class"
             defaultTheme="dark"

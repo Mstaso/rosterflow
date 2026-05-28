@@ -5,6 +5,12 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "~/components/ui/tabs";
 import { TeamSelectDropdown } from "../trade-machine/team-select-dropdown";
 import { TeamCard } from "../trade-machine/team-card";
 import { Button } from "~/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "~/components/ui/tooltip";
 import { LightbulbIcon, UsersIcon, PlayIcon } from "lucide-react";
 import type { SelectedAsset, Team, TradeInfo, TradeScenario } from "~/types";
 import { toast } from "sonner";
@@ -502,31 +508,55 @@ export default function TradeMachineClient({
                 <span>View Generated Trades ({generatedTrades.length})</span>
               </Button>
             )}
-            <Button
-              disabled={!isTryTradeEnabled}
-              onClick={() => {
-                posthog?.capture("trade_tried", {
-                  teams_count: selectedTeams.length,
-                  teams: selectedTeams.map((t) => t.displayName),
-                  assets_count: selectedAssets.length,
-                });
-                setShowTryTradePreview(true);
-              }}
-              variant="success"
-              className="w-full sm:w-auto"
-            >
-              <PlayIcon className="h-4 w-4" strokeWidth={1.5} />
-              <span>Try Trade</span>
-            </Button>
-            <Button
-              disabled={!isTradeButtonActive}
-              onClick={handleGenerateTrade}
-              variant="indigo"
-              className="w-full sm:w-auto"
-            >
-              <LightbulbIcon className="h-4 w-4" strokeWidth={1.5} />
-              <span>Generate Trades</span>
-            </Button>
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span tabIndex={isTryTradeEnabled ? -1 : 0} className="w-full sm:w-auto">
+                    <Button
+                      disabled={!isTryTradeEnabled}
+                      onClick={() => {
+                        posthog?.capture("trade_tried", {
+                          teams_count: selectedTeams.length,
+                          teams: selectedTeams.map((t) => t.displayName),
+                          assets_count: selectedAssets.length,
+                        });
+                        setShowTryTradePreview(true);
+                      }}
+                      variant="success"
+                      className="w-full sm:w-auto"
+                    >
+                      <PlayIcon className="h-4 w-4" strokeWidth={1.5} />
+                      <span>Try Trade</span>
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {!isTryTradeEnabled && (
+                  <TooltipContent side="bottom" className="max-w-xs text-center">
+                    Add 2+ teams and select at least one player or pick from each side.
+                  </TooltipContent>
+                )}
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span tabIndex={isTradeButtonActive ? -1 : 0} className="w-full sm:w-auto">
+                    <Button
+                      disabled={!isTradeButtonActive}
+                      onClick={handleGenerateTrade}
+                      variant="primary"
+                      className="w-full sm:w-auto"
+                    >
+                      <LightbulbIcon className="h-4 w-4" strokeWidth={1.5} />
+                      <span>Generate Trades</span>
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {!isTradeButtonActive && (
+                  <TooltipContent side="bottom" className="max-w-xs text-center">
+                    Choose a player or pick to offer. We&rsquo;ll find the trade partners.
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
             <SelectedAssetsTrigger
               selectedAssets={selectedAssets}
               isOpen={assetsExpanded}
@@ -711,12 +741,97 @@ export default function TradeMachineClient({
               </div>
             </>
           ) : (
-            <div className="text-center p-8 rounded-xl bg-surface-low">
-              <LightbulbIcon className="mx-auto h-12 w-12 text-on-surface-variant mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No Teams Selected</h3>
-              <p className="text-on-surface-variant mb-4">
-                Add teams to start building your trade.
-              </p>
+            <div className="rounded-xl bg-surface-low px-6 py-12 md:px-12 md:py-16">
+              <div className="text-center mb-10 md:mb-12">
+                <p className="font-supermolot text-[11px] tracking-[0.22em] text-on-surface-variant mb-3">
+                  Trade Machine
+                </p>
+                <h2 className="text-2xl md:text-3xl font-semibold text-foreground tracking-tight">
+                  Two ways to build a trade.
+                </h2>
+                <p className="mt-3 text-sm md:text-base text-on-surface-variant max-w-md mx-auto">
+                  Pick a path below, then add a team to get started.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                {/* Generate Trades */}
+                <div className="rounded-lg bg-surface-container px-6 py-7 md:px-8 md:py-8 flex flex-col gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-md bg-primary/10 p-2">
+                      <LightbulbIcon
+                        className="h-5 w-5 text-primary"
+                        strokeWidth={1.75}
+                      />
+                    </div>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      Generate Trades
+                    </h3>
+                  </div>
+                  <p className="text-sm leading-relaxed text-on-surface-variant">
+                    Offer any combination of players and picks &mdash; from one
+                    team or several. We&rsquo;ll find the right partners, model
+                    the cap math, and propose realistic multi-team scenarios.
+                  </p>
+                  <ol className="space-y-1.5 text-sm text-on-surface-variant list-decimal list-inside marker:text-primary marker:font-semibold">
+                    <li>Add one or more teams.</li>
+                    <li>Select the players or picks you want to move.</li>
+                    <li>
+                      Hit{" "}
+                      <span className="text-foreground font-medium">
+                        Generate Trades
+                      </span>
+                      .
+                    </li>
+                  </ol>
+                </div>
+
+                {/* Try a Trade */}
+                <div className="rounded-lg bg-surface-container px-6 py-7 md:px-8 md:py-8 flex flex-col gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-md bg-emerald-500/10 p-2">
+                      <PlayIcon
+                        className="h-5 w-5 text-emerald-400"
+                        strokeWidth={1.75}
+                      />
+                    </div>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      Try a Trade
+                    </h3>
+                  </div>
+                  <p className="text-sm leading-relaxed text-on-surface-variant">
+                    Build your own deal. Choose the players and picks moving
+                    each way and we validate against the salary cap and apron
+                    rules in real time.
+                  </p>
+                  <ol className="space-y-1.5 text-sm text-on-surface-variant list-decimal list-inside marker:text-emerald-400 marker:font-semibold">
+                    <li>Add at least two teams.</li>
+                    <li>Choose the players and picks each side trades away.</li>
+                    <li>
+                      Hit{" "}
+                      <span className="text-foreground font-medium">Try Trade</span>.
+                    </li>
+                  </ol>
+                </div>
+              </div>
+
+              <div className="mt-10 md:mt-12 flex justify-center">
+                <TeamSelectDropdown
+                  allTeams={nbaTeams}
+                  selectedTeamIds={selectedTeamIds}
+                  onTeamSelect={(team) => {
+                    void handleTeamSelect(team);
+                    if (
+                      typeof window !== "undefined" &&
+                      window.innerWidth < 768
+                    ) {
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }
+                  }}
+                  maxTeamsReached={selectedTeams.length >= MAX_TEAMS}
+                  isLoading={isLoading}
+                />
+              </div>
             </div>
           )}
         </>

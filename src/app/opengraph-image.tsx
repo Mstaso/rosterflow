@@ -65,8 +65,8 @@ export default async function Image() {
             >
               <defs>
                 <linearGradient id="indigoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="hsl(243, 75%, 65%)" />
-                  <stop offset="100%" stopColor="hsl(243, 75%, 53%)" />
+                  <stop offset="0%" stopColor="hsl(195, 55%, 65%)" />
+                  <stop offset="100%" stopColor="hsl(195, 50%, 50%)" />
                 </linearGradient>
               </defs>
               <path

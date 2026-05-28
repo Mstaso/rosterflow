@@ -34,6 +34,7 @@ const tradeInclude = {
     },
   },
   votes: true,
+  _count: { select: { comments: true } },
 } as const;
 
 const tradeIncludeWithComments = {

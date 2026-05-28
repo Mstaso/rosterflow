@@ -19,8 +19,8 @@ const buttonVariants = cva(
           "bg-surface-high text-secondary-foreground shadow-sm hover:bg-surface-highest disabled:text-on-surface-variant/40",
         ghost: "hover:bg-surface-high hover:text-foreground disabled:text-on-surface-variant/40",
         link: "text-primary underline-offset-4 hover:underline disabled:text-on-surface-variant/40",
-        indigo:
-          "gradient-primary text-white hover:opacity-90 shadow-sm disabled:opacity-100 disabled:bg-surface-container disabled:bg-none disabled:text-on-surface-variant/40 disabled:shadow-none",
+        primary:
+          "gradient-primary text-primary-foreground hover:opacity-90 shadow-sm disabled:opacity-100 disabled:bg-surface-container disabled:bg-none disabled:text-on-surface-variant/40 disabled:shadow-none",
         success:
           "bg-emerald-600/90 text-white hover:bg-emerald-600 disabled:bg-surface-high disabled:text-on-surface-variant/40",
         edit:
