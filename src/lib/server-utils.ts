@@ -1,5 +1,15 @@
 import { getNBATeamWithRosterAndDraftPicks } from "~/actions/nbaTeams";
 import type { DraftPick, Player, SelectedAsset, Team } from "~/types";
+import {
+  isOwnPick as isOwnPickShared,
+  getOwnStepienBlockedYears as getOwnStepienBlockedYearsShared,
+} from "./stepien";
+
+// Re-exported for backward compatibility — implementations live in
+// `./stepien.ts` so they can be imported in client-side code without dragging
+// the server-only imports above into the browser bundle.
+export const isOwnPick = isOwnPickShared;
+export const getOwnStepienBlockedYears = getOwnStepienBlockedYearsShared;
 
 const MIN_SALARY_THRESHOLD = 2_000_000; // Filter out players under $2M
 
@@ -231,37 +241,9 @@ export function getRosterContext(involvedTeams: Team[], selectedAssets?: Selecte
   return rosterContext;
 }
 
-/**
- * True if a draft pick is the team's OWN future pick (vs one acquired from
- * another team via a prior trade). Own picks are subject to the Stepien rule.
- */
-export function isOwnPick(pick: DraftPick): boolean {
-  const desc = (pick.description ?? "").trim().toLowerCase();
-  return desc === "" || desc === "own" || desc.startsWith("own");
-}
-
-/**
- * Years in which a team's OWN first-round pick is un-tradable under the
- * Stepien rule (no consecutive future R1s). Returns only blocked years for
- * picks the team actually still holds — acquired picks from other teams are
- * unaffected.
- */
-export function getOwnStepienBlockedYears(team: Team): Set<number> {
-  const blocked = new Set<number>();
-  const r1Picks = ((team as any).draftPicks || []).filter(
-    (p: DraftPick) => p.round === 1
-  );
-  const ownYears = new Set<number>();
-  for (const pick of r1Picks) {
-    if (isOwnPick(pick)) ownYears.add(pick.year);
-  }
-  for (let y = 2025; y <= 2031; y++) {
-    if (ownYears.has(y)) continue;
-    if (ownYears.has(y - 1)) blocked.add(y - 1);
-    if (ownYears.has(y + 1)) blocked.add(y + 1);
-  }
-  return blocked;
-}
+// `isOwnPick` and `getOwnStepienBlockedYears` now live in `./stepien.ts` and
+// are re-exported at the top of this file. See that module for the source of
+// truth.
 
 export function getStepienContext(involvedTeams: Team[]): string {
   // Stepien-blocked picks are filtered out of getRosterContext so the LLM

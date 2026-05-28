@@ -108,9 +108,8 @@
     font-family: var(--font-logo), ui-sans-serif, system-ui, -apple-system,
       Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
       "Segoe UI Emoji";
-    font-weight: 800;
-    font-style: italic;
-    letter-spacing: 0.06em;
+    font-weight: 700;
+    letter-spacing: -0.04em;
     text-transform: uppercase;
   }
 
@@ -127,6 +126,12 @@
   /* Ambient shadow for floating elements */
   .shadow-ambient {
     box-shadow: 0 8px 32px -4px hsl(218 50% 4% / 0.08);
+  }
+
+  /* Brand-tinted ambient shadow for hover lifts on cards. Uses the primary
+     hue so the lift carries the brand instead of a generic charcoal drop. */
+  .shadow-primary-ambient {
+    box-shadow: 0 14px 36px -14px hsl(var(--primary) / 0.42);
   }
 
   /* Glass effect for modals/popovers */

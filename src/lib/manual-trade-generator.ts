@@ -435,8 +435,6 @@ function buildTradeScenario(
 
     teams.push({
       teamName,
-      explanation: "",
-      salaryMatch: "",
       gives: {
         players: givesPlayers.length > 0 ? givesPlayers : undefined,
         picks: givesPicks.length > 0 ? givesPicks : undefined,

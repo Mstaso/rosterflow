@@ -24,8 +24,6 @@ import {
   StarIcon,
   CheckCircleIcon,
   XCircleIcon,
-  UsersIcon,
-  FileTextIcon,
   PencilIcon,
   ArrowBigUp,
   ArrowBigDown,
@@ -397,14 +395,14 @@ export function SavedTradeDetail({
 
       if ((isOverFirstApron || wouldCrossFirstApron) && incomingSalary > maxAllowedFirstApron) {
         const excess = ((incomingSalary - maxAllowedFirstApron) / 1000000).toFixed(1);
-        return `${tradeTeam.teamDisplayName} (1st apron): incoming exceeds limit by $${excess}M — need $${(maxAllowedFirstApron / 1000000).toFixed(1)}M max`;
+        return `${tradeTeam.teamDisplayName} (1st apron): incoming exceeds limit by $${excess}M, need $${(maxAllowedFirstApron / 1000000).toFixed(1)}M max`;
       }
 
       if (capSpace < 0 && firstApronSpace >= 0) {
         const maxAllowedOverCap = outgoingSalary * 1.25 + 100000;
         if (incomingSalary > maxAllowedOverCap) {
           const excess = ((incomingSalary - maxAllowedOverCap) / 1000000).toFixed(1);
-          return `${tradeTeam.teamDisplayName} (over cap): incoming exceeds limit by $${excess}M — need $${(maxAllowedOverCap / 1000000).toFixed(1)}M max`;
+          return `${tradeTeam.teamDisplayName} (over cap): incoming exceeds limit by $${excess}M, need $${(maxAllowedOverCap / 1000000).toFixed(1)}M max`;
         }
       }
     }
@@ -475,7 +473,7 @@ export function SavedTradeDetail({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <SignInButton mode="modal">
               <Button
-                variant="indigo"
+                variant="primary"
                 onClick={() => setShowSignInPrompt(false)}
               >
                 Sign In
@@ -494,7 +492,7 @@ export function SavedTradeDetail({
             className="text-on-surface-variant p-0 h-auto hover:text-white hover:bg-transparent mb-4"
           >
             <ArrowLeft className="mr-2 h-4 w-4 text-indigoMain" />
-            Back to My Trades
+            Back to Community Trades
           </Button>
 
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -670,64 +668,64 @@ export function SavedTradeDetail({
               key={index}
               className="flex flex-col h-auto overflow-hidden bg-surface-low"
             >
-              <CardHeader className="flex flex-row items-center justify-center space-y-0 pb-2 pt-4 px-4 bg-surface-container">
-                <div className="flex items-center justify-center gap-2 min-w-0 w-full">
+              <CardHeader className="flex flex-row items-center justify-center space-y-0 pt-6 pb-4 px-5 bg-surface-container">
+                <div className="flex items-center justify-center gap-2.5 min-w-0 w-full">
                   {(teamInfo.tradeTeam.teamLogo as { href?: string })?.href && (
                     <Image
                       src={
                         (teamInfo.tradeTeam.teamLogo as { href: string }).href
                       }
                       alt={teamInfo.tradeTeam.teamDisplayName}
-                      width={32}
-                      height={32}
+                      width={36}
+                      height={36}
                       className="object-contain"
                     />
                   )}
-                  <span className="text-lg font-semibold whitespace-nowrap md:inline-block md:max-w-[220px] md:truncate">
+                  <span className="text-lg font-semibold tracking-tight whitespace-nowrap md:inline-block md:max-w-[220px] md:truncate">
                     {teamInfo.tradeTeam.teamDisplayName}
                   </span>
                 </div>
               </CardHeader>
 
-              {/* Salary Info */}
-              <div className="px-4 py-3 bg-surface-low">
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <div className="text-xs text-on-surface-variant mb-1">
-                      Outgoing Salary
-                    </div>
-                    <div className="text-sm font-medium">
-                      ${(teamInfo.outgoingSalary / 1000000).toFixed(1)}M
-                    </div>
+              <div className="px-5 py-4 bg-surface-low">
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="text-center">
+                    <p className="font-supermolot text-[10px] tracking-[0.22em] text-on-surface-variant mb-1.5">
+                      Out
+                    </p>
+                    <p className="text-sm font-medium tabular-nums">
+                      ${(teamInfo.outgoingSalary / 1_000_000).toFixed(1)}M
+                    </p>
                   </div>
-                  <div>
-                    <div className="text-xs text-on-surface-variant mb-1">
-                      Incoming Salary
-                    </div>
-                    <div className="text-sm font-medium">
-                      ${(teamInfo.incomingSalary / 1000000).toFixed(1)}M
-                    </div>
+                  <div className="text-center">
+                    <p className="font-supermolot text-[10px] tracking-[0.22em] text-on-surface-variant mb-1.5">
+                      In
+                    </p>
+                    <p className="text-sm font-medium tabular-nums">
+                      ${(teamInfo.incomingSalary / 1_000_000).toFixed(1)}M
+                    </p>
                   </div>
-                  <div>
-                    <div className="text-xs text-on-surface-variant mb-1">
-                      Cap Difference
-                    </div>
-                    <div
-                      className={`text-sm font-medium ${
+                  <div className="text-center">
+                    <p className="font-supermolot text-[10px] tracking-[0.22em] text-on-surface-variant mb-1.5">
+                      Delta
+                    </p>
+                    <p
+                      className={`text-sm font-medium tabular-nums ${
                         teamInfo.capDifference > 0
-                          ? "text-red-500"
+                          ? "text-warning"
                           : teamInfo.capDifference < 0
-                          ? "text-green-500"
-                          : "text-foreground"
+                            ? "text-primary"
+                            : "text-foreground"
                       }`}
                     >
-                      ${(teamInfo.capDifference / 1000000).toFixed(1)}M
-                    </div>
+                      {teamInfo.capDifference > 0 ? "+" : teamInfo.capDifference < 0 ? "-" : ""}
+                      ${(Math.abs(teamInfo.capDifference) / 1_000_000).toFixed(1)}M
+                    </p>
                   </div>
                 </div>
               </div>
 
-              <CardContent className="px-4 py-4 flex-grow flex flex-col bg-surface-container ">
+              <CardContent className="px-5 pt-5 pb-6 flex-grow flex flex-col bg-surface-container">
                 <Tabs defaultValue="receives" className="w-full">
                   <TabsList className="grid w-full grid-cols-2 mb-4">
                     <TabsTrigger value="receives">Receives</TabsTrigger>
@@ -735,185 +733,59 @@ export function SavedTradeDetail({
                   </TabsList>
 
                   <TabsContent value="receives" className="mt-0">
-                <div className="space-y-6">
-                  {/* Players Received */}
-                  {teamInfo.playersReceived.length > 0 && (
-                    <div>
-                      <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-on-surface-variant">
-                        <UsersIcon className="w-4 h-4" strokeWidth={1.5} />
-                        Players Received
-                      </div>
-                      <div className="space-y-3">
-                        {teamInfo.playersReceived.map((asset) => (
-                          <div
-                            key={asset.id}
-                            className="group relative flex items-center justify-between p-3 rounded-md bg-surface-low rounded-lg transition-colors"
-                          >
-                            <div className="flex items-center gap-3 min-w-0 flex-1">
-                              {(asset.playerHeadshot as { href?: string })
-                                ?.href && (
-                                <div className="bg-surface-highest p-1 rounded-full">
-                                  <Image
-                                    src={
-                                      (
-                                        asset.playerHeadshot as {
-                                          href: string;
-                                        }
-                                      ).href
-                                    }
-                                    alt={asset.playerName || ""}
-                                    width={96}
-                                    height={96}
-                                    className="rounded-full object-cover w-12 h-12"
-                                  />
-                                </div>
-                              )}
-                              <div className="min-w-0">
-                                <div className="flex items-baseline gap-1 min-w-0 w-full">
-                                  <span className="font-medium text-sm truncate min-w-0 flex-1">
-                                    {asset.playerName}
-                                  </span>
-                                  <span className="text-xs text-on-surface-variant whitespace-nowrap shrink-0">
-                                    ({asset.playerPosition || "Unknown"})
-                                  </span>
-                                </div>
-                                <div className="text-xs text-on-surface-variant">
-                                  {asset.playerSalary
-                                    ? `Salary: $${(
-                                        asset.playerSalary / 1000000
-                                      ).toFixed(1)}M`
-                                    : "No contract"}
-                                  {asset.playerContractYears && (
-                                    <>
-                                      {" | "}
-                                      {asset.playerContractYears}
-                                      {` ${
-                                        asset.playerContractYears === 1
-                                          ? "yr"
-                                          : "yrs"
-                                      }`}
-                                    </>
-                                  )}
-                                </div>
-                                <div className="text-xs text-on-surface-variant mt-1">
-                                  from {asset.tradeTeam.teamAbbreviation}
-                                </div>
-                              </div>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 shrink-0 text-on-surface-variant hover:text-indigoMain"
-                              onClick={() => handleOpenPlayerStats(asset)}
-                            >
-                              <BarChart3Icon className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Picks Received */}
-                  {teamInfo.picksReceived.length > 0 && (
-                    <div>
-                      <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-on-surface-variant">
-                        <FileTextIcon className="w-4 h-4" strokeWidth={1.5} />
-                        Picks Received
-                      </div>
-                      <div className="space-y-3">
-                        {teamInfo.picksReceived.map((asset) => (
-                          <div
-                            key={asset.id}
-                            className="group relative flex items-center justify-between p-3 rounded-md bg-surface-low rounded-lg"
-                          >
-                            <div className="flex flex-col gap-1">
-                              <div className="text-xs text-on-surface-variant">
-                                from {asset.tradeTeam.teamAbbreviation}
-                              </div>
-                              <div className="font-medium text-sm">
-                                {asset.pickYear} Round {asset.pickRound} Pick
-                              </div>
-                              {asset.pickDescription && (
-                                <div className="text-xs text-on-surface-variant">
-                                  {asset.pickDescription}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* No assets received */}
-                  {teamInfo.playersReceived.length === 0 &&
-                    teamInfo.picksReceived.length === 0 && (
-                      <div className="text-center py-6 text-on-surface-variant">
-                        <div className="text-sm">No assets received</div>
-                      </div>
-                    )}
-
-                </div>
-                  </TabsContent>
-
-                  <TabsContent value="sends" className="mt-0">
-                    <div className="space-y-6">
-                      {/* Players Sent */}
-                      {teamInfo.playersSent.length > 0 && (
+                    <div className="space-y-5">
+                      {teamInfo.playersReceived.length > 0 && (
                         <div>
-                          <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-on-surface-variant">
-                            <UsersIcon className="w-4 h-4" strokeWidth={1.5} />
-                            Players Sent
-                          </div>
-                          <div className="space-y-3">
-                            {teamInfo.playersSent.map((asset) => (
+                          <p className="font-supermolot text-[10px] tracking-[0.22em] text-on-surface-variant mb-2.5">
+                            Players
+                          </p>
+                          <div className="space-y-1.5">
+                            {teamInfo.playersReceived.map((asset) => (
                               <div
                                 key={asset.id}
-                                className="group relative flex items-center justify-between p-3 rounded-md bg-surface-low rounded-lg transition-colors"
+                                className="group relative flex items-center justify-between p-2.5 rounded-lg bg-surface-high transition-colors"
                               >
-                                <div className="flex items-center gap-3">
-                                  {(asset.playerHeadshot as { href?: string })?.href && (
-                                    <div className="bg-surface-highest p-1 rounded-full">
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                  {(asset.playerHeadshot as { href?: string })
+                                    ?.href && (
+                                    <div className="bg-surface-highest p-1 rounded-full shrink-0">
                                       <Image
-                                        src={(asset.playerHeadshot as { href: string }).href}
+                                        src={
+                                          (
+                                            asset.playerHeadshot as {
+                                              href: string;
+                                            }
+                                          ).href
+                                        }
                                         alt={asset.playerName || ""}
                                         width={96}
                                         height={96}
-                                        className="rounded-full object-cover w-12 h-12"
+                                        className="rounded-full object-cover w-11 h-11"
                                       />
                                     </div>
                                   )}
-                                  <div className="min-w-0">
-                                    <div className="flex items-baseline gap-1 min-w-0">
-                                      <span className="font-medium text-sm truncate">
-                                        {asset.playerName}
-                                      </span>
-                                      <span className="text-xs text-on-surface-variant whitespace-nowrap shrink-0">
-                                        ({asset.playerPosition || "Unknown"})
+                                  <div className="min-w-0 flex-1">
+                                    <div className="font-medium text-sm truncate">
+                                      {asset.playerName}{" "}
+                                      <span className="text-[11px] text-on-surface-variant whitespace-nowrap">
+                                        {asset.playerPosition || "—"}
                                       </span>
                                     </div>
-                                    <div className="text-xs text-on-surface-variant">
+                                    <div className="text-[11px] text-on-surface-variant tabular-nums">
                                       {asset.playerSalary
-                                        ? `Salary: $${(asset.playerSalary / 1000000).toFixed(1)}M`
+                                        ? `$${(asset.playerSalary / 1_000_000).toFixed(1)}M`
                                         : "No contract"}
-                                      {asset.playerContractYears && (
-                                        <>
-                                          {" | "}
-                                          {asset.playerContractYears}
-                                          {` ${asset.playerContractYears === 1 ? "yr" : "yrs"}`}
-                                        </>
-                                      )}
-                                    </div>
-                                    <div className="text-xs text-on-surface-variant mt-1">
-                                      to {asset.targetTradeTeam.teamAbbreviation}
+                                      {asset.playerContractYears
+                                        ? ` · ${asset.playerContractYears} ${asset.playerContractYears === 1 ? "yr" : "yrs"}`
+                                        : ""}
+                                      {` · from ${asset.tradeTeam.teamAbbreviation}`}
                                     </div>
                                   </div>
                                 </div>
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-8 w-8 text-on-surface-variant hover:text-indigoMain"
+                                  className="h-8 w-8 shrink-0 text-on-surface-variant hover:text-primary"
                                   onClick={() => handleOpenPlayerStats(asset)}
                                 >
                                   <BarChart3Icon className="h-4 w-4" />
@@ -924,28 +796,26 @@ export function SavedTradeDetail({
                         </div>
                       )}
 
-                      {/* Picks Sent */}
-                      {teamInfo.picksSent.length > 0 && (
+                      {teamInfo.picksReceived.length > 0 && (
                         <div>
-                          <div className="flex items-center gap-1.5 mb-3 text-sm font-medium text-on-surface-variant">
-                            <FileTextIcon className="w-4 h-4" strokeWidth={1.5} />
-                            Picks Sent
-                          </div>
-                          <div className="space-y-3">
-                            {teamInfo.picksSent.map((asset) => (
+                          <p className="font-supermolot text-[10px] tracking-[0.22em] text-on-surface-variant mb-2.5">
+                            Picks
+                          </p>
+                          <div className="space-y-1.5">
+                            {teamInfo.picksReceived.map((asset) => (
                               <div
                                 key={asset.id}
-                                className="group relative flex items-center justify-between p-3 rounded-md bg-surface-low rounded-lg"
+                                className="group relative flex items-center justify-between p-2.5 rounded-lg bg-surface-high"
                               >
-                                <div className="flex flex-col gap-1">
-                                  <div className="text-xs text-on-surface-variant">
-                                    to {asset.targetTradeTeam.teamAbbreviation}
+                                <div className="flex flex-col gap-0.5">
+                                  <div className="text-[11px] text-on-surface-variant">
+                                    from {asset.tradeTeam.teamAbbreviation}
                                   </div>
                                   <div className="font-medium text-sm">
                                     {asset.pickYear} Round {asset.pickRound} Pick
                                   </div>
                                   {asset.pickDescription && (
-                                    <div className="text-xs text-on-surface-variant">
+                                    <div className="text-[11px] text-on-surface-variant">
                                       {asset.pickDescription}
                                     </div>
                                   )}
@@ -956,7 +826,102 @@ export function SavedTradeDetail({
                         </div>
                       )}
 
-                      {/* No assets sent */}
+                      {teamInfo.playersReceived.length === 0 &&
+                        teamInfo.picksReceived.length === 0 && (
+                          <div className="text-center py-6 text-on-surface-variant">
+                            <div className="text-sm">No assets received</div>
+                          </div>
+                        )}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="sends" className="mt-0">
+                    <div className="space-y-5">
+                      {teamInfo.playersSent.length > 0 && (
+                        <div>
+                          <p className="font-supermolot text-[10px] tracking-[0.22em] text-on-surface-variant mb-2.5">
+                            Players
+                          </p>
+                          <div className="space-y-1.5">
+                            {teamInfo.playersSent.map((asset) => (
+                              <div
+                                key={asset.id}
+                                className="group relative flex items-center justify-between p-2.5 rounded-lg bg-surface-high transition-colors"
+                              >
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                  {(asset.playerHeadshot as { href?: string })?.href && (
+                                    <div className="bg-surface-highest p-1 rounded-full shrink-0">
+                                      <Image
+                                        src={(asset.playerHeadshot as { href: string }).href}
+                                        alt={asset.playerName || ""}
+                                        width={96}
+                                        height={96}
+                                        className="rounded-full object-cover w-11 h-11"
+                                      />
+                                    </div>
+                                  )}
+                                  <div className="min-w-0 flex-1">
+                                    <div className="font-medium text-sm truncate">
+                                      {asset.playerName}{" "}
+                                      <span className="text-[11px] text-on-surface-variant whitespace-nowrap">
+                                        {asset.playerPosition || "—"}
+                                      </span>
+                                    </div>
+                                    <div className="text-[11px] text-on-surface-variant tabular-nums">
+                                      {asset.playerSalary
+                                        ? `$${(asset.playerSalary / 1_000_000).toFixed(1)}M`
+                                        : "No contract"}
+                                      {asset.playerContractYears
+                                        ? ` · ${asset.playerContractYears} ${asset.playerContractYears === 1 ? "yr" : "yrs"}`
+                                        : ""}
+                                      {` · to ${asset.targetTradeTeam.teamAbbreviation}`}
+                                    </div>
+                                  </div>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 shrink-0 text-on-surface-variant hover:text-primary"
+                                  onClick={() => handleOpenPlayerStats(asset)}
+                                >
+                                  <BarChart3Icon className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {teamInfo.picksSent.length > 0 && (
+                        <div>
+                          <p className="font-supermolot text-[10px] tracking-[0.22em] text-on-surface-variant mb-2.5">
+                            Picks
+                          </p>
+                          <div className="space-y-1.5">
+                            {teamInfo.picksSent.map((asset) => (
+                              <div
+                                key={asset.id}
+                                className="group relative flex items-center justify-between p-2.5 rounded-lg bg-surface-high"
+                              >
+                                <div className="flex flex-col gap-0.5">
+                                  <div className="text-[11px] text-on-surface-variant">
+                                    to {asset.targetTradeTeam.teamAbbreviation}
+                                  </div>
+                                  <div className="font-medium text-sm">
+                                    {asset.pickYear} Round {asset.pickRound} Pick
+                                  </div>
+                                  {asset.pickDescription && (
+                                    <div className="text-[11px] text-on-surface-variant">
+                                      {asset.pickDescription}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       {teamInfo.playersSent.length === 0 &&
                         teamInfo.picksSent.length === 0 && (
                           <div className="text-center py-6 text-on-surface-variant">
@@ -967,39 +932,36 @@ export function SavedTradeDetail({
                   </TabsContent>
                 </Tabs>
 
-                {/* Updated Cap Info - always visible */}
                 <div className="mt-6">
-                  <div className="text-sm font-semibold mb-2">
-                    Updated Team Cap Info
-                  </div>
-                  <table className="w-full ghost-border rounded text-xs">
-                    <tbody>
-                      <tr className="bg-surface-high">
-                        <td className="px-2 py-1 text-on-surface-variant w-1/2">Total Cap</td>
-                        <td className="px-2 py-1 font-medium w-1/2 text-right">
-                          ${teamInfo.tradeTeam.totalCapAllocation ? (teamInfo.tradeTeam.totalCapAllocation / 1000000).toFixed(1) : "0.0"}M
-                        </td>
-                      </tr>
-                      <tr className="bg-background">
-                        <td className="px-2 py-1 text-on-surface-variant w-1/2">Cap Space</td>
-                        <td className="px-2 py-1 font-medium w-1/2 text-right">
-                          ${(calculateUpdatedTaxValue(teamInfo.tradeTeam.capSpace || 0, teamInfo.capDifference) / 1000000).toFixed(1)}M
-                        </td>
-                      </tr>
-                      <tr className="bg-surface-high">
-                        <td className="px-2 py-1 text-on-surface-variant w-1/2">1st Apron Space</td>
-                        <td className="px-2 py-1 font-medium w-1/2 text-right">
-                          ${(calculateUpdatedTaxValue(teamInfo.tradeTeam.firstApronSpace || 0, teamInfo.capDifference) / 1000000).toFixed(1)}M
-                        </td>
-                      </tr>
-                      <tr className="bg-background">
-                        <td className="px-2 py-1 text-on-surface-variant w-1/2">2nd Apron Space</td>
-                        <td className="px-2 py-1 font-medium w-1/2 text-right">
-                          ${(calculateUpdatedTaxValue(teamInfo.tradeTeam.secondApronSpace || 0, teamInfo.capDifference) / 1000000).toFixed(1)}M
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                  <p className="font-supermolot text-[10px] tracking-[0.22em] text-on-surface-variant mb-2.5">
+                    Updated Cap Position
+                  </p>
+                  <dl className="rounded-lg bg-surface-high px-3.5 py-3 text-xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <dt className="text-on-surface-variant">Total Cap</dt>
+                      <dd className="font-medium tabular-nums">
+                        ${((teamInfo.tradeTeam.totalCapAllocation ?? 0) / 1_000_000).toFixed(1)}M
+                      </dd>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <dt className="text-on-surface-variant">Cap Space</dt>
+                      <dd className="font-medium tabular-nums">
+                        ${(calculateUpdatedTaxValue(teamInfo.tradeTeam.capSpace ?? 0, teamInfo.capDifference) / 1_000_000).toFixed(1)}M
+                      </dd>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <dt className="text-on-surface-variant">1st Apron Space</dt>
+                      <dd className="font-medium tabular-nums">
+                        ${(calculateUpdatedTaxValue(teamInfo.tradeTeam.firstApronSpace ?? 0, teamInfo.capDifference) / 1_000_000).toFixed(1)}M
+                      </dd>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <dt className="text-on-surface-variant">2nd Apron Space</dt>
+                      <dd className="font-medium tabular-nums">
+                        ${(calculateUpdatedTaxValue(teamInfo.tradeTeam.secondApronSpace ?? 0, teamInfo.capDifference) / 1_000_000).toFixed(1)}M
+                      </dd>
+                    </div>
+                  </dl>
                 </div>
               </CardContent>
             </Card>
@@ -1044,7 +1006,7 @@ export function SavedTradeDetail({
                         ? !commentText.trim() || isSubmittingComment
                         : false
                     }
-                    variant="indigo"
+                    variant="primary"
                   >
                     {isSubmittingComment ? (
                       <>

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { HandshakeIcon } from "lucide-react";
 
 function InstagramIcon({ className }: { className?: string }) {
   return (
@@ -71,7 +70,7 @@ const footerLinks = [
     title: "Product",
     links: [
       { name: "Trade Machine", href: "/" },
-      { name: "View Trades", href: "/my-trades" },
+      { name: "Community Trades", href: "/my-trades" },
     ],
   },
   {
@@ -93,13 +92,9 @@ export function Footer() {
           <div className="md:col-span-2">
             <Link
               href="/"
-              className="flex items-center gap-2 text-xl font-bold text-foreground hover:text-foreground/90 transition-colors mb-4"
+              className="flex items-center text-xl font-bold text-foreground hover:text-foreground/90 transition-colors mb-4"
             >
-              <HandshakeIcon
-                className="h-7 w-7 text-indigoMain"
-                strokeWidth={1.5}
-              />
-              <span className="font-supermolot">Roster Flows</span>
+              <span className="font-supermolot">Roster<span className="text-primary">Flows</span></span>
             </Link>
             <p className="text-on-surface-variant text-sm max-w-md mb-6">
               Create realistic NBA trades with AI-powered analysis. Our trade

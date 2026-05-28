@@ -238,7 +238,7 @@ export default function SaveTradeModal({
       toast.success("Trade saved successfully!", {
         description: "Your trade has been saved to your collection.",
         action: {
-          label: "View Trades",
+          label: "View Community Trades",
           onClick: () => router.push("/my-trades"),
         },
       });
@@ -258,7 +258,7 @@ export default function SaveTradeModal({
         <Dialog open={open} onOpenChange={setOpen}>
           <Button
             onClick={handleOpen}
-            variant="indigo"
+            variant="primary"
             className="w-full sm:w-auto"
           >
             <SaveIcon className="mr-1 h-4 w-4" strokeWidth={1.5} />
@@ -356,7 +356,7 @@ export default function SaveTradeModal({
                   <Button
                     type="submit"
                     disabled={isLoading || isSaving}
-                    className="w-full sm:w-auto bg-indigoMain text-primary-white hover:bg-indigoMain/70
+                    className="w-full sm:w-auto bg-indigoMain text-primary-foreground hover:bg-indigoMain/70
           disabled:bg-muted disabled:text-muted-foreground/70 disabled:border disabled:border-muted-foreground/30 disabled:cursor-not-allowed
           transition-all duration-150 ease-in-out"
                   >
@@ -370,7 +370,7 @@ export default function SaveTradeModal({
       ) : (
         <SignInButton mode="modal">
           <Button
-            className="w-full sm:w-auto bg-indigoMain text-primary-white hover:bg-indigoMain/70
+            className="w-full sm:w-auto bg-indigoMain text-primary-foreground hover:bg-indigoMain/70
             disabled:bg-muted disabled:text-muted-foreground/70 disabled:border disabled:border-muted-foreground/30 disabled:cursor-not-allowed
             transition-all duration-150 ease-in-out"
             onClick={() => {

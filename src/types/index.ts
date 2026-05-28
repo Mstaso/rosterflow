@@ -219,8 +219,6 @@ export type TeamTradeAssets = {
 
 export type TeamInTradeScenario = {
   teamName: string;
-  explanation: string;
-  salaryMatch: string;
   gives: TeamTradeAssets;
   receives: TeamTradeAssets;
 };

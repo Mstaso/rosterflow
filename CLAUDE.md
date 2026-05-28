@@ -60,6 +60,21 @@ Both share context-building helpers in `src/lib/server-utils.ts` and the cap rul
 
 `src/actions/trades.ts` → `saveTradeAction()` writes one `Trade` + N `TradeTeam` + M `TradeAsset` rows in a transaction, snapshotting player/team data so historic trades survive roster changes. Models in `prisma/schema.prisma`.
 
+### Shared trade-result-view layer
+
+Three components render the same per-team "trade result" card layout and need to stay in visual sync:
+
+- `src/components/trade-machine/generated-trades/trade-card.tsx` — AI-generated scenarios (Flow A)
+- `src/components/trade-machine/try-trade-preview.tsx` — user-built trades (Flow B)
+- `src/components/my-trades/saved-trade-detail.tsx` — historic saved trades at `/my-trades/[id]`
+
+They consume a shared library at `src/lib/trade-warnings.ts`:
+
+- `collectTradeWarnings(moves)` — returns every applicable warning (cap rules, Stepien, roster imbalance, roster overflow), blockers-first. Drives the masthead's verdict banner. **Roster overflow only fires when the trade *increases* body count** — `team.players` includes two-way contracts in the DB, so absolute size comparisons are noisy.
+- `computeSubdeck(moves)` — editorial one-liner ("Warriors slide back under the second apron.") derived from cap math, used as the masthead subdeck.
+
+And a shared `TradeMasthead` at `src/components/trade-machine/trade-masthead.tsx` — eyebrow + subdeck + tinted verdict banner (teal for valid, copper for issues with bulleted reasons). Currently used by `trade-card.tsx` and `try-trade-preview.tsx`; `saved-trade-detail.tsx` has its own bespoke verdict block (harmonization is a followup).
+
 ### Cap-tier matching rules (domain logic — get these right)
 
 Defined in `src/lib/server-utils.ts` → `computeMatchingBounds()`. For incoming salary given outgoing salary `O`:

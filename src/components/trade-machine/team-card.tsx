@@ -71,9 +71,9 @@ function getCapTier(team: Team): { tier: CapTier; label: string; color: string }
   if ((team.secondApronSpace || 0) < 0)
     return { tier: "SECOND_APRON", label: "2nd Apron", color: "text-red-400 bg-red-500/10" };
   if ((team.firstApronSpace || 0) < 0)
-    return { tier: "FIRST_APRON", label: "1st Apron", color: "text-warning bg-warning/10" };
+    return { tier: "FIRST_APRON", label: "1st Apron", color: "text-warning bg-warning/25" };
   if ((team.capSpace || 0) < 0)
-    return { tier: "OVER_CAP", label: "Over Cap", color: "text-slate-300 bg-slate-500/10" };
+    return { tier: "OVER_CAP", label: "Over Cap", color: "text-warning bg-warning/10" };
   return { tier: "UNDER_CAP", label: "Under Cap", color: "text-emerald-400 bg-emerald-500/10" };
 }
 
