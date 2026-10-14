@@ -18,7 +18,9 @@ NBA trade-machine web app. Users select teams and assets (players + draft picks)
 - `pnpm build` — `prisma generate && next build`
 - `pnpm lint` — ESLint (flat config)
 - `pnpm db:push` — sync schema
-- `pnpm db:seed` — `tsx prisma/seed.ts` — live ESPN rosters + synthetic contracts/picks
+- `pnpm db:seed` — `tsx prisma/seed.ts` — **wipes everything including saved trades**, then live ESPN rosters/contracts + static cap/pick JSON
+- `pnpm db:refresh` — `tsx scripts/refresh-data.ts` — non-destructive ESPN refresh (same code as the cron)
+- `pnpm check:refresh` — self-check for the refresh logic (no network, no DB)
 - `pnpm db:studio` — Prisma Studio on :5555
 - `./start-database.sh` — local Postgres container (Docker/Podman) from `.env`
 
@@ -93,6 +95,19 @@ Teams can't trade their own R1 picks in consecutive future years. Source of trut
 
 Acquired R1s (e.g. "Lakers' 2027 R1 via NYK") aren't subject to the holder's Stepien restriction and move freely.
 
+## Data refresh (cron)
+
+`src/lib/data-refresh.ts` holds the ESPN fetchers (shared with `prisma/seed.ts`) and `refreshLeagueData()`. `vercel.json` fires `GET /api/cron/refresh-players` daily at 10:00 UTC (needs `CRON_SECRET`); the route skips non-Mondays in July–September. `GET /api/data-status` reports the oldest per-team refresh time (`Team.updatedAt`, bumped only when that team's refresh commits). The footer (`src/components/layout/data-freshness.tsx`) shows it as "Rosters & stats as of …"; it fetches client-side because the pages are statically rendered, and the endpoint is CDN-cached for 10 minutes.
+
+Rules the refresh keeps — don't loosen without reading `scripts/check-data-refresh.ts`:
+
+- One transaction per team; any ESPN failure for a team means zero writes for it.
+- Records and stats with fewer than `MIN_GAMES` (10) games never overwrite stored values (ESPN reports 0-0 in preseason, which would label all 30 teams "rebuilding").
+- A player on an ESPN roster with no current-season contract keeps the stored contract; one we've never seen is not created.
+- Players are pruned only when all 30 rosters were fetched and fewer than 25% vanished.
+
+**Not refreshed** (static JSON in `prisma/seeddata/`): team cap figures (`totalCapAllocation`, `capSpace`, apron spaces → cap tiers) and all draft picks. See `context.md`.
+
 ## Eval harness (offline, not user-facing)
 
 `src/lib/eval/` + `src/app/api/trades/eval/route.ts` (dev-only). `buildAllScenarios()` generates scenarios from live DB, runs the same `generateTradesCore()`, then `grader.ts` (salary/value/integrity) and `realism-judge.ts` (LLM-judged realism) score the output. Results land in `./eval-results/*.json`. Useful when tuning the prompt or refinement logic.
@@ -102,10 +117,10 @@ Note: grader scales draft-pick value by 0.65 vs player ratings (top-10 pick ≈ 
 ## Conventions
 
 - **UI work:** read `DESIGN.md` ("The Kinetic Ledger" — surface hierarchy, no-line rule, elevation, component patterns) before changing components. Use the `frontend-design` skill for substantive UI.
-- **ESPN integration:** `API_DOCUMENTATION.md` documents the unofficial endpoints and known gaps (notably: no salary data — contracts are synthetic).
+- **ESPN integration:** `API_DOCUMENTATION.md` documents the unofficial endpoints. Its "no salary data" note is out of date: the roster endpoint returns `contract` (salary, years remaining) for players signed for the current season, and that is where `Player.contract` comes from.
 - **Type imports:** inline (`import { type X }`) — enforced by `@typescript-eslint/consistent-type-imports`.
 - **Unused args:** prefix `_` to bypass lint.
 
 ## Followups / known issues
 
-See `context.md` — long-lived backlog. Currently tracks: player/team data freshness needs a cron (only `seed.ts` refreshes data today).
+See `context.md` — long-lived backlog. Currently tracks: static cap + draft-pick data that the cron cannot refresh, two-way contracts, the `/my-trades` split.

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DataFreshness } from "./data-freshness";
 
 function InstagramIcon({ className }: { className?: string }) {
   return (
@@ -143,9 +144,12 @@ export function Footer() {
         {/* Bottom Section */}
         <div className="mt-12 pt-8 border-t border-outline-variant/15">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-on-surface-variant">
-              © {currentYear} Roster Flows. All rights reserved.
-            </p>
+            <div className="shrink-0 space-y-1 text-center md:text-left">
+              <p className="text-sm text-on-surface-variant">
+                © {currentYear} Roster Flows. All rights reserved.
+              </p>
+              <DataFreshness />
+            </div>
             <p className="text-xs text-on-surface-variant/60">
               Not affiliated with the NBA or any NBA team. All team names,
               logos, and player information are property of their respective
