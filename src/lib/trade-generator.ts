@@ -84,8 +84,8 @@ export function describeTeamConstraints(team: Team): string {
   const openSpots = Math.max(0, 15 - (team.players?.length ?? 0));
   const roster =
     openSpots > 0
-      ? `${openSpots} open roster spot(s): may take back at most ${openSpots} more player(s) than it sends`
-      : "roster full: must not take back more players than it sends";
+      ? `${openSpots} open roster spot(s): prefer taking back at most ${openSpots} more player(s) than it sends`
+      : "roster full: prefer not to take back more players than it sends";
   return `- ${team.displayName}: ${salary}. ${roster}.`;
 }
 
@@ -248,7 +248,7 @@ ${rolesContext ? `\n${rolesContext}\n` : ""}
 SELECTED ASSETS (must appear in every scenario):
 ${assetsDescription}${destinationInfo}
 
-TEAM CONSTRAINTS (computed from league data — a scenario that breaks any of these is rejected):
+TEAM CONSTRAINTS (computed from league data — a scenario that breaks a salary limit is rejected):
 ${teamConstraints}
 
 ROSTERS & PICKS (top players by rating, pick value 1-100):
@@ -256,7 +256,7 @@ ${rosterContext}
 ${suggestedPackagesContext ? `\n${suggestedPackagesContext}` : ""}
 SALARY MATCHING:
 - Add up the $ figures from the roster data for what each team sends and receives, and check them against that team's line in TEAM CONSTRAINTS before you commit to a scenario. Swap or add a role player to make the math work.
-- Count bodies too: a team with a full roster cannot take back more players than it sends.
+- Count bodies too: a team with a full roster should not take back more players than it sends.
 - Don't pair a $40M star with a $2M minimum-contract return.
 
 TRADE REALISM RULES:
@@ -308,8 +308,8 @@ Respond with ONLY a JSON array. Each scenario lists only what each team GIVES an
 
 /**
  * Decide whether a raw model scenario is a real, legal trade. The legality
- * checker is the authority; a scenario that fails only on salary matching or
- * roster size gets one deterministic repair attempt (see trade-repair.ts).
+ * checker is the authority; a scenario that fails only on salary matching
+ * gets one deterministic repair attempt (see trade-repair.ts).
  */
 export function vetTrade(
   raw: any,

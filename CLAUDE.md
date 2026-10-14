@@ -41,14 +41,14 @@ Both share context-building helpers in `src/lib/server-utils.ts` and the cap rul
 3. **Build prompt + context.** `buildTradePrompt()` assembles:
    - `getRosterContext` — top 10 players per team with rating + salary, and **only tradable picks**, each under a unique name (`pickLabel`: a team's second 2027 R1 is "2027 R1 #2").
    - `getTeamOutlookContext` — win %, rank, contender/rebuild label
-   - `describeTeamConstraints` — one line per team of hard limits computed in code: matching rule for its cap tier, dollars of room below each apron, open roster spots. The model is told scenarios breaking these are rejected.
+   - `describeTeamConstraints` — one line per team of hard limits computed in code: matching rule for its cap tier, dollars of room below each apron, open roster spots. The model is told a scenario breaking a salary limit is rejected; roster room is a preference.
    - `classifyTeamRoles` (`src/lib/team-role-classifier.ts`) → PRINCIPAL_SELLER/BUYER/FACILITATOR for multi-team deals
    - `SUGGESTED TARGET PACKAGES` — when the scorer ran in step 2, the packages render here as starter suggestions.
    - Also runs `src/lib/manual-trade-generator.ts` first — if it returns a trade that passes the legality checker, that's prepended and the LLM is asked not to repeat it.
 4. **Generate, vet, repair, retry.** `generateVettedTrades()` streams Sonnet 4.6 (temp 0.7, 5500 tokens). The model returns names only — who gives what to whom. Each scenario goes through `vetTrade()`:
    - `isValidTrade()` + `reconstructReceives()` (structure; rebuild `receives` from `gives`).
-   - `checkTradeLegality()` in `src/lib/trade-legality.ts` resolves every team, player and pick to DB rows and returns violations: unknown/wrong-team player, unknown/untradable pick, Stepien, routing, salary, roster, ignored user request. Cap rules come from `collectTradeWarnings`, so the server and the result card cannot disagree. It also stamps the resolved pick `id` onto the trade for the client.
-   - If the only violations are salary/roster, `repairTrade()` in `src/lib/trade-repair.ts` searches for at most two role-player edits (rating ≤ 57) that make the checker pass.
+   - `checkTradeLegality()` in `src/lib/trade-legality.ts` resolves every team, player and pick to DB rows and returns violations: unknown/wrong-team player, unknown/untradable pick, Stepien, routing, salary, ignored user request. Roster size is deliberately *not* a rejection — the card shows it as a soft warning. Cap rules come from `collectTradeWarnings`, so the server and the result card cannot disagree. It also stamps the resolved pick `id` onto the trade for the client.
+   - If the only violations are salary, `repairTrade()` in `src/lib/trade-repair.ts` searches for at most two role-player edits (rating ≤ 57) that make the checker pass.
    - Legal trades stream to the client. If fewer than 3 are legal, the model gets **one** retry with the checker's messages for each reject. If nothing is legal and there's no manual trade, the two least-broken rejects are shown (the card explains what's wrong).
 5. **Display.** `src/components/trade-machine/generated-trades/trade-container.tsx` appends each trade as it arrives. Salaries and stats on the card are looked up from DB-sourced team data by name/id — nothing numeric comes from the model.
 
@@ -90,7 +90,7 @@ The result card (`checkCapRules` in `trade-warnings.ts`) is the authority for le
 
 ### Pick tradability (domain logic)
 
-`pickUntradableReason()` in `src/lib/trade-legality.ts`. A row in `DraftPick` is **not** proof the team can trade it — the seed data lists obligations next to holdings. Untradable: draft year already passed, description starting "To " (owed to another team), "Frozen", or own R1 in a Stepien-blocked year. Picks the user selects themselves are exempt (their call; the card still warns).
+`pickUntradableReason()` in `src/lib/trade-legality.ts`. A row in `DraftPick` is **not** proof the team can trade it — the seed data lists obligations next to holdings. Untradable: draft year already passed, description starting "To " (owed to another team), "Frozen", or own R1 in a Stepien-blocked year. The asset picker (`team-card.tsx`) shows these rows disabled with the reason, except Stepien-blocked picks, which stay selectable so Try Trade can explain the rule; a Stepien pick the user selected is not held against generated trades.
 
 ### Stepien rule (domain logic)
 

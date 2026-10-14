@@ -119,7 +119,7 @@ assert.ok(codes(swap([], [], ["Beta One"], [])).includes("STRUCTURE"));
 assert.ok(codes({ teams: [side("Atlanta Hawks", ["Alpha One"], [], "Boston Celtics", [], []), side("Boston Celtics", [], [], "Atlanta Hawks", ["Alpha One"], [])] }).includes("UNKNOWN_TEAM"));
 assert.ok(codes(swap(["Alpha One"], [], ["Beta One"], []), [{ id: hawks.players[1].id, type: "player", teamId: 1 }]).includes("REQUEST"));
 
-// Roster: a 15-man team can't take two players back for one.
+// Roster size is a card warning, not a rejection: 15-man team, two back for one.
 {
   const full = team(3, "Full Team", 50e6, Array.from({ length: 15 }, (_, i) => player(`Full ${i}`, 5)), []);
   const trade = {
@@ -128,7 +128,7 @@ assert.ok(codes(swap(["Alpha One"], [], ["Beta One"], []), [{ id: hawks.players[
       side("Atlanta Hawks", ["Alpha Two", "José Alvarado"], [], "Full Team", ["Full 0"], []),
     ],
   };
-  assert.deepEqual(checkTradeLegality(trade, [full, hawks], [], NOW).violations.map((v) => v.code), ["ROSTER"]);
+  assert.deepEqual(checkTradeLegality(trade, [full, hawks], [], NOW).violations, []);
 }
 
 console.log("check-trade-legality: all checks passed");

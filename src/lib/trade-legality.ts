@@ -14,8 +14,6 @@ import type { DraftPick, Player, SelectedAsset, Team } from "~/types";
 import { getOwnStepienBlockedYears, isOwnPick } from "./stepien";
 import { collectTradeWarnings, type TeamTradeMove } from "./trade-warnings";
 
-const STANDARD_ROSTER_LIMIT = 15;
-
 export type ViolationCode =
   | "STRUCTURE" // malformed: missing teams, team gives nothing, asset given twice
   | "UNKNOWN_TEAM" // team isn't part of this request
@@ -26,7 +24,6 @@ export type ViolationCode =
   | "STEPIEN"
   | "ROUTING" // an asset has no valid destination, or is received without being given
   | "SALARY" // cap-tier matching
-  | "ROSTER" // trade pushes a team past 15 players
   | "REQUEST"; // ignores what the user asked for (selected asset, destination)
 
 export interface Violation {
@@ -313,19 +310,13 @@ export function checkTradeLegality(
     move.incomingSalary = sum(move.playersReceived);
     move.capDifference = move.incomingSalary - move.outgoingSalary;
 
-    const before = move.team.players?.length ?? 0;
-    const after = before - move.playersSent.length + move.playersReceived.length;
-    if (after > before && after > STANDARD_ROSTER_LIMIT) {
-      add(
-        "ROSTER",
-        `${move.team.displayName} would hold ${after} players; the limit is ${STANDARD_ROSTER_LIMIT}.`
-      );
-    }
   }
 
   // Cap + Stepien rules are only meaningful once every name resolved; salary
   // math on a trade with a missing player is fiction.
-  if (violations.every((v) => v.code === "ROSTER" || v.code === "REQUEST")) {
+  // Roster size is deliberately not checked here: the card shows it as a soft
+  // warning, and a 2-for-1 with a corresponding waiver is a normal trade.
+  if (violations.every((v) => v.code === "REQUEST")) {
     for (const w of collectTradeWarnings(moves)) {
       // Stepien was already checked per pick above (and waived for picks the
       // user selected themselves; the card still warns about those).

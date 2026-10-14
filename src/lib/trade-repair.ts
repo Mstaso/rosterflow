@@ -1,6 +1,5 @@
 /**
- * Deterministic repair for a trade that fails only on salary matching or
- * roster size.
+ * Deterministic repair for a trade that fails only on salary matching.
  *
  * The legality checker is the oracle: we try small edits (add one role player
  * between two teams already in the deal, or drop one the model added) and keep
@@ -86,7 +85,7 @@ function candidateEdits(
 
 /**
  * Returns a legal version of `trade`, or null if no edit of at most two moves
- * fixes it. Only attempted when every violation is SALARY or ROSTER — a
+ * fixes it. Only attempted when every violation is SALARY — a
  * hallucinated player or an untradable pick isn't something filler can fix.
  */
 export function repairTrade(
@@ -95,7 +94,7 @@ export function repairTrade(
   involvedTeams: Team[],
   selectedAssets: SelectedAsset[]
 ): { trade: any; notes: string[] } | null {
-  if (!violations.every((v) => v.code === "SALARY" || v.code === "ROSTER")) return null;
+  if (!violations.every((v) => v.code === "SALARY")) return null;
 
   const rating = (e: Edit) => computePlayerRating(e.player).rating;
   const describe = (e: Edit) =>

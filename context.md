@@ -72,9 +72,6 @@ tuned against today's ratings, so it needs a deliberate recalibration.
   `pickUntradableReason` filters the obvious cases by description text. The real
   fix is a pick table with explicit `ownerTeamId` / `originalTeamId` /
   protection columns, loaded without an LLM in the path.
-- **Asset picker still offers untradable picks.** A user can select a pick the
-  checker would refuse for the model. Proposal: show them disabled with the
-  reason. UI change — not done.
 - **Realism judge is saturated.** `fitScore` is ~2/10 for almost everything,
   partly because it penalises the premise the scenario imposed. Needs a rubric
   that judges construction given the premise, or pairwise comparison.
@@ -84,9 +81,6 @@ tuned against today's ratings, so it needs a deliberate recalibration.
 - **One player has `yearsRemaining` = 3658800** (ESPN data error); nothing
   sanity-checks contract fields.
 - **Season label is hard-coded** ("2025-26") in the generation prompt.
-- **Roster limit uses `team.players.length`**, which depends on which contracts
-  ESPN exposes (see the next section). Thin preseason rosters make the limit
-  looser than reality.
 
 ---
 
