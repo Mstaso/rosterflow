@@ -50,3 +50,5 @@ yarn-error.log*
 
 # Claude Code local worktrees (nested git repos)
 .claude/
+# RealGM pages saved by scrapers/realgm_draft_picks.py
+/scrapers/.realgm-html
