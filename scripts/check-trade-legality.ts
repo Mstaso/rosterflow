@@ -93,6 +93,11 @@ assert.deepEqual(codes(swap(["Alpha Two"], [], ["Beta One"], [])), ["SALARY"]);
   const repaired = repairTrade(broken, violations, teams, []);
   assert.deepEqual(repaired?.trade.teams[0].gives.players.map((p: any) => p.name), ["Alpha Two", "Alpha Filler"]);
   assert.deepEqual(codes(repaired!.trade), []);
+  // A starter-level player is never used as filler, even if he is the only fix.
+  const filler = hawks.players[3];
+  filler.statistics = { points: 25, rebounds: 8, assists: 6, steals: 1, blocks: 1 };
+  assert.equal(repairTrade(broken, violations, teams, []), null);
+  delete filler.statistics;
   const fake = swap(["Made Up Guy"], [], ["Beta One"], []);
   assert.equal(repairTrade(fake, checkTradeLegality(fake, teams, [], NOW).violations, teams, []), null);
 }

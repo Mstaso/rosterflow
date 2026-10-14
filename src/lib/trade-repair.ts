@@ -4,15 +4,22 @@
  *
  * The legality checker is the oracle: we try small edits (add one role player
  * between two teams already in the deal, or drop one the model added) and keep
- * the first combination of at most two edits that the checker accepts. Among
- * legal options the one moving the least talent wins, so the repair reads as
- * salary filler rather than a second headline player.
+ * the best combination of at most two edits that the checker accepts. Only
+ * role players are eligible, and among legal options the one moving the least
+ * talent wins, so a repair reads as salary filler, never a second headliner.
  */
 
 import type { Player, SelectedAsset, Team } from "~/types";
 import { computePlayerRating } from "~/lib/server-utils";
 import { checkTradeLegality, norm, type Violation } from "~/lib/trade-legality";
 
+/**
+ * Repairs only move filler: nobody rated as a starter or better (58+, see
+ * `getTier`). Without this the cheapest legal fix is sometimes "add the other
+ * team's superstar", which is legal and absurd. A trade that can't be fixed
+ * with role players goes back to the model instead.
+ */
+const FILLER_MAX_RATING = 57;
 /** Single edits carried into the two-edit search. */
 const BEAM = 30;
 
@@ -60,6 +67,7 @@ function candidateEdits(
     if (!team) continue;
     const sending = new Set((tt.gives?.players ?? []).map((p: any) => norm(p.name)));
     for (const player of team.players ?? []) {
+      if (computePlayerRating(player).rating > FILLER_MAX_RATING) continue;
       if (sending.has(norm(player.fullName))) {
         if (!selectedPlayerIds.has(player.id)) {
           edits.push({ kind: "remove", from: tt.teamName, player });
