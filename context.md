@@ -19,27 +19,18 @@ in `src/lib/data-refresh.ts`; `pnpm check:refresh` guards them. Requires
 
 ### What it cannot cover
 
-Both come from hand-maintained JSON in `prisma/seeddata/`, last updated
-2026-03-16, and only `pnpm db:seed` (which wipes saved trades) loads them:
-
 1. **Team cap figures** — `totalCapAllocation`, `capSpace`, `firstApronSpace`,
-   `secondApronSpace`. These decide each team's cap tier, so every
-   salary-matching rule depends on them. They are 2025-26 numbers.
-2. **Draft picks** — ownership, protections, `estimatedValue`. Already wrong in
-   known ways: many R1 rows describe picks the team *owes* to someone else
-   ("To PHL (...)"), and picks for drafts that have already happened stay listed.
-
-### Proposal for the static data
-
-- **Cap figures:** derive instead of hand-entering. Sum `Player.contract.salary`
-  per team after each refresh and subtract from a three-number per-season table
-  (cap, first apron, second apron). Roster sums run below the JSON totals (dead
-  money, cap holds and two-ways are missing), so derived values will under-state
-  apron teams unless a per-team "other charges" number is kept alongside.
-- **Draft picks:** needs a `db:refresh-picks` script that upserts from the JSON
-  by `(teamId, year, round, sequence)` instead of wipe-and-reseed, so updating
-  picks stops costing the trade history. The JSON itself still has to be
-  re-pulled by hand a few times a year (draft, deadline, July).
+   `secondApronSpace`, from hand-maintained JSON in `prisma/seeddata/` (last
+   updated 2026-03-16) that only `pnpm db:seed` loads. These decide each team's
+   cap tier, so every salary-matching rule depends on them. Proposal: derive
+   them — sum `Player.contract.salary` per team after each refresh and subtract
+   from a three-number per-season table (cap, first apron, second apron). Roster
+   sums run below the JSON totals (dead money, cap holds and two-ways are
+   missing), so keep a per-team "other charges" number alongside.
+2. **Draft picks** — manual by design: RealGM is behind a Cloudflare check, so
+   `scrapers/realgm_draft_picks.py` runs in a visible browser on Malcolm's
+   machine, then `pnpm db:load-picks`. Re-scrape after the draft, the trade
+   deadline and in July.
 
 ### Known ESPN gaps
 
@@ -59,6 +50,30 @@ ESPN's labels are `FG` ("8.7-18.6"), not `FGA`/`FGM`. So the true-shooting
 multiplier in `computePlayerRating` has never applied. Fixing the parse would
 shift every rating (league-average efficiency maps to ×0.85) and the thresholds
 tuned against today's ratings, so it needs a deliberate recalibration.
+
+---
+
+## Trade accuracy — open items after the legality checker
+
+**Discovered:** 2026-10-13
+
+- **Some pick slots don't reconcile with RealGM.** About 1 in 13 team/year/round
+  slots are multi-team pools or chains of conditions the parser can't map to
+  RealGM's count; they're listed in `draft_picks.json` → `mismatches` on every
+  scrape. When the parse finds more picks than RealGM counts it keeps RealGM's
+  number; when it finds fewer it writes what it found.
+- **Pick rows are keyed by `(team, year, round, sequence)`**, so after a reload a
+  saved trade's live `draftPickId` can point at a different pick in the same slot.
+  Saved trades render from their own snapshot, so nothing visible changes today.
+- **Realism judge is saturated.** `fitScore` is ~2/10 for almost everything,
+  partly because it penalises the premise the scenario imposed. Needs a rubric
+  that judges construction given the premise, or pairwise comparison.
+- **ESPN `contract.tradeRestriction`** is true for ~40% of players. Meaning
+  unverified (recently signed? no-trade clause? post-deadline?), so it is not
+  enforced. Same for `poisonPillProvision` / `baseYearCompensation` flags.
+- **One player has `yearsRemaining` = 3658800** (ESPN data error); nothing
+  sanity-checks contract fields.
+- **Season label is hard-coded** ("2025-26") in the generation prompt.
 
 ---
 

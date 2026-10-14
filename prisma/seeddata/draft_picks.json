@@ -1,0 +1,5314 @@
+{
+  "source": "https://basketball.realgm.com/nba/draft/future_drafts/detailed",
+  "scrapedAt": "2026-10-14T13:59:03+00:00",
+  "teams": {
+    "Atlanta Hawks": [
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "NOP",
+          "MIL"
+        ],
+        "description": "From NOP/MIL \u00b7 protected 1-4 \u00b7 conditional",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "ATL"
+        ],
+        "description": "Own \u00b7 only if 31-55 (else to DAL)",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "ATL"
+        ],
+        "description": "Own \u00b7 swap with UTA/CLE",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "ATL"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "CLE"
+        ],
+        "description": "From CLE",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "ATL"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "NYK"
+        ],
+        "description": "From NYK",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "ATL"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "ATL"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "ATL"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "ATL"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "SAC"
+        ],
+        "description": "From SAC",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "Boston Celtics": [
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "BOS"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "BOS"
+        ],
+        "description": "Own \u00b7 swap with SAS",
+        "isProtected": true,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "LAC",
+          "PHI"
+        ],
+        "description": "From LAC/PHI \u00b7 protected 1-16 \u00b7 swap \u00b7 conditional",
+        "isProtected": true,
+        "isSwap": true,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "BOS"
+        ],
+        "description": "Own \u00b7 only if 31-45 (else to NYK)",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "GSW",
+          "MIL",
+          "OKC"
+        ],
+        "description": "From GSW/MIL/OKC \u00b7 conditional",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "BOS"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "CHA"
+        ],
+        "description": "From CHA \u00b7 protected 31-55",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "PHX",
+          "POR",
+          "WAS"
+        ],
+        "description": "From PHX/POR/WAS \u00b7 conditional",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "BOS"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "PHI"
+        ],
+        "description": "From PHI",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "BOS"
+        ],
+        "description": "Own \u00b7 swap with UTA/CLE",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "HOU"
+        ],
+        "description": "From HOU \u00b7 protected 31-55 \u00b7 conditional",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "BOS"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "BOS"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "BOS"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "BOS"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "Brooklyn Nets": [
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "BKN"
+        ],
+        "description": "Own \u00b7 swap with HOU",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "NYK"
+        ],
+        "description": "From NYK",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "LAL"
+        ],
+        "description": "From LAL \u00b7 conditional",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "BKN"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "PHI"
+        ],
+        "description": "From PHI \u00b7 protected 1-8 \u00b7 conditional",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": false
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "BKN"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "ATL"
+        ],
+        "description": "From ATL",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "MEM"
+        ],
+        "description": "From MEM",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "BKN"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "HOU",
+          "DAL",
+          "PHX"
+        ],
+        "description": "From HOU/DAL/PHX \u00b7 swap",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "NYK"
+        ],
+        "description": "From NYK",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "BKN"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "DAL"
+        ],
+        "description": "From DAL",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "GSW"
+        ],
+        "description": "From GSW",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "MEM"
+        ],
+        "description": "From MEM",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "BKN"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "BKN"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "BOS"
+        ],
+        "description": "From BOS",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "DAL"
+        ],
+        "description": "From DAL",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "LAL"
+        ],
+        "description": "From LAL",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "BKN"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "NYK"
+        ],
+        "description": "From NYK",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "BKN"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "LAL"
+        ],
+        "description": "From LAL",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "BKN"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "DEN"
+        ],
+        "description": "From DEN",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "BKN"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "DEN"
+        ],
+        "description": "From DEN",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "MIA"
+        ],
+        "description": "From MIA",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "TOR"
+        ],
+        "description": "From TOR",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "BKN"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "BKN"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "Charlotte Hornets": [
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "CHA"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "DAL"
+        ],
+        "description": "From DAL \u00b7 protected 1-2 \u00b7 conditional",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "MIA"
+        ],
+        "description": "From MIA \u00b7 protected 1-14 \u00b7 conditional",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "MEM"
+        ],
+        "description": "From MEM",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "NOP",
+          "POR"
+        ],
+        "description": "From NOP/POR",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "CHA"
+        ],
+        "description": "Own \u00b7 swap with MIN",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "CHA"
+        ],
+        "description": "Own \u00b7 swap with LAC/DET",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "HOU"
+        ],
+        "description": "From HOU",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "ORL"
+        ],
+        "description": "From ORL",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "CHA"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "CHA"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "DEN"
+        ],
+        "description": "From DEN",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "ATL",
+          "MIA"
+        ],
+        "description": "From ATL/MIA \u00b7 conditional",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "MIN"
+        ],
+        "description": "From MIN \u00b7 conditional",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "CHA"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "CHA"
+        ],
+        "description": "Own \u00b7 only if 31-55 (else to BOS)",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "LAC",
+          "UTA"
+        ],
+        "description": "From LAC/UTA \u00b7 conditional",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "CHA"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "CHA"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "MIL"
+        ],
+        "description": "From MIL",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "PHX"
+        ],
+        "description": "From PHX",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "CHA"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "CHA"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "MIL"
+        ],
+        "description": "From MIL",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "MIN"
+        ],
+        "description": "From MIN",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "CHA"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "MIN"
+        ],
+        "description": "From MIN",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "PHX"
+        ],
+        "description": "From PHX",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "CHA"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "HOU"
+        ],
+        "description": "From HOU",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "MIN"
+        ],
+        "description": "From MIN",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "Chicago Bulls": [
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "CHI"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "CLE"
+        ],
+        "description": "From CLE",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "CHI"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "CHI"
+        ],
+        "description": "Own \u00b7 swap with IND/PHX",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "CHI"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "CHI"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "DET",
+          "MIL",
+          "NYK"
+        ],
+        "description": "From DET/MIL/NYK",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "CHI"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "CHI"
+        ],
+        "description": "Own \u00b7 swap with IND",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "CHI"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "CHI"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "DEN"
+        ],
+        "description": "From DEN",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "MIN",
+          "GSW"
+        ],
+        "description": "From MIN/GSW \u00b7 swap",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "NYK"
+        ],
+        "description": "From NYK",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "CHI"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "CHI"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "HOU",
+          "PHX"
+        ],
+        "description": "From HOU/PHX",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "CHI"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "CHI"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "Cleveland Cavaliers": [
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "CLE"
+        ],
+        "description": "Own \u00b7 swap with UTA/LAL/ATL",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "CLE"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "CLE"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "CLE"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "CLE"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "Dallas Mavericks": [
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "DAL"
+        ],
+        "description": "Own \u00b7 only if 1-2 (else to CHA)",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "ATL"
+        ],
+        "description": "From ATL \u00b7 protected 31-55 \u00b7 conditional",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "DAL"
+        ],
+        "description": "Own \u00b7 swap with OKC",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "LAL"
+        ],
+        "description": "From LAL",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "DAL"
+        ],
+        "description": "Own \u00b7 swap with SAS/MIN",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "DAL"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "DAL"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "DAL"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "Denver Nuggets": [
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "DEN"
+        ],
+        "description": "Own \u00b7 conditional",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "DEN"
+        ],
+        "description": "Own \u00b7 only if 31-33 (else to WAS)",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "MIN"
+        ],
+        "description": "From MIN \u00b7 conditional",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "DEN"
+        ],
+        "description": "Own \u00b7 conditional",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "DEN"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "CLE"
+        ],
+        "description": "From CLE",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "SAC"
+        ],
+        "description": "From SAC",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "SAC"
+        ],
+        "description": "From SAC",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "DEN"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "DEN"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "Detroit Pistons": [
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "DET"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "DET"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "DET"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "DET"
+        ],
+        "description": "Own \u00b7 swap with UTA/CHA/LAC/MIA/NYK",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "CHA",
+          "LAC"
+        ],
+        "description": "From CHA/LAC \u00b7 conditional",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": false
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "MIA"
+        ],
+        "description": "From MIA \u00b7 conditional",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": false
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "DET"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "MIL",
+          "NYK"
+        ],
+        "description": "From MIL/NYK",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "MIL",
+          "NYK"
+        ],
+        "description": "From MIL/NYK",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "DET"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "DET"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "DET"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "DAL"
+        ],
+        "description": "From DAL",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "MIN",
+          "GSW"
+        ],
+        "description": "From MIN/GSW \u00b7 swap",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "DET"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "DET"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "DET"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "DET"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "Golden State Warriors": [
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "GSW"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "GSW"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "GSW"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "GSW"
+        ],
+        "description": "Own \u00b7 only if 1-20 (else to MEM)",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "GSW"
+        ],
+        "description": "Own \u00b7 conditional",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "GSW"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "GSW"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "GSW"
+        ],
+        "description": "Own \u00b7 only if 31-50 (else to MEM)",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "GSW"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "GSW"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "Houston Rockets": [
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "HOU"
+        ],
+        "description": "Own \u00b7 swap with BKN",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "PHX"
+        ],
+        "description": "From PHX",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "POR",
+          "NOP"
+        ],
+        "description": "From POR/NOP \u00b7 conditional",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "HOU"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "HOU"
+        ],
+        "description": "Own \u00b7 swap with DAL/PHX/BKN",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "HOU"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "HOU"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "HOU"
+        ],
+        "description": "Own \u00b7 swap with OKC/ATL \u00b7 conditional",
+        "isProtected": true,
+        "isSwap": true,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "HOU"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "HOU"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "Indiana Pacers": [
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "IND"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "UTA"
+        ],
+        "description": "From UTA",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "IND"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "IND"
+        ],
+        "description": "Own \u00b7 swap with PHX/CHI/NYK",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "IND"
+        ],
+        "description": "Own \u00b7 swap with WAS/POR",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "IND"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "IND"
+        ],
+        "description": "Own \u00b7 swap with CHI",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "IND"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "IND"
+        ],
+        "description": "Own \u00b7 swap with WAS/MEM/MIA",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "IND"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "IND"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "IND"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "IND"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "LA Clippers": [
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "LAC"
+        ],
+        "description": "Own \u00b7 swap with OKC/DEN/TOR",
+        "isProtected": true,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "DAL"
+        ],
+        "description": "From DAL",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "LAC"
+        ],
+        "description": "Own \u00b7 swap with PHI",
+        "isProtected": true,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "TOR"
+        ],
+        "description": "From TOR",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "TOR"
+        ],
+        "description": "From TOR",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "LAC"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "LAC"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "TOR"
+        ],
+        "description": "From TOR",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "LAC"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "TOR"
+        ],
+        "description": "From TOR",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "Los Angeles Lakers": [
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "LAL"
+        ],
+        "description": "Own \u00b7 only if 1-4 (else to MEM)",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "LAL"
+        ],
+        "description": "Own \u00b7 swap with UTA/CLE",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "LAL"
+        ],
+        "description": "Own \u00b7 swap with UTA",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "WAS"
+        ],
+        "description": "From WAS",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "LAL"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "WAS"
+        ],
+        "description": "From WAS",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "LAL"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "Memphis Grizzlies": [
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "MEM"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "UTA",
+          "CLE",
+          "MIN"
+        ],
+        "description": "From UTA/CLE/MIN",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "LAL"
+        ],
+        "description": "From LAL \u00b7 protected 1-4 \u00b7 conditional",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "MEM"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "MEM"
+        ],
+        "description": "Own \u00b7 swap with ORL",
+        "isProtected": true,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "HOU"
+        ],
+        "description": "From HOU",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "LAL"
+        ],
+        "description": "From LAL",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "POR"
+        ],
+        "description": "From POR",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "MEM"
+        ],
+        "description": "Own \u00b7 swap with WAS/PHX",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "GSW"
+        ],
+        "description": "From GSW \u00b7 protected 1-20",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "ORL"
+        ],
+        "description": "From ORL \u00b7 conditional",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "MEM"
+        ],
+        "description": "Own \u00b7 only if 31-50 (else to MIN)",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "DEN",
+          "HOU",
+          "MIA"
+        ],
+        "description": "From DEN/HOU/MIA \u00b7 conditional",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": false
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "MEM"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "PHX"
+        ],
+        "description": "From PHX",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "MEM"
+        ],
+        "description": "Own \u00b7 swap with IND/MIA",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "MEM"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "MEM"
+        ],
+        "description": "Own \u00b7 swap with PHI/UTA/WAS",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "GSW"
+        ],
+        "description": "From GSW \u00b7 protected 31-50 \u00b7 conditional",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "MEM"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "MEM"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "OKC"
+        ],
+        "description": "From OKC",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "WAS"
+        ],
+        "description": "From WAS",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "Miami Heat": [
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "MIA"
+        ],
+        "description": "Own \u00b7 swap with PHI/NOP/NYK/SAS/OKC/HOU/IND",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "MIA"
+        ],
+        "description": "Own \u00b7 conditional",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "MIA"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "MIA"
+        ],
+        "description": "Own \u00b7 swap with MIL/POR",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "MIA"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "Milwaukee Bucks": [
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "MIL"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "BKN",
+          "DAL"
+        ],
+        "description": "From BKN/DAL",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "MIL"
+        ],
+        "description": "Own \u00b7 swap with POR/WAS/BKN/PHI/PHX",
+        "isProtected": true,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "MIL"
+        ],
+        "description": "Own \u00b7 swap with POR/MIA",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "MIL"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "MIA"
+        ],
+        "description": "From MIA",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "MIL"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "MIL"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "MIA"
+        ],
+        "description": "From MIA",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "MIL"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "MIA"
+        ],
+        "description": "From MIA",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "Minnesota Timberwolves": [
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "MIN"
+        ],
+        "description": "Own \u00b7 swap with CHA",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "MIN"
+        ],
+        "description": "Own \u00b7 swap with CHA/PHX/CLE/UTA \u00b7 conditional",
+        "isProtected": true,
+        "isSwap": true,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "MIN"
+        ],
+        "description": "Own \u00b7 swap with SAS/DAL",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "MEM"
+        ],
+        "description": "From MEM \u00b7 protected 31-50 \u00b7 conditional",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "MIN"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "New Orleans Pelicans": [
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "MIL"
+        ],
+        "description": "From MIL \u00b7 protected 1-4",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "OKC",
+          "HOU",
+          "IND",
+          "MIA"
+        ],
+        "description": "From OKC/HOU/IND/MIA",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "NOP"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "NOP"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "NOP"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "NOP"
+        ],
+        "description": "Own \u00b7 swap with ORL",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "NOP"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "TOR"
+        ],
+        "description": "From TOR",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "NOP"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "NOP"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "NOP"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "NOP"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "New York Knicks": [
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "NYK"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "OKC",
+          "HOU",
+          "IND",
+          "MIA"
+        ],
+        "description": "From OKC/HOU/IND/MIA",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "WAS"
+        ],
+        "description": "From WAS",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "NYK"
+        ],
+        "description": "Own \u00b7 swap with BKN/PHX",
+        "isProtected": true,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "BOS"
+        ],
+        "description": "From BOS \u00b7 protected 31-45",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "IND",
+          "PHX"
+        ],
+        "description": "From IND/PHX \u00b7 swap \u00b7 conditional",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "PHX"
+        ],
+        "description": "From PHX",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "SAC"
+        ],
+        "description": "From SAC",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "NYK"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "PHI"
+        ],
+        "description": "From PHI",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "NYK"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "NYK"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "DAL"
+        ],
+        "description": "From DAL",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "NYK"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "NYK"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "PHX"
+        ],
+        "description": "From PHX",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "Oklahoma City Thunder": [
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "OKC"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "SAS"
+        ],
+        "description": "From SAS \u00b7 protected 17-30 \u00b7 conditional",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": false
+      },
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "DEN"
+        ],
+        "description": "From DEN \u00b7 protected 1-5 \u00b7 conditional",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": false
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "CHI"
+        ],
+        "description": "From CHI",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "OKC"
+        ],
+        "description": "Own \u00b7 swap with DAL",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "UTA"
+        ],
+        "description": "From UTA",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "OKC"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "DEN"
+        ],
+        "description": "From DEN \u00b7 protected 1-5 \u00b7 conditional",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "OKC"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "BOS"
+        ],
+        "description": "From BOS",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "ATL",
+          "MIA"
+        ],
+        "description": "From ATL/MIA",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "OKC"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "OKC"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "ATL"
+        ],
+        "description": "From ATL",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "DEN",
+          "HOU",
+          "MIA"
+        ],
+        "description": "From DEN/HOU/MIA",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "DEN",
+          "HOU",
+          "MIA"
+        ],
+        "description": "From DEN/HOU/MIA",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "MIN"
+        ],
+        "description": "From MIN",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "OKC"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "OKC"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "DET"
+        ],
+        "description": "From DET",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "ATL",
+          "HOU"
+        ],
+        "description": "From ATL/HOU \u00b7 protected 56-60 \u00b7 swap",
+        "isProtected": true,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "ORL",
+          "NOP"
+        ],
+        "description": "From ORL/NOP \u00b7 swap",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "OKC"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "OKC"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "ATL"
+        ],
+        "description": "From ATL",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "LAL"
+        ],
+        "description": "From LAL",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "OKC"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "Orlando Magic": [
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "ORL"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "LAL",
+          "WAS"
+        ],
+        "description": "From LAL/WAS",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "ORL"
+        ],
+        "description": "Own \u00b7 swap with MEM",
+        "isProtected": true,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "ORL"
+        ],
+        "description": "Own \u00b7 conditional",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "ORL"
+        ],
+        "description": "Own \u00b7 swap with NOP",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "MIL"
+        ],
+        "description": "From MIL",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "ORL"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "ORL"
+        ],
+        "description": "Own \u00b7 swap with NOP/OKC",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "ORL"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "ORL"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "ORL"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "ORL"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "Philadelphia 76ers": [
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "PHI"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "PHI"
+        ],
+        "description": "Own \u00b7 swap with WAS/GSW/PHX/OKC/HOU/IND/MIA",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "GSW",
+          "PHX"
+        ],
+        "description": "From GSW/PHX",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "PHI"
+        ],
+        "description": "Own \u00b7 swap with BOS/SAS/LAC \u00b7 conditional",
+        "isProtected": true,
+        "isSwap": true,
+        "conditional": true,
+        "reconciled": false
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "PHI"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "DET"
+        ],
+        "description": "From DET \u00b7 protected 31-55",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "GSW",
+          "MIL",
+          "OKC"
+        ],
+        "description": "From GSW/MIL/OKC \u00b7 conditional",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "GSW",
+          "MIL",
+          "OKC"
+        ],
+        "description": "From GSW/MIL/OKC \u00b7 conditional",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "PHI"
+        ],
+        "description": "Own \u00b7 swap with LAC",
+        "isProtected": true,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "PHI"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "PHI"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "PHX",
+          "POR",
+          "WAS"
+        ],
+        "description": "From PHX/POR/WAS",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "PHI"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "PHI"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "PHI"
+        ],
+        "description": "Own \u00b7 swap with MEM/WAS",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "PHI"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "PHI"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "Phoenix Suns": [
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "UTA",
+          "CLE",
+          "MIN"
+        ],
+        "description": "From UTA/CLE/MIN",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "BOS",
+          "ORL"
+        ],
+        "description": "From BOS/ORL",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "PHX"
+        ],
+        "description": "Own \u00b7 swap with BKN/NYK/WAS/PHI",
+        "isProtected": true,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "CHA",
+          "CLE",
+          "UTA",
+          "MIN"
+        ],
+        "description": "From CHA/CLE/UTA/MIN \u00b7 protected 6-30 \u00b7 swap",
+        "isProtected": true,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "PHX"
+        ],
+        "description": "Own \u00b7 swap with WAS/MEM",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "PHX"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "PHX"
+        ],
+        "description": "Own \u00b7 swap with MIN/HOU",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "Portland Trail Blazers": [
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "POR"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "POR"
+        ],
+        "description": "Own \u00b7 swap with CHA/NOP",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "MIN"
+        ],
+        "description": "From MIN \u00b7 conditional",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "POR"
+        ],
+        "description": "Own \u00b7 swap with MIL/WAS",
+        "isProtected": true,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "ORL"
+        ],
+        "description": "From ORL",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "POR"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "SAC"
+        ],
+        "description": "From SAC",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "BOS",
+          "MIL"
+        ],
+        "description": "From BOS/MIL",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "BOS",
+          "MIL"
+        ],
+        "description": "From BOS/MIL",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "IND",
+          "WAS"
+        ],
+        "description": "From IND/WAS",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "POR"
+        ],
+        "description": "Own \u00b7 swap with MIL/MIA",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "POR"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "POR"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "POR"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "POR"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "POR"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "POR"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "Sacramento Kings": [
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "SAC"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "SAS"
+        ],
+        "description": "From SAS \u00b7 protected 17-30 \u00b7 conditional",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "SAC"
+        ],
+        "description": "Own \u00b7 conditional",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "CHA"
+        ],
+        "description": "From CHA \u00b7 conditional",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "SAC"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "SAC"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "SAC"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "SAC"
+        ],
+        "description": "Own \u00b7 swap with SAS",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "MIN"
+        ],
+        "description": "From MIN",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "SAC"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "SAC"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "San Antonio Spurs": [
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "SAS"
+        ],
+        "description": "Own \u00b7 only if 17-30 (else to SAC/OKC)",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "SAS"
+        ],
+        "description": "Own \u00b7 swap with OKC/HOU/IND/MIA",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "SAS"
+        ],
+        "description": "Own \u00b7 swap with BOS",
+        "isProtected": true,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "SAS"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "NOP"
+        ],
+        "description": "From NOP",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "SAS"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "SAS"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "LAC"
+        ],
+        "description": "From LAC",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "NOP"
+        ],
+        "description": "From NOP",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "SAS"
+        ],
+        "description": "Own \u00b7 swap with DAL/MIN",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "SAS"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "CLE"
+        ],
+        "description": "From CLE",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "SAC"
+        ],
+        "description": "From SAC",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "SAS"
+        ],
+        "description": "Own \u00b7 swap with SAC",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "SAS"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "SAS"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "SAS"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "SAS"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "SAS"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "Toronto Raptors": [
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "TOR"
+        ],
+        "description": "Own \u00b7 swap with LAC/OKC/DEN",
+        "isProtected": true,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "TOR"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "TOR"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "TOR"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "TOR"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "TOR"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "TOR"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "TOR"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "Utah Jazz": [
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "CLE",
+          "MIN"
+        ],
+        "description": "From CLE/MIN",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "DEN"
+        ],
+        "description": "From DEN",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "LAC"
+        ],
+        "description": "From LAC",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "BOS",
+          "ORL"
+        ],
+        "description": "From BOS/ORL",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "UTA"
+        ],
+        "description": "Own \u00b7 swap with CLE/LAL/ATL",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "CLE"
+        ],
+        "description": "From CLE",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "DET",
+          "CHA",
+          "LAC",
+          "MIA",
+          "NYK"
+        ],
+        "description": "From DET/CHA/LAC/MIA/NYK \u00b7 protected 56-60",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "CLE",
+          "MIN"
+        ],
+        "description": "From CLE/MIN \u00b7 protected 1-5",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2029,
+        "round": 2,
+        "originalTeams": [
+          "UTA"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "UTA"
+        ],
+        "description": "Own \u00b7 swap with LAL",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "UTA"
+        ],
+        "description": "Own \u00b7 swap with CHA/LAC",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "UTA"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "LAL"
+        ],
+        "description": "From LAL",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "UTA"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "BOS",
+          "CLE"
+        ],
+        "description": "From BOS/CLE",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "UTA"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "CLE"
+        ],
+        "description": "From CLE",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "UTA"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "LAL"
+        ],
+        "description": "From LAL",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "UTA"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ],
+    "Washington Wizards": [
+      {
+        "year": 2027,
+        "round": 1,
+        "originalTeams": [
+          "WAS"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "BKN",
+          "DAL"
+        ],
+        "description": "From BKN/DAL",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "GSW",
+          "PHX"
+        ],
+        "description": "From GSW/PHX",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2027,
+        "round": 2,
+        "originalTeams": [
+          "PHI",
+          "GSW",
+          "PHX",
+          "OKC",
+          "HOU",
+          "IND",
+          "MIA"
+        ],
+        "description": "From PHI/GSW/PHX/OKC/HOU/IND/MIA",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 1,
+        "originalTeams": [
+          "WAS"
+        ],
+        "description": "Own \u00b7 swap with PHI/BKN/PHX",
+        "isProtected": true,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": false
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "WAS"
+        ],
+        "description": "Own \u00b7 swap with ORL/LAL",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2028,
+        "round": 2,
+        "originalTeams": [
+          "DEN"
+        ],
+        "description": "From DEN \u00b7 protected 31-33 \u00b7 conditional",
+        "isProtected": true,
+        "isSwap": false,
+        "conditional": true,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "WAS"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2029,
+        "round": 1,
+        "originalTeams": [
+          "BOS",
+          "MIL",
+          "POR"
+        ],
+        "description": "From BOS/MIL/POR",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 1,
+        "originalTeams": [
+          "WAS"
+        ],
+        "description": "Own \u00b7 swap with PHX/MEM",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2030,
+        "round": 2,
+        "originalTeams": [
+          "PHX",
+          "POR"
+        ],
+        "description": "From PHX/POR",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 1,
+        "originalTeams": [
+          "WAS"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2031,
+        "round": 2,
+        "originalTeams": [
+          "IND",
+          "MIA"
+        ],
+        "description": "From IND/MIA \u00b7 swap",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 1,
+        "originalTeams": [
+          "WAS"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2032,
+        "round": 2,
+        "originalTeams": [
+          "MEM",
+          "PHI",
+          "UTA"
+        ],
+        "description": "From MEM/PHI/UTA \u00b7 swap",
+        "isProtected": false,
+        "isSwap": true,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 1,
+        "originalTeams": [
+          "WAS"
+        ],
+        "description": "Own",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      },
+      {
+        "year": 2033,
+        "round": 2,
+        "originalTeams": [
+          "DAL"
+        ],
+        "description": "From DAL",
+        "isProtected": false,
+        "isSwap": false,
+        "conditional": false,
+        "reconciled": true
+      }
+    ]
+  },
+  "mismatches": [
+    "Atlanta Hawks 2031 R2: RealGM counts 0+0, parsed 1 (Own \u00b7 only if 56-60 (else to OKC/HOU))",
+    "Brooklyn Nets 2028 R1: RealGM counts 1+1, parsed 3 (Own; From PHI \u00b7 protected 1-8; From PHI/PHX/NYK \u00b7 protected 1-8 \u00b7 swap)",
+    "Brooklyn Nets 2028 R2: RealGM counts 3+1, parsed 3 (Own; From ATL; From MEM)",
+    "Charlotte Hornets 2028 R1: RealGM counts 1+1, parsed 1 (Own \u00b7 swap with MIN)",
+    "Charlotte Hornets 2028 R2: RealGM counts 3+1, parsed 3 (Own \u00b7 swap with LAC/DET; From HOU; From ORL)",
+    "Charlotte Hornets 2029 R1: RealGM counts 1+0, parsed 3 (Own; From UTA/CLE/MIN \u00b7 protected 1-5; From MIN \u00b7 protected 6-30 \u00b7 swap)",
+    "Charlotte Hornets 2030 R1: RealGM counts 1+0, parsed 2 (Own; From MIN/SAS/DAL \u00b7 swap)",
+    "Cleveland Cavaliers 2029 R1: RealGM counts 0+0, parsed 1 (Own \u00b7 only if 1-5 (else to UTA/CHA))",
+    "Denver Nuggets 2027 R1: RealGM counts 0+1, parsed 0 (none)",
+    "Denver Nuggets 2029 R1: RealGM counts 0+1, parsed 0 (none)",
+    "Detroit Pistons 2028 R2: RealGM counts 1+2, parsed 4 (Own \u00b7 swap with UTA/CHA/LAC/MIA/NYK; From CHA/LAC; From MIA; From NYK)",
+    "Houston Rockets 2029 R1: RealGM counts 2+0, parsed 1 (Own \u00b7 swap with DAL/PHX/BKN)",
+    "LA Clippers 2028 R1: RealGM counts 0+0, parsed 1 (Own \u00b7 only if 1-16 (else to BOS))",
+    "Memphis Grizzlies 2027 R2: RealGM counts 0+1, parsed 0 (none)",
+    "Memphis Grizzlies 2029 R2: RealGM counts 3+1, parsed 3 (From HOU; From LAL; From POR)",
+    "Memphis Grizzlies 2030 R2: RealGM counts 1+2, parsed 2 (Own \u00b7 only if 31-50 (else to MIN); From DEN/HOU/MIA)",
+    "Miami Heat 2027 R1: RealGM counts 0+1, parsed 0 (none)",
+    "Milwaukee Bucks 2027 R1: RealGM counts 0+0, parsed 1 (Own \u00b7 only if 1-4 (else to NOP/ATL))",
+    "New Orleans Pelicans 2027 R1: RealGM counts 1+1, parsed 1 (From MIL \u00b7 protected 1-4)",
+    "Oklahoma City Thunder 2027 R1: RealGM counts 1+2, parsed 4 (Own; From SAS \u00b7 protected 17-30; From DEN \u00b7 protected 1-5; From LAC \u00b7 protected 1-5 \u00b7 swap)",
+    "Oklahoma City Thunder 2027 R2: RealGM counts 1+2, parsed 1 (From CHI)",
+    "Oklahoma City Thunder 2028 R1: RealGM counts 1+1, parsed 1 (Own \u00b7 swap with DAL)",
+    "Oklahoma City Thunder 2029 R2: RealGM counts 3+1, parsed 3 (Own; From BOS; From ATL/MIA)",
+    "Oklahoma City Thunder 2030 R1: RealGM counts 1+1, parsed 1 (Own)",
+    "Philadelphia 76ers 2027 R2: RealGM counts 2+0, parsed 3 (Own \u00b7 swap with WAS/GSW/PHX/OKC/HOU/IND/MIA; From GSW/PHX; From OKC/HOU/IND/MIA)",
+    "Philadelphia 76ers 2028 R1: RealGM counts 0+1, parsed 2 (Own \u00b7 swap with BOS/SAS/LAC; From LAC)",
+    "Philadelphia 76ers 2030 R2: RealGM counts 1+0, parsed 2 (From PHX/POR/WAS; From WAS)",
+    "San Antonio Spurs 2027 R1: RealGM counts 1+0, parsed 2 (Own \u00b7 only if 17-30 (else to SAC/OKC); From ATL)",
+    "San Antonio Spurs 2028 R2: RealGM counts 2+1, parsed 2 (Own; From NOP)",
+    "Utah Jazz 2029 R1: RealGM counts 1+1, parsed 1 (From CLE/MIN \u00b7 protected 1-5)",
+    "Utah Jazz 2029 R2: RealGM counts 1+1, parsed 1 (Own)",
+    "Washington Wizards 2028 R1: RealGM counts 1+0, parsed 2 (Own \u00b7 swap with PHI/BKN/PHX; From MIL/POR \u00b7 protected 1-8 \u00b7 swap)"
+  ]
+}

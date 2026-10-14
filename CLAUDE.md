@@ -8,7 +8,7 @@ NBA trade-machine web app. Users select teams and assets (players + draft picks)
 - Prisma + PostgreSQL — README mentions Drizzle, **ignore it, not used**
 - Clerk for auth — README mentions NextAuth, **also not used**
 - Tailwind 3 + shadcn/ui (Radix)
-- Anthropic SDK (`claude-sonnet-4-6`) for trade generation; OpenAI SDK only in the seed pipeline
+- Anthropic SDK (`claude-sonnet-4-6`) for trade generation
 - PostHog + Vercel Analytics
 - `pnpm@10.11.1` pinned
 
@@ -18,9 +18,12 @@ NBA trade-machine web app. Users select teams and assets (players + draft picks)
 - `pnpm build` — `prisma generate && next build`
 - `pnpm lint` — ESLint (flat config)
 - `pnpm db:push` — sync schema
-- `pnpm db:seed` — `tsx prisma/seed.ts` — **wipes everything including saved trades**, then live ESPN rosters/contracts + static cap/pick JSON
+- `pnpm db:seed` — `tsx prisma/seed.ts` — **wipes everything including saved trades**, then live ESPN rosters/contracts + static cap JSON + `draft_picks.json`
+- `python scrapers/realgm_draft_picks.py` — scrape RealGM picks into `prisma/seeddata/draft_picks.json` (manual: visible browser, RealGM is behind Cloudflare; `--offline` re-parses saved pages)
+- `pnpm db:load-picks` — load `draft_picks.json` into `DraftPick`; update-only, saved trades survive
 - `pnpm db:refresh` — `tsx scripts/refresh-data.ts` — non-destructive ESPN refresh (same code as the cron)
 - `pnpm check:refresh` — self-check for the refresh logic (no network, no DB)
+- `pnpm check:picks` — self-checks for the pick loader and the RealGM parser (needs `bs4` for the Python half)
 - `pnpm db:studio` — Prisma Studio on :5555
 - `./start-database.sh` — local Postgres container (Docker/Podman) from `.env`
 
@@ -31,26 +34,26 @@ Both share context-building helpers in `src/lib/server-utils.ts` and the cap rul
 ### Flow A — AI-generate trades
 
 1. **UI trigger.** `src/components/trade-machine/trade-machine-client.tsx` → `handleGenerateTrade()` → POSTs to `/api/trades/generate` (SSE). Client always sends `additionalTeams: null` — the server decides who the trade partners are.
-2. **Fit-based partner selection (single-player case only).** When `selectedAssets.length === 1`, `teams.length === 1`, and the offered asset is a player, `src/app/api/trades/generate/route.ts` calls `pickFitPartners()` from `src/lib/target-asset-scorer.ts`. That scorer:
+2. **Resolve the request.** `resolveTradeRequest()` in `src/lib/trade-generator.ts` re-reads every team from the DB by id (rosters, salaries and cap numbers in the request body are ignored) and, when exactly one player from one team is offered with no partners, calls `pickFitPartners()` from `src/lib/target-asset-scorer.ts`. That scorer:
    - Hydrates all 30 teams via `db.teams.getAllWithRosters()` (single Prisma query)
    - Scores every other-team asset on salary fit (`computeMatchingBounds`), rating parity (±8), seller orientation (rebuilders favor age ≤25 + picks; contenders favor 75+ veterans + expiring), position adjacency, target cap-tier penalty
-   - Hard-filters Stepien-blocked own R1s via `getOwnStepienBlockedYears`
+   - Only considers picks that pass `tradablePicks()` (see "Pick tradability" below)
    - Picks top 8 teams by aggregate score, weighted-samples 2 by score² (variety on regenerate)
    - For each selected team, returns up to 2 candidate **packages** (1–3 assets that meet matching bounds)
-   Multi-asset, multi-team, or user-picked-partner requests skip this entirely.
-3. **Build prompt + context.** `src/lib/trade-generator.ts` → `buildTradePrompt()` assembles:
-   - `getRosterContext` — top 10 players per team with rating + salary. **Stepien-blocked own R1s are filtered out here**, so the LLM never sees them (no warning section needed).
+   Multi-asset, multi-team, or user-picked-partner requests skip the scorer.
+3. **Build prompt + context.** `buildTradePrompt()` assembles:
+   - `getRosterContext` — top 10 players per team with rating + salary, and **only tradable picks**, each under a unique name (`pickLabel`: a team's second 2027 R1 is "2027 R1 #2").
    - `getTeamOutlookContext` — win %, rank, contender/rebuild label
-   - `getCapTier` per team → `SECOND_APRON` tags surfaced; other cap matching done post-gen
+   - `describeTeamConstraints` — one line per team of hard limits computed in code: matching rule for its cap tier, dollars of room below each apron, open roster spots. The model is told a scenario breaking a salary limit is rejected; roster room is a preference.
    - `classifyTeamRoles` (`src/lib/team-role-classifier.ts`) → PRINCIPAL_SELLER/BUYER/FACILITATOR for multi-team deals
-   - `SUGGESTED TARGET PACKAGES` — when the scorer ran in step 2, the packages render here as starter suggestions ("substitute or augment from rosters if you can do better"). Anchors the LLM on the specific assets the partner team was chosen for, including sub-top-10 role players/expiring deals that the roster context wouldn't show.
-   - Also runs `src/lib/manual-trade-generator.ts` first — if it returns a valid algorithmic trade, that's prepended and the LLM is asked not to repeat it.
-4. **Stream from Anthropic.** `src/app/api/trades/generate/route.ts` calls Sonnet 4.6 (temp 0.7, 5500 tokens). The model returns a JSON array of scenarios; each is streamed back as it parses.
-5. **Validate + refine each scenario.** Back in `trade-generator.ts`:
-   - `isValidTrade()` rejects scenarios where an asset is double-given or a team gives nothing.
-   - `reconstructReceives()` rebuilds each team's `receives` from everyone else's `gives` (the LLM is unreliable here).
-   - `refineTradeSalary()` in `src/lib/trade-refinement.ts` iteratively adds filler players until cap-matching bounds are met (max 3 iters for 2-team, 5 for multi-team).
-6. **Display.** `src/components/trade-machine/generated-trades/trade-container.tsx` appends each trade as it arrives. User can edit or save.
+   - `SUGGESTED TARGET PACKAGES` — when the scorer ran in step 2, the packages render here as starter suggestions.
+   - Also runs `src/lib/manual-trade-generator.ts` first — if it returns a trade that passes the legality checker, that's prepended and the LLM is asked not to repeat it.
+4. **Generate, vet, repair, retry.** `generateVettedTrades()` streams Sonnet 4.6 (temp 0.7, 5500 tokens). The model returns names only — who gives what to whom. Each scenario goes through `vetTrade()`:
+   - `isValidTrade()` + `reconstructReceives()` (structure; rebuild `receives` from `gives`).
+   - `checkTradeLegality()` in `src/lib/trade-legality.ts` resolves every team, player and pick to DB rows and returns violations: unknown/wrong-team player, unknown/untradable pick, Stepien, routing, salary, ignored user request. Roster size is deliberately *not* a rejection — the card shows it as a soft warning. Cap rules come from `collectTradeWarnings`, so the server and the result card cannot disagree. It also stamps the resolved pick `id` onto the trade for the client.
+   - If the only violations are salary, `repairTrade()` in `src/lib/trade-repair.ts` searches for at most two role-player edits (rating ≤ 57) that make the checker pass.
+   - Legal trades stream to the client. If fewer than 3 are legal, the model gets **one** retry with the checker's messages for each reject. If nothing is legal and there's no manual trade, the two least-broken rejects are shown (the card explains what's wrong).
+5. **Display.** `src/components/trade-machine/generated-trades/trade-container.tsx` appends each trade as it arrives. Salaries and stats on the card are looked up from DB-sourced team data by name/id — nothing numeric comes from the model.
 
 ### Flow B — User "tries" their own trade
 
@@ -86,12 +89,15 @@ Defined in `src/lib/server-utils.ts` → `computeMatchingBounds()`. For incoming
 - `FIRST_APRON`: `O / 1.1 - 0.1M ≤ incoming ≤ O * 1.1 + 0.1M`
 - `SECOND_APRON`: `incoming ≤ O` (no aggregation allowed)
 
+The result card (`checkCapRules` in `trade-warnings.ts`) is the authority for legality and is stricter than the static tiers in one way: a team that would *cross* an apron because of the trade is held to that apron's rule. It has no minimum-incoming check. `computeMatchingBounds` (with its lower bound) is still used by the fit scorer and the manual generator.
+
+### Pick tradability (domain logic)
+
+`pickUntradableReason()` in `src/lib/trade-legality.ts`. A row in `DraftPick` is **not** proof the team can trade it. Untradable: draft year already passed; description containing "only if" or "conditional" (scraper labels for protected obligations and picks RealGM counts as conditional); legacy "To …" / "Frozen" descriptions; or own R1 in a Stepien-blocked year. The asset picker (`team-card.tsx`) shows these rows disabled with the reason, except Stepien-blocked picks, which stay selectable so Try Trade can explain the rule; a Stepien pick the user selected is not held against generated trades.
+
 ### Stepien rule (domain logic)
 
-Teams can't trade their own R1 picks in consecutive future years. Source of truth: `src/lib/server-utils.ts` → `isOwnPick()` + `getOwnStepienBlockedYears()`. These are used in two places:
-
-- `getRosterContext` filters Stepien-blocked own R1s out of what the LLM sees (so it can't propose trading them)
-- `target-asset-scorer.ts` excludes them from the candidate pool when picking partner teams
+Teams can't trade their own R1 picks in consecutive future years. Source of truth: `src/lib/server-utils.ts` → `isOwnPick()` + `getOwnStepienBlockedYears()`. Applied through `pickUntradableReason()`, which the prompt context, the fit scorer and the legality checker all share.
 
 Acquired R1s (e.g. "Lakers' 2027 R1 via NYK") aren't subject to the holder's Stepien restriction and move freely.
 
@@ -106,11 +112,17 @@ Rules the refresh keeps — don't loosen without reading `scripts/check-data-ref
 - A player on an ESPN roster with no current-season contract keeps the stored contract; one we've never seen is not created.
 - Players are pruned only when all 30 rosters were fetched and fewer than 25% vanished.
 
-**Not refreshed** (static JSON in `prisma/seeddata/`): team cap figures (`totalCapAllocation`, `capSpace`, apron spaces → cap tiers) and all draft picks. See `context.md`.
+**Not refreshed by the cron:** team cap figures (static JSON in `prisma/seeddata/`, only loaded by `db:seed`) and draft picks (manual: scraper + `db:load-picks`). See `context.md`.
+
+## Draft picks
+
+`scrapers/realgm_draft_picks.py` combines RealGM's league-wide "detailed" page (one entry per traded pick, split Incoming/Outgoing) with each team page's pick count (green = held, gold = conditional). RealGM's count is the source of truth for how many picks a team holds; slots where the parse disagrees are flagged `reconciled: false` and listed under `mismatches`, never padded. Output holds facts and our own short labels only ("From SAS · protected 17-30") — the repo is public, so RealGM's prose stays out. `src/lib/draft-picks.ts` loads it: one transaction per team, upsert by `(teamId, year, round, sequence)`, stale rows unlinked from saved trades then deleted, `estimatedValue` from `pickValue()` (original team's win %, years out, protection, conditional).
 
 ## Eval harness (offline, not user-facing)
 
 `src/lib/eval/` + `src/app/api/trades/eval/route.ts` (dev-only). `buildAllScenarios()` generates scenarios from live DB, runs the same `generateTradesCore()`, then `grader.ts` (salary/value/integrity) and `realism-judge.ts` (LLM-judged realism) score the output. Results land in `./eval-results/*.json`. Useful when tuning the prompt or refinement logic.
+
+**Fixed legality eval:** `pnpm eval:trades <label>` (`scripts/eval-trades.ts`) runs 22 fixed requests through `generateTradesCore()` and reports the share of displayed AI trades with violations, rejects before display, retries, and trades per request. Run it twice per code state — single runs differ by a few points. `pnpm check:legality` is the no-network self-check for the checker and repair. The realism judge's `fitScore` currently sits at ~2/10 for nearly every trade, so it cannot tell changes apart; don't read it as evidence until it's recalibrated.
 
 Note: grader scales draft-pick value by 0.65 vs player ratings (top-10 pick ≈ 55–65 rated player). Match this if extending the grader.
 

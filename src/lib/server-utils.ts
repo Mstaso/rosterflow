@@ -4,6 +4,7 @@ import {
   isOwnPick as isOwnPickShared,
   getOwnStepienBlockedYears as getOwnStepienBlockedYearsShared,
 } from "./stepien";
+import { pickLabel, tradablePicks } from "./trade-legality";
 
 // Re-exported for backward compatibility — implementations live in
 // `./stepien.ts` so they can be imported in client-side code without dragging
@@ -132,8 +133,8 @@ function getPlayerCompact(player: Player) {
   return line;
 }
 
-function getPickCompact(pick: DraftPick) {
-  let text = `${pick.year} R${pick.round}`;
+function getPickCompact(pick: DraftPick, label?: string) {
+  let text = label ?? `${pick.year} R${pick.round}`;
 
   if (pick.isProtected) text += " (P)";
   if (pick.isSwap) text += " (Swap)";
@@ -222,18 +223,11 @@ export function getRosterContext(involvedTeams: Team[], selectedAssets?: Selecte
       .map((wr: { player: Player }) => getPlayerCompact(wr.player))
       .join("; ");
 
-    // Drop Stepien-blocked own R1s from the prompt so the LLM can't propose
-    // trading them. Acquired R1s (description starting with another team)
-    // are unaffected — those move freely.
-    const blockedYears = getOwnStepienBlockedYears(team);
-    const tradablePicks = (team.draftPicks || []).filter((pick: DraftPick) => {
-      if (pick.round !== 1) return true;
-      if (!blockedYears.has(pick.year)) return true;
-      if (!isOwnPick(pick)) return true;
-      return false;
-    });
-    const picksFormatted = tradablePicks
-      .map((pick: DraftPick) => getPickCompact(pick))
+    // Only picks the team can actually trade (not owed elsewhere, frozen,
+    // already drafted, or Stepien-blocked), each under a unique name. The LLM
+    // never sees the rest, so it can't propose them.
+    const picksFormatted = tradablePicks(team)
+      .map((pick: DraftPick) => getPickCompact(pick, pickLabel(pick, team)))
       .join("; ");
 
     rosterContext += `${teamName}: ${playersInfo} || Picks: ${picksFormatted}\n`;
