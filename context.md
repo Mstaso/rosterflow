@@ -62,6 +62,34 @@ tuned against today's ratings, so it needs a deliberate recalibration.
 
 ---
 
+## Trade accuracy — open items after the legality checker
+
+**Discovered:** 2026-10-13
+
+- **Draft-pick table is unreliable.** Rows the team owes away ("To PHL (...)")
+  sit next to rows it holds; some incoming picks were lost when the seed's LLM
+  step merged entries by year+round; protections ("1-5 Own pick") aren't parsed.
+  `pickUntradableReason` filters the obvious cases by description text. The real
+  fix is a pick table with explicit `ownerTeamId` / `originalTeamId` /
+  protection columns, loaded without an LLM in the path.
+- **Asset picker still offers untradable picks.** A user can select a pick the
+  checker would refuse for the model. Proposal: show them disabled with the
+  reason. UI change — not done.
+- **Realism judge is saturated.** `fitScore` is ~2/10 for almost everything,
+  partly because it penalises the premise the scenario imposed. Needs a rubric
+  that judges construction given the premise, or pairwise comparison.
+- **ESPN `contract.tradeRestriction`** is true for ~40% of players. Meaning
+  unverified (recently signed? no-trade clause? post-deadline?), so it is not
+  enforced. Same for `poisonPillProvision` / `baseYearCompensation` flags.
+- **One player has `yearsRemaining` = 3658800** (ESPN data error); nothing
+  sanity-checks contract fields.
+- **Season label is hard-coded** ("2025-26") in the generation prompt.
+- **Roster limit uses `team.players.length`**, which depends on which contracts
+  ESPN exposes (see the next section). Thin preseason rosters make the limit
+  looser than reality.
+
+---
+
 ## `team.players` includes two-way contracts
 
 **Discovered:** 2026-05-27
