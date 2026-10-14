@@ -61,6 +61,9 @@ export function pickUntradableReason(
   const desc = (pick.description ?? "").trim().toLowerCase();
   if (desc.startsWith("to ")) return "already owed to another team";
   if (desc.includes("frozen")) return "frozen";
+  // Scraper labels: protected obligations ("Own · only if 1-5 (else to CHA)")
+  // and picks RealGM counts as conditional may never convey.
+  if (desc.includes("only if") || desc.includes("conditional")) return "conditional — may never convey";
   if (
     pick.round === 1 &&
     isOwnPick(pick) &&

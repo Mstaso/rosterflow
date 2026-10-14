@@ -2,7 +2,6 @@ import { PrismaClient } from "@prisma/client";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import OpenAI from "openai";
 import {
   DEFAULT_RECORD,
   fetchPlayerStats,
@@ -12,6 +11,7 @@ import {
   hasContract,
   toPlayerFields,
 } from "../src/lib/data-refresh";
+import { loadDraftPicks } from "../src/lib/draft-picks";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,7 +20,6 @@ const prisma = new PrismaClient({
   log: ["info", "warn", "error"],
 });
 
-const openai = new OpenAI();
 
 // NBA Conference and Division mappings
 const NBA_DIVISIONS = {
@@ -193,226 +192,6 @@ async function seedPlayers(teams: any[]) {
   }
 }
 
-interface RawDraftPick {
-  team: string;
-  year: string;
-  round: number;
-  description: string;
-}
-
-interface EnrichedPick {
-  year: number;
-  round: number;
-  originalDescription: string;
-  description: string;
-  estimatedValue: number;
-  isProtected: boolean;
-  splitIndex: number; // 0 for non-split or first split, 1, 2... for additional splits
-}
-
-async function enrichPicksWithLLM(
-  teamName: string,
-  record: string,
-  picks: RawDraftPick[]
-): Promise<EnrichedPick[]> {
-  const picksForPrompt = picks.map((p) => ({
-    year: parseInt(p.year),
-    round: p.round,
-    description: p.description,
-  }));
-
-  const prompt = `You are an NBA draft pick evaluator. Given the following draft picks owned by the ${teamName} (current record: ${record}), do three things:
-
-1. **Simplify the description** into a short, consistent format. Examples:
-   - "Own" → "Own pick"
-   - "From Brooklyn (via Phoenix)" → "Via BKN (through PHX)"
-   - Complex protection language → summarize the key protection simply, e.g. "Via MIA - top 10 protected through 2027, becomes 2 2nds"
-   - Keep it under 80 characters when possible
-
-2. **Estimate a value from 1-100** based on:
-   - Round (1st round picks are more valuable than 2nd round)
-   - Year (closer years are generally more valuable / more certain)
-   - Team quality (bad teams = higher picks = more valuable)
-   - Protections (protected picks are less valuable to the receiving team)
-   - "Own pick" for a bad team is very valuable (top 5 potential), "Own pick" for a great team is less valuable
-   - Swap rights are generally less valuable than outright picks
-   - Use the team's current record to inform how good/bad the team is
-
-3. **Detect and split multi-destination picks**: If a single entry describes multiple DISTINCT picks going to DIFFERENT destination teams, output separate entries for each pick. Set "splitIndex" to 0, 1, 2... for each. Give each split entry its own description and value estimate.
-
-   SPLIT these (multiple picks, different destinations):
-   - "two most favorable of DEN, OKC and LAC to OKC then other to LAC" → split into 2 entries: one "To OKC (more favorable of DEN/OKC/LAC)", one "To LAC (remaining of DEN/OKC/LAC)"
-   - "Most favorable to POR; second most favorable to WAS" → split into 2 entries, one per destination
-   - "one to MEM, other to BRK" → split into 2 entries
-
-   DO NOT split these (single pick, conditional ownership):
-   - "More favorable of ATL and SAN" → one pick, just conditional on draft position
-   - "via BOS to MEM to POR" → one pick, trade chain
-   - "Own or swap for HOU" → one pick with swap option
-   - "if PHL conveys 1st round pick to OKC in 2026" → conditional, one pick
-
-   Split pick descriptions must NOT start with "Own".
-
-Here are the picks:
-${JSON.stringify(picksForPrompt, null, 2)}
-
-Respond with ONLY a JSON array (no markdown, no explanation) where each element has:
-- "year": number
-- "round": number
-- "description": string (simplified)
-- "estimatedValue": number (1-100)
-- "isProtected": boolean
-- "splitIndex": number (0 for non-split picks or the first of a split group, 1 for the second, etc.)`;
-
-  try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      temperature: 0.3,
-      response_format: { type: "json_object" },
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are an NBA analytics assistant. Always respond with valid JSON. Wrap your array in an object with a 'picks' key.",
-        },
-        { role: "user", content: prompt },
-      ],
-    });
-
-    const content = response.choices[0]?.message?.content;
-    if (!content) throw new Error("Empty response from GPT");
-
-    const parsed = JSON.parse(content);
-    const rawResults: any[] = parsed.picks || parsed;
-
-    // The LLM may return more entries than input (due to splits), so we can't
-    // index by i to get the original description. Instead, match by year+round.
-    const origByYearRound = new Map<string, string>();
-    for (const p of picks) {
-      origByYearRound.set(`${parseInt(p.year)}-${p.round}`, p.description);
-    }
-
-    const enrichedPicks: EnrichedPick[] = rawResults.map((p: any) => ({
-      year: p.year,
-      round: p.round,
-      originalDescription: origByYearRound.get(`${p.year}-${p.round}`) ?? "",
-      description: p.description || "",
-      estimatedValue: Math.min(100, Math.max(1, p.estimatedValue || 50)),
-      isProtected:
-        p.isProtected ??
-        (origByYearRound.get(`${p.year}-${p.round}`) ?? "").toLowerCase().includes("protected"),
-      splitIndex: p.splitIndex ?? 0,
-    }));
-
-    return enrichedPicks;
-  } catch (error) {
-    console.error(`  ⚠️ LLM enrichment failed for ${teamName}, using defaults`);
-    console.error(error);
-    // Fallback: return picks with default values (no splitting on error)
-    return picks.map((p) => ({
-      year: parseInt(p.year),
-      round: p.round,
-      originalDescription: p.description,
-      description: p.description,
-      estimatedValue: p.round === 1 ? 55 : 25,
-      isProtected: p.description.toLowerCase().includes("protected"),
-      splitIndex: 0,
-    }));
-  }
-}
-
-async function seedDraftPicks(
-  teams: { id: number; name: string; location: string; record: any }[]
-) {
-  console.log("📝 Seeding draft picks with LLM enrichment...");
-
-  const draftPicksData = JSON.parse(
-    fs.readFileSync(
-      path.join(__dirname, "seeddata", "nba_draft_picks.json"),
-      "utf-8"
-    )
-  );
-
-  // Create a map of team display names to team DB records
-  const teamMap = new Map(
-    teams.map((team) => [`${team.location} ${team.name}`, team])
-  );
-
-  // Phase 1: Enrich all picks with LLM (no DB writes yet)
-  console.log("\n📡 Phase 1: Enriching picks with LLM...");
-  const allPicksToInsert: {
-    teamId: number;
-    teamName: string;
-    pick: EnrichedPick;
-  }[] = [];
-
-  for (const [teamName, picks] of Object.entries(draftPicksData)) {
-    const team = teamMap.get(teamName);
-    if (!team) {
-      console.warn(`  ⚠️ Team not found: ${teamName}`);
-      continue;
-    }
-
-    const rawPicks = picks as RawDraftPick[];
-    if (rawPicks.length === 0) continue;
-
-    const record =
-      typeof team.record === "string" ? team.record : JSON.stringify(team.record);
-
-    console.log(`  🏀 ${teamName} (${record}) - ${rawPicks.length} picks`);
-
-    const enrichedPicks = await enrichPicksWithLLM(teamName, record, rawPicks);
-
-    for (const pick of enrichedPicks) {
-      allPicksToInsert.push({ teamId: team.id, teamName, pick });
-    }
-  }
-
-  console.log(`\n✅ Enriched ${allPicksToInsert.length} picks total`);
-
-  // Phase 2: Insert all picks into DB in quick succession
-  console.log("\n💾 Phase 2: Writing picks to database...");
-  const createdPicks = new Set<string>();
-  let totalPicks = 0;
-
-  for (const { teamId, teamName, pick } of allPicksToInsert) {
-    const pickKey = `${pick.year}-${pick.round}-${teamId}-${pick.splitIndex}`;
-
-    if (createdPicks.has(pickKey)) {
-      continue;
-    }
-
-    try {
-      await prisma.draftPick.create({
-        data: {
-          year: pick.year,
-          round: pick.round,
-          sequence: pick.splitIndex,
-          teamId,
-          isSwap: false,
-          isProtected: pick.isProtected,
-          description: pick.description,
-          estimatedValue: pick.estimatedValue,
-        },
-      });
-
-      createdPicks.add(pickKey);
-      totalPicks++;
-      const splitTag = pick.splitIndex > 0 ? ` [split #${pick.splitIndex}]` : "";
-      console.log(
-        `  ✅ ${teamName}: ${pick.year} R${pick.round}${splitTag} (value: ${pick.estimatedValue}) - ${pick.description}`
-      );
-    } catch (error) {
-      console.error(
-        `  ❌ Failed to insert ${teamName}: ${pick.year} R${pick.round}:`,
-        error
-      );
-    }
-  }
-
-  console.log(`\n🎉 Seeded ${totalPicks} draft picks with estimated values!`);
-}
-
 async function main() {
   console.log("🚀 Starting NBA database seed...\n");
 
@@ -436,7 +215,11 @@ async function main() {
     await seedPlayers(teams);
 
     // Seed draft picks
-    await seedDraftPicks(teams);
+    const picks = await loadDraftPicks(
+      prisma,
+      JSON.parse(fs.readFileSync(path.join(__dirname, "seeddata", "draft_picks.json"), "utf-8"))
+    );
+    console.log(`📝 Loaded ${picks.picks} draft picks`);
 
     console.log("\n🎉 Database seeding completed successfully!");
     console.log("\n📊 Summary:");

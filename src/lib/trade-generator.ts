@@ -698,7 +698,7 @@ export function reconstructReceives(trade: any): any {
 /**
  * Validate a trade's structural integrity:
  * - no player given by multiple teams
- * - no pick given by multiple teams
+ * - no team gives the same pick twice
  * - every team gives at least one asset
  */
 export function isValidTrade(trade: any): boolean {
@@ -719,10 +719,11 @@ export function isValidTrade(trade: any): boolean {
     }
 
     for (const pick of team.gives?.picks || []) {
-      const name = pick.name?.toLowerCase().trim();
+      // "2031 R1" names a slot, not a pick: two teams can each trade their own.
+      const name = pick.name && `${team.teamName}:${pick.name.toLowerCase().trim()}`;
       if (!name) continue;
       if (givenPicks.has(name)) {
-        console.log(`[trade-validation] REJECTED: pick "${pick.name}" given by multiple teams`);
+        console.log(`[trade-validation] REJECTED: ${team.teamName} gives pick "${pick.name}" twice`);
         return false;
       }
       givenPicks.add(name);
