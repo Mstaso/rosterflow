@@ -26,6 +26,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PlayerStatsModal } from "~/components/player-stats-modal";
+import { pickUntradableReason } from "~/lib/trade-legality";
 
 interface TeamCardProps {
   team: Team;
@@ -415,6 +416,31 @@ export function TeamCard({
                   const isSelected = selectedAssets.some(
                     (asset) => asset.id === pick.id && asset.type === "pick"
                   );
+
+                  // Owed elsewhere, frozen, or already drafted: not an asset.
+                  // Stepien-blocked picks stay selectable so Try Trade can
+                  // explain the rule.
+                  const untradable = pickUntradableReason(pick, team);
+                  if (untradable && !untradable.startsWith("Stepien") && !isSelected) {
+                    return (
+                      <div
+                        key={pick.id}
+                        aria-disabled="true"
+                        className="p-2.5 rounded-lg bg-surface-low opacity-50 cursor-not-allowed"
+                      >
+                        <div className="font-medium text-sm">
+                          {pick.year} {pick.round === 1 ? "1st" : "2nd"} round{" "}
+                          {pick.isSwap ? "Pick Swap" : "Pick"}
+                        </div>
+                        <div className="text-xs text-on-surface-variant">
+                          {pick.description}
+                        </div>
+                        <div className="mt-1 font-supermolot text-[10px] tracking-[0.22em] text-on-surface-variant">
+                          Not tradable · {untradable}
+                        </div>
+                      </div>
+                    );
+                  }
 
                   return (
                     <DropdownMenu key={pick.id}>

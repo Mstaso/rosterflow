@@ -10,6 +10,7 @@
  */
 
 import type { DraftPick, Player, Team } from "~/types";
+import { pickLabel, tradablePicks } from "~/lib/trade-legality";
 import {
   computeMatchingBounds,
   computePlayerRating,
@@ -272,7 +273,7 @@ export function pickFitPartners(
         scored.push({ asset: p, assetType: "player", team, score });
       }
     }
-    for (const pick of team.draftPicks ?? []) {
+    for (const pick of tradablePicks(team)) {
       const score = scoreTargetAsset(
         offered,
         pick,
@@ -452,7 +453,7 @@ function scoredAssetToPackageAsset(s: ScoredAsset): SuggestedPackageAsset {
   return {
     type: "pick",
     id: pk.id,
-    name: `${pk.year} R${pk.round}`,
+    name: pickLabel(pk, s.team),
     pickYear: pk.year,
     pickRound: pk.round,
     pickValue: pk.estimatedValue,

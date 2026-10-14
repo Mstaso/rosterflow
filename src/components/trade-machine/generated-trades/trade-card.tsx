@@ -81,9 +81,14 @@ export default function TradeCard({
       const year = parseInt(yearMatch[1]);
       const round = parseInt(roundMatch[1]);
 
-      const realDraftPick = fromTeam.draftPicks.find(
-        (dp) => dp.year === year && dp.round === round
-      );
+      // The server stamps the exact pick row it validated; fall back to
+      // year/round for trades saved before that.
+      const pickId = (pick as { id?: number }).id;
+      const realDraftPick =
+        fromTeam.draftPicks.find((dp) => dp.id === pickId) ??
+        fromTeam.draftPicks.find(
+          (dp) => dp.year === year && dp.round === round
+        );
 
       if (realDraftPick) {
         enrichedPick.draftPick = realDraftPick;
