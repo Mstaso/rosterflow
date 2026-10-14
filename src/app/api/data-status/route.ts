@@ -12,5 +12,9 @@ export async function GET() {
       { status: 500 }
     );
   }
-  return NextResponse.json({ success: true, ...(await getDataFreshness(prisma)) });
+  // Called from the footer on every page view; let the CDN absorb it.
+  return NextResponse.json(
+    { success: true, ...(await getDataFreshness(prisma)) },
+    { headers: { "Cache-Control": "public, s-maxage=600, stale-while-revalidate=3600" } }
+  );
 }

@@ -97,7 +97,7 @@ Acquired R1s (e.g. "Lakers' 2027 R1 via NYK") aren't subject to the holder's Ste
 
 ## Data refresh (cron)
 
-`src/lib/data-refresh.ts` holds the ESPN fetchers (shared with `prisma/seed.ts`) and `refreshLeagueData()`. `vercel.json` fires `GET /api/cron/refresh-players` daily at 10:00 UTC (needs `CRON_SECRET`); the route skips non-Mondays in July–September. `GET /api/data-status` reports the oldest per-team refresh time (`Team.updatedAt`, bumped only when that team's refresh commits).
+`src/lib/data-refresh.ts` holds the ESPN fetchers (shared with `prisma/seed.ts`) and `refreshLeagueData()`. `vercel.json` fires `GET /api/cron/refresh-players` daily at 10:00 UTC (needs `CRON_SECRET`); the route skips non-Mondays in July–September. `GET /api/data-status` reports the oldest per-team refresh time (`Team.updatedAt`, bumped only when that team's refresh commits). The footer (`src/components/layout/data-freshness.tsx`) shows it as "Rosters & stats as of …"; it fetches client-side because the pages are statically rendered, and the endpoint is CDN-cached for 10 minutes.
 
 Rules the refresh keeps — don't loosen without reading `scripts/check-data-refresh.ts`:
 
