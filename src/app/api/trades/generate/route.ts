@@ -4,15 +4,10 @@ import { z } from "zod";
 import { env } from "~/env";
 import {
   buildTradePrompt,
-  streamTradesFromAnthropic,
-  TRADE_MODEL,
-  TRADE_TEMPERATURE,
-  TRADE_MAX_TOKENS,
+  generateVettedTrades,
+  resolveTradeRequest,
 } from "~/lib/trade-generator";
 import { tradeGenerateLimiter, getClientIp } from "~/lib/rate-limit";
-import { pickFitPartners, type FitPartner } from "~/lib/target-asset-scorer";
-import { db } from "~/lib/db";
-import type { Player, Team } from "~/types";
 
 export const dynamic = "force-dynamic";
 
@@ -67,55 +62,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fit-based partner selection: when the user offered exactly one player
-    // from one team and didn't pick partners themselves, score the league for
-    // plausible target assets and use the owning teams as partners. This
-    // replaces the prior client-side Math.random() shuffle.
-    let resolvedAdditionalTeams: Team[] | null = additionalTeams ?? null;
-    let suggestedPackages: FitPartner[] | null = null;
-    const onlySingleAsset = selectedAssets.length === 1;
-    const onlySingleTeam = teams.length === 1;
-    const noClientPartners = !additionalTeams || additionalTeams.length === 0;
-    const offeredAsset = selectedAssets[0];
-
-    if (
-      onlySingleAsset &&
-      onlySingleTeam &&
-      noClientPartners &&
-      offeredAsset?.type === "player"
-    ) {
-      const sellerTeam = teams[0] as Team;
-      const offered = (sellerTeam.players ?? []).find(
-        (p: Player) => p.id === offeredAsset.id
-      );
-      if (offered) {
-        const allTeams = (await db.teams.getAllWithRosters()) as unknown as Team[];
-        const otherTeams = allTeams.filter((t) => t.id !== sellerTeam.id);
-        const partners = pickFitPartners(offered, sellerTeam, otherTeams);
-        if (partners.length > 0) {
-          resolvedAdditionalTeams = partners.map((p) => p.team);
-          suggestedPackages = partners;
-        }
-      }
-    }
-
-    const { prompt, system, manualTrade, teamsAddedToTrade, involvedTeams } =
-      await buildTradePrompt({
-        selectedAssets,
-        teams,
-        additionalTeams: resolvedAdditionalTeams,
-        suggestedPackages,
-      });
-
-      console.log("[generate] prompt:", prompt);
-    // Stream the response using SSE
-    const stream = anthropic.messages.stream({
-      model: TRADE_MODEL,
-      system,
-      messages: [{ role: "user", content: prompt }],
-      temperature: TRADE_TEMPERATURE,
-      max_tokens: TRADE_MAX_TOKENS,
-    });
+    // Re-reads the teams from the DB and, for a single offered player with
+    // no partners chosen, lets the fit scorer pick them.
+    const built = await buildTradePrompt(
+      await resolveTradeRequest({ selectedAssets, teams, additionalTeams })
+    );
+    const { manualTrade, teamsAddedToTrade } = built;
 
     const encoder = new TextEncoder();
 
@@ -141,18 +93,14 @@ export async function POST(request: NextRequest) {
         }
 
         try {
-          await streamTradesFromAnthropic(
-            stream,
-            (trade) => {
-              controller.enqueue(
-                encoder.encode(
-                  `data: ${JSON.stringify({ type: "trade", trade, index: tradeIndex })}\n\n`
-                )
-              );
-              tradeIndex++;
-            },
-            involvedTeams
-          );
+          await generateVettedTrades(built, anthropic, (trade) => {
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({ type: "trade", trade, index: tradeIndex })}\n\n`
+              )
+            );
+            tradeIndex++;
+          });
 
           controller.enqueue(
             encoder.encode(

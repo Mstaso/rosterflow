@@ -27,8 +27,11 @@ import {
 import { refineTradeSalary } from "~/lib/trade-refinement";
 import {
   formatSuggestedPackagesContext,
+  pickFitPartners,
   type FitPartner,
 } from "~/lib/target-asset-scorer";
+import { checkTradeLegality, type Violation } from "~/lib/trade-legality";
+import { db } from "~/lib/db";
 
 export const TRADE_SYSTEM_PROMPT =
   "You are an expert NBA trade analyst and salary cap specialist. Generate realistic trade scenarios that a real front office would consider — weigh team windows (contending vs rebuilding), player production (stats), age curves, and contract value. Use only the provided roster data. Respond with valid JSON only — no markdown, no explanations.";
@@ -36,6 +39,9 @@ export const TRADE_SYSTEM_PROMPT =
 export const TRADE_MODEL = "claude-sonnet-4-6";
 export const TRADE_TEMPERATURE = 0.7;
 export const TRADE_MAX_TOKENS = 5500;
+/** Below this many legal AI scenarios we ask the model once to fix its rejects. */
+const MIN_LEGAL_TRADES = 3;
+const MAX_TRADES = 4;
 
 export interface BuildPromptInput {
   selectedAssets: SelectedAsset[];
@@ -55,6 +61,47 @@ export interface BuildPromptResult {
   manualTrade: ReturnType<typeof generateManualTrade>;
   teamsAddedToTrade: Team[];
   involvedTeams: Team[];
+  selectedAssets: SelectedAsset[];
+}
+
+/**
+ * Turn a client request into trustworthy generator input. Teams are re-read
+ * from the database by id — rosters, salaries and cap numbers in the request
+ * body are never used. When the user offered exactly one player from one team
+ * and chose no partners, the fit scorer picks the partners.
+ */
+export async function resolveTradeRequest(input: BuildPromptInput): Promise<BuildPromptInput> {
+  const { selectedAssets } = input;
+  const teams = (
+    (await setupAdditionalTeamsForTrade(input.teams)) as unknown as (Team | null)[]
+  ).filter((t): t is Team => !!t);
+  let additionalTeams = input.additionalTeams ?? null;
+  let suggestedPackages: FitPartner[] | null = null;
+
+  const offeredAsset = selectedAssets[0];
+  if (
+    selectedAssets.length === 1 &&
+    teams.length === 1 &&
+    (!additionalTeams || additionalTeams.length === 0) &&
+    offeredAsset?.type === "player"
+  ) {
+    const sellerTeam = teams[0]!;
+    const offered = (sellerTeam.players ?? []).find((p) => p.id === offeredAsset.id);
+    if (offered) {
+      const allTeams = (await db.teams.getAllWithRosters()) as unknown as Team[];
+      const partners = pickFitPartners(
+        offered,
+        sellerTeam,
+        allTeams.filter((t) => t.id !== sellerTeam.id)
+      );
+      if (partners.length > 0) {
+        additionalTeams = partners.map((p) => p.team);
+        suggestedPackages = partners;
+      }
+    }
+  }
+
+  return { selectedAssets, teams, additionalTeams, suggestedPackages };
 }
 
 /**
@@ -110,8 +157,15 @@ export async function buildTradePrompt(
   }
 
   // Generate manual first trade (algorithmic, instant result)
-  const manualTrade = generateManualTrade(selectedAssets, involvedTeams);
+  let manualTrade = generateManualTrade(selectedAssets, involvedTeams);
   let manualTradeExclusion = "";
+  if (manualTrade) {
+    const { violations } = checkTradeLegality(manualTrade, involvedTeams, selectedAssets);
+    if (violations.length > 0) {
+      console.log("[manual-trade] DROPPED - illegal:", violations.map((v) => v.message).join(" "));
+      manualTrade = null;
+    }
+  }
   if (manualTrade) {
     console.log(
       "[manual-trade] SUCCESS - generated trade with",
@@ -233,24 +287,137 @@ Respond with ONLY a JSON array. Each scenario lists only what each team GIVES an
     manualTrade,
     teamsAddedToTrade,
     involvedTeams,
+    selectedAssets,
   };
 }
 
 /**
- * Parse Anthropic streaming output into complete trade objects.
+ * Decide whether a raw model scenario is a real, legal trade. The legality
+ * checker is the authority; the salary refiner is only tried as a repair when
+ * salary matching is the sole problem, and its result is re-checked.
+ */
+export function vetTrade(
+  raw: any,
+  involvedTeams: Team[],
+  selectedAssets: SelectedAsset[]
+): { trade: any; violations: Violation[] } {
+  if (!isValidTrade(raw)) {
+    return {
+      trade: raw,
+      violations: [
+        { code: "STRUCTURE", message: "An asset is traded twice, or a team gives nothing." },
+      ],
+    };
+  }
+  const trade = reconstructReceives(raw);
+  const { violations } = checkTradeLegality(trade, involvedTeams, selectedAssets);
+  if (violations.length > 0 && violations.every((v) => v.code === "SALARY")) {
+    const refined = refineTradeSalary(structuredClone(trade), involvedTeams);
+    if (
+      refined.refined &&
+      checkTradeLegality(refined.trade, involvedTeams, selectedAssets).violations.length === 0
+    ) {
+      console.log(`[trade-refine] ${refined.notes.join("; ")}`);
+      return { trade: refined.trade, violations: [] };
+    }
+  }
+  return { trade, violations };
+}
+
+function describeGives(trade: any): string {
+  return (trade?.teams ?? [])
+    .map((t: any) => {
+      const names = [...(t.gives?.players ?? []), ...(t.gives?.picks ?? [])].map((a: any) => a.name);
+      return `${t.teamName} sends ${names.join(", ") || "nothing"}`;
+    })
+    .join("; ");
+}
+
+/**
+ * Run the model, emit only legal trades, and give it one chance to fix what
+ * the checker rejected. If nothing at all is legal, the two least-broken
+ * scenarios are emitted anyway — the result card shows what's wrong with them,
+ * which beats an empty screen.
+ */
+export async function generateVettedTrades(
+  built: BuildPromptResult,
+  anthropic: Anthropic,
+  onTrade: (trade: any) => void
+): Promise<{ accepted: any[]; rejected: { trade: any; violations: Violation[] }[]; retried: boolean }> {
+  const accepted: any[] = [];
+  let rejected: { trade: any; violations: Violation[] }[] = [];
+  const seen = new Set<string>();
+
+  const run = async (messages: Anthropic.MessageParam[]) => {
+    const stream = anthropic.messages.stream({
+      model: TRADE_MODEL,
+      system: built.system,
+      messages,
+      temperature: TRADE_TEMPERATURE,
+      max_tokens: TRADE_MAX_TOKENS,
+    });
+    const batch: typeof rejected = [];
+    const { accumulated } = await streamTradesFromAnthropic(stream, (raw) => {
+      const vetted = vetTrade(raw, built.involvedTeams, built.selectedAssets);
+      const signature = describeGives(vetted.trade);
+      if (seen.has(signature)) return;
+      seen.add(signature);
+      if (vetted.violations.length > 0) {
+        console.log(`[trade-validation] rejected: ${vetted.violations.map((v) => v.message).join(" ")}`);
+        batch.push(vetted);
+      } else if (accepted.length < MAX_TRADES) {
+        accepted.push(vetted.trade);
+        onTrade(vetted.trade);
+      }
+    });
+    return { accumulated, batch };
+  };
+
+  const first = await run([{ role: "user", content: built.prompt }]);
+  rejected = first.batch;
+
+  let retried = false;
+  if (accepted.length < MIN_LEGAL_TRADES && rejected.length > 0 && first.accumulated.trim()) {
+    retried = true;
+    const wanted = Math.min(rejected.length, MAX_TRADES - accepted.length);
+    const feedback = rejected
+      .map(
+        (r, i) =>
+          `${i + 1}. ${describeGives(r.trade)}\n${r.violations.map((v) => `   - ${v.message}`).join("\n")}`
+      )
+      .join("\n");
+    const second = await run([
+      { role: "user", content: built.prompt },
+      { role: "assistant", content: first.accumulated.trim() },
+      {
+        role: "user",
+        content: `These scenarios were rejected by the league-rules checker and will not be shown:\n${feedback}\n\nReturn ONLY a JSON array of ${wanted} replacement scenario(s) in the same format. Each must fix the specific problems listed — change who is included rather than repeating the same deal. Do not repeat a scenario that was not rejected.`,
+      },
+    ]);
+    rejected = [...rejected, ...second.batch];
+  }
+
+  if (accepted.length === 0 && !built.manualTrade) {
+    const leastBroken = [...rejected]
+      .filter((r) => Array.isArray(r.trade?.teams) && r.trade.teams.every((t: any) => t.receives))
+      .sort((a, b) => a.violations.length - b.violations.length)
+      .slice(0, 2);
+    for (const r of leastBroken) onTrade(r.trade);
+  }
+
+  return { accepted, rejected, retried };
+}
+
+/**
+ * Parse Anthropic streaming output into raw scenario objects.
  *
  * Scans the SSE text deltas for top-level `{...}` objects inside the outer
- * JSON array and invokes `onTrade` for each one that passes validation and
- * receives-reconstruction.
+ * JSON array and invokes `onTrade` with each one as soon as it is complete.
+ * No validation happens here — see `vetTrade`.
  */
 export async function streamTradesFromAnthropic(
   stream: ReturnType<typeof Anthropic.prototype.messages.stream>,
-  onTrade: (trade: any) => void,
-  /**
-   * Optional: hydrated teams used for post-generation salary refinement.
-   * If omitted, the refiner is skipped (back-compat).
-   */
-  involvedTeams?: Team[]
+  onTrade: (trade: any) => void
 ): Promise<{ accumulated: string; parsedCount: number }> {
   let accumulated = "";
   let parsedCount = 0;
@@ -325,25 +492,8 @@ export async function streamTradesFromAnthropic(
           currentTradeStart = -1;
 
           try {
-            let trade = JSON.parse(tradeJson);
-            if (!isValidTrade(trade)) {
-              console.log(
-                `[trade-validation] Skipping invalid trade scenario ${parsedCount}`
-              );
-            } else {
-              trade = reconstructReceives(trade);
-              if (involvedTeams) {
-                const result = refineTradeSalary(trade, involvedTeams);
-                trade = result.trade;
-                if (result.refined) {
-                  console.log(
-                    `[trade-refine] scenario ${parsedCount}: ${result.notes.join("; ")}`
-                  );
-                }
-              }
-              onTrade(trade);
-              parsedCount++;
-            }
+            onTrade(JSON.parse(tradeJson));
+            parsedCount++;
           } catch (e) {
             console.error(
               "Failed to parse trade chunk:",
@@ -371,23 +521,7 @@ export async function streamTradesFromAnthropic(
       const trades = Array.isArray(parsed)
         ? parsed
         : parsed.trades || parsed.scenarios || [];
-      for (let trade of trades) {
-        if (!isValidTrade(trade)) {
-          console.log(
-            `[trade-validation] Skipping invalid trade scenario ${parsedCount} (full parse)`
-          );
-          continue;
-        }
-        trade = reconstructReceives(trade);
-        if (involvedTeams) {
-          const result = refineTradeSalary(trade, involvedTeams);
-          trade = result.trade;
-          if (result.refined) {
-            console.log(
-              `[trade-refine] scenario ${parsedCount} (full parse): ${result.notes.join("; ")}`
-            );
-          }
-        }
+      for (const trade of trades) {
         onTrade(trade);
         parsedCount++;
       }
@@ -415,31 +549,24 @@ export async function generateTradesCore(
   aiTrades: any[];
   teamsAddedToTrade: Team[];
   involvedTeams: Team[];
+  /** Scenarios the legality checker refused, with reasons (for the eval). */
+  rejected: { trade: any; violations: Violation[] }[];
+  retried: boolean;
 }> {
-  const built = await buildTradePrompt(input);
-
-  const stream = anthropic.messages.stream({
-    model: TRADE_MODEL,
-    system: built.system,
-    messages: [{ role: "user", content: built.prompt }],
-    temperature: TRADE_TEMPERATURE,
-    max_tokens: TRADE_MAX_TOKENS,
-  });
+  const built = await buildTradePrompt(await resolveTradeRequest(input));
 
   const aiTrades: any[] = [];
-  await streamTradesFromAnthropic(
-    stream,
-    (trade) => {
-      aiTrades.push(trade);
-    },
-    built.involvedTeams
-  );
+  const { rejected, retried } = await generateVettedTrades(built, anthropic, (trade) => {
+    aiTrades.push(trade);
+  });
 
   return {
     manualTrade: built.manualTrade,
     aiTrades,
     teamsAddedToTrade: built.teamsAddedToTrade,
     involvedTeams: built.involvedTeams,
+    rejected,
+    retried,
   };
 }
 
