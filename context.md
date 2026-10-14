@@ -5,73 +5,60 @@ don't belong in a single PR. Append to this file as things come up.
 
 ---
 
-## Player & team data freshness — needs a cron
+## Player & team data freshness — cron in place, static data still manual
 
-**Discovered:** 2026-04-23
+**Discovered:** 2026-04-23 · **Cron added:** 2026-10-13
 
-### Problem
+### What the cron covers
 
-The `Player.statistics`, `Player.contract`, `Player.injuries`, `Team.record`,
-and team cap data in the database are populated by `prisma/seed.ts`, which
-pulls from the ESPN API and the static JSON files in `prisma/seeddata/`. The
-seed only runs when a developer manually invokes it. In production this means:
+`/api/cron/refresh-players` (daily in season, Mondays July–September) refreshes
+from ESPN: team records, roster membership (trades, signings, waivers),
+contracts, injuries, age/status, and season stats. Logic and safety rules live
+in `src/lib/data-refresh.ts`; `pnpm check:refresh` guards them. Requires
+`CRON_SECRET` in Vercel. `/api/data-status` shows how old the data is.
 
-- Player season stats (ppg/rpg/apg, TS%, etc.) drift from reality the moment
-  the season progresses past the last seed.
-- Team records / win% don't update — directly affects the contender vs
-  rebuilder logic in `team-role-classifier.ts` and
-  `getTeamOutlookContext` (used in every trade prompt).
-- Salary / contract years don't reflect mid-season trades, waivers, or
-  buyouts.
-- Injury status is stale.
-- Draft pick ownership doesn't reflect real-life trades.
+### What it cannot cover
 
-The trade generator + role classifier rely on this data being current. Stale
-records mean the model gets told "the Lakers are rebuilding" when they're 30-15.
+Both come from hand-maintained JSON in `prisma/seeddata/`, last updated
+2026-03-16, and only `pnpm db:seed` (which wipes saved trades) loads them:
 
-### What we need
+1. **Team cap figures** — `totalCapAllocation`, `capSpace`, `firstApronSpace`,
+   `secondApronSpace`. These decide each team's cap tier, so every
+   salary-matching rule depends on them. They are 2025-26 numbers.
+2. **Draft picks** — ownership, protections, `estimatedValue`. Already wrong in
+   known ways (see the trade-accuracy write-up, 2026-10-13): 60 of 286 R1 rows
+   describe picks the team *owes* to someone else, and all 115 picks for the
+   2026 draft are still listed after that draft happened.
 
-A scheduled job that re-runs (or re-runs a subset of) the seed pipeline on a
-recurring cadence. Cheapest version: nightly cron during the regular season,
-weekly off-season.
+### Proposal for the static data
 
-### Implementation options (pick later)
+- **Cap figures:** derive instead of hand-entering. Sum `Player.contract.salary`
+  per team after each refresh and subtract from a three-number per-season table
+  (cap, first apron, second apron). Checked 2026-10-13: roster sums run 4–16%
+  below the JSON totals (dead money, cap holds, two-ways are missing), so derived
+  values will under-state apron teams unless a per-team "other charges" number is
+  kept alongside. Worth doing once ESPN has 2026-27 contracts for everyone.
+- **Draft picks:** needs a `db:refresh-picks` script that upserts from the JSON
+  by `(teamId, year, round, sequence)` instead of wipe-and-reseed, so updating
+  picks stops costing the trade history. The JSON itself still has to be
+  re-pulled by hand a few times a year (draft, deadline, July).
 
-1. **Vercel Cron + a route handler** — simplest. Add a `vercel.ts` cron
-   entry pointing at a new `/api/cron/refresh-players` route that runs the
-   ESPN-fetching portion of `seed.ts`. Protect with `CRON_SECRET`.
-   - Pro: lives next to the app, no external infra.
-   - Con: cron runs hit Vercel function execution; need to make sure the
-     refresh fits inside `maxDuration` (default 300s, can extend per-route).
-     Full league refresh is 30 teams × ~17 players, may need chunking.
+### Known ESPN gaps (measured 2026-10-13, preseason)
 
-2. **GitHub Actions scheduled workflow** — runs `npm run db:refresh` on a
-   schedule against the production DB.
-   - Pro: no Vercel function timeout limits.
-   - Con: needs DB credentials in Actions secrets.
+- ESPN had a 2026-27 contract for 321 of the 412 players it lists who are in our
+  DB; the other 91 keep last season's salary until ESPN catches up.
+- 217 roster entries (camp invites, two-ways, some 2026 rookies) have no
+  contract and are skipped, leaving some teams with as few as 10 players.
+- Records are 0-0 until the season starts; the refresh holds last season's
+  records until a team has played 10 games.
 
-3. **External scheduler (e.g. Vercel Queues + worker)** — overkill for now.
+### Known data bug, not fixed here
 
-### What needs splitting out of `seed.ts` before we can wire any cron
-
-`prisma/seed.ts` currently does first-time setup AND data fetching as one
-script. For a cron we want a refresh function that:
-
-- Updates `Player.statistics`, `Player.contract`, `Player.injuries`,
-  `Player.age`, `Player.status` for existing players.
-- Adds new players (rookies, signings) and removes / archives waived ones.
-- Updates `Team.record` and any cap-related team fields.
-- Does NOT re-create teams from scratch or wipe trade history.
-
-Probably extract into `src/lib/data-refresh.ts` (or similar) and have both
-`seed.ts` and the cron route call into it.
-
-### Why this matters for trade quality
-
-The eval harness scenarios are built off live DB data. Bad records → bad
-contender/rebuilder labels → bad role guidance → realism score regressions
-that look like prompt bugs but are actually data bugs. Worth fixing before
-spending more time tuning the prompt.
+`Statistics.fieldGoalAttempts` / `freeThrowAttempts` are 0 for every player:
+ESPN's labels are `FG` ("8.7-18.6"), not `FGA`/`FGM`. So the true-shooting
+multiplier in `computePlayerRating` has never applied. Fixing the parse would
+shift every rating (league-average efficiency maps to ×0.85) and the thresholds
+tuned against today's ratings, so it needs a deliberate recalibration.
 
 ---
 

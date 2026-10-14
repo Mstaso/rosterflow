@@ -3,6 +3,15 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import OpenAI from "openai";
+import {
+  DEFAULT_RECORD,
+  fetchPlayerStats,
+  fetchTeamRecord,
+  fetchTeamRoster,
+  fetchTeams,
+  hasContract,
+  toPlayerFields,
+} from "../src/lib/data-refresh";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -81,180 +90,11 @@ const salaryCapData = capData.map((team: CapDataTeam) => ({
   secondApronSpace: Math.round(team.SecondApronSpace),
 }));
 
-async function fetchTeams() {
-  try {
-    const url =
-      "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams";
-    console.log("Fetching teams from:", url);
-
-    const response = await fetch(url, {
-      headers: {
-        Accept: "application/json",
-        "User-Agent": "Mozilla/5.0 (compatible; RosterFlows/1.0)",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch teams: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    const teams =
-      data.sports[0]?.leagues[0]?.teams?.map((teamData: any) => ({
-        id: teamData.team.id,
-        slug: teamData.team.slug,
-        abbreviation: teamData.team.abbreviation,
-        displayName: teamData.team.displayName,
-        shortDisplayName: teamData.team.shortDisplayName,
-        name: teamData.team.name,
-        location: teamData.team.location,
-        color: teamData.team.color,
-        alternateColor: teamData.team.alternateColor,
-        isActive: teamData.team.isActive,
-        logos: teamData.team.logos,
-        record: teamData.team.record,
-        venue: teamData.team.venue,
-        nickname: teamData.team.nickname,
-        links: teamData.team.links,
-      })) || [];
-
-    return teams;
-  } catch (error) {
-    console.error("Error fetching teams:", error);
-    throw error;
-  }
-}
-
-async function fetchTeamRecord(teamId: string) {
-  try {
-    const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/${teamId}`;
-    console.log(`Fetching record for team ${teamId}...`);
-
-    const response = await fetch(url, {
-      headers: {
-        Accept: "application/json",
-        "User-Agent": "Mozilla/5.0 (compatible; RosterFlows/1.0)",
-      },
-    });
-
-    const data = await response.json();
-    const recordItem = data.team?.record?.items?.[0];
-
-    if (!recordItem) {
-      return { wins: 41, losses: 41, winPercentage: 0.5, conferenceRank: 15, divisionRank: 5 };
-    }
-
-    // Parse stats array into a keyed object
-    const statsMap: Record<string, number> = {};
-    for (const stat of recordItem.stats || []) {
-      statsMap[stat.name] = stat.value;
-    }
-
-    return {
-      wins: statsMap.wins ?? 41,
-      losses: statsMap.losses ?? 41,
-      winPercentage: statsMap.winPercent ?? 0.5,
-      conferenceRank: statsMap.playoffSeed ?? 15,
-      divisionRank: statsMap.divisionRank ?? 5,
-    };
-  } catch (error) {
-    console.error(`Error fetching record for team ${teamId}:`, error);
-    return { wins: 41, losses: 41, winPercentage: 0.5, conferenceRank: 15, divisionRank: 5 };
-  }
-}
-
-async function fetchPlayerStats(espnId: string): Promise<any> {
-  try {
-    const url = `https://site.web.api.espn.com/apis/common/v3/sports/basketball/nba/athletes/${espnId}/stats`;
-    const response = await fetch(url, {
-      headers: {
-        Accept: "application/json",
-        "User-Agent": "Mozilla/5.0 (compatible; RosterFlows/1.0)",
-      },
-    });
-
-    if (!response.ok) return null;
-
-    const data = await response.json();
-    const avgCategory = data.categories?.find((c: any) => c.name === "averages");
-    if (!avgCategory) return null;
-
-    const labels: string[] = avgCategory.labels || [];
-    // Get current season stats (last entry in statistics array)
-    const seasons = avgCategory.statistics || [];
-    const currentSeason = seasons.length > 0 ? seasons[seasons.length - 1] : null;
-
-    if (!currentSeason?.stats) return null;
-
-    const statMap: Record<string, string> = {};
-    for (let i = 0; i < labels.length; i++) {
-      statMap[labels[i]] = currentSeason.stats[i];
-    }
-
-    return {
-      points: parseFloat(statMap["PTS"] || "0"),
-      rebounds: parseFloat(statMap["REB"] || "0"),
-      assists: parseFloat(statMap["AST"] || "0"),
-      steals: parseFloat(statMap["STL"] || "0"),
-      blocks: parseFloat(statMap["BLK"] || "0"),
-      fieldGoalPercentage: parseFloat(statMap["FG%"] || "0"),
-      threePointPercentage: parseFloat(statMap["3P%"] || "0"),
-      freeThrowPercentage: parseFloat(statMap["FT%"] || "0"),
-      minutesPerGame: parseFloat(statMap["MIN"] || "0"),
-      gamesPlayed: parseFloat(statMap["GP"] || "0"),
-      turnovers: parseFloat(statMap["TO"] || "0"),
-      fieldGoalAttempts: parseFloat(statMap["FGA"] || "0"),
-      fieldGoalsMade: parseFloat(statMap["FGM"] || "0"),
-      threePointAttempts: parseFloat(statMap["3PA"] || "0"),
-      threePointMade: parseFloat(statMap["3PM"] || "0"),
-      freeThrowAttempts: parseFloat(statMap["FTA"] || "0"),
-      freeThrowsMade: parseFloat(statMap["FTM"] || "0"),
-    };
-  } catch (error) {
-    return null;
-  }
-}
-
-async function fetchTeamRoster(teamId: string) {
-  try {
-    const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/${teamId}/roster`;
-    console.log(`Fetching roster for team ${teamId}...`);
-
-    const response = await fetch(url, {
-      headers: {
-        Accept: "application/json",
-        "User-Agent": "Mozilla/5.0 (compatible; RosterFlows/1.0)",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch roster for team ${teamId}: ${response.status}`
-      );
-    }
-
-    const data = await response.json();
-
-    if (!data.athletes) {
-      console.warn(`No athletes found in roster data for team ${teamId}`);
-      return { athletes: [], team: data.team?.displayName || "Unknown" };
-    }
-
-    return {
-      athletes: data.athletes,
-      team: data.team?.displayName || "Unknown",
-    };
-  } catch (error) {
-    console.error(`Error fetching roster for team ${teamId}:`, error);
-    return { athletes: [], team: "Unknown" };
-  }
-}
-
 async function seedTeams() {
   console.log("🏀 Seeding NBA teams...");
 
   const espnTeams = await fetchTeams();
+  if (!espnTeams) throw new Error("Failed to fetch teams from ESPN");
   console.log(`Found ${espnTeams.length} teams from ESPN API`);
 
   const teams = [];
@@ -278,7 +118,7 @@ async function seedTeams() {
       alternateColor: espnTeam.alternateColor,
       isActive: espnTeam.isActive,
       logos: espnTeam.logos,
-      record: await fetchTeamRecord(espnTeam.id),
+      record: { ...((await fetchTeamRecord(espnTeam.id)) ?? DEFAULT_RECORD) },
       slug: espnTeam.slug,
       conference,
       division,
@@ -305,7 +145,10 @@ async function seedPlayers(teams: any[]) {
   console.log("👥 Seeding NBA players...");
 
   for (const team of teams) {
-    const roster: any = await fetchTeamRoster(team.espnTeamId);
+    const roster: any = (await fetchTeamRoster(team.espnTeamId)) ?? {
+      athletes: [],
+      team: "Unknown",
+    };
     console.log(`Found ${roster.athletes.length} players for ${team.name} (ESPN ID: ${team.espnTeamId})`);
 
     const findTeam = await prisma.team.findUnique({
@@ -322,38 +165,15 @@ async function seedPlayers(teams: any[]) {
     }
 
     for (const player of roster.athletes) {
-      if (
-        player.contract &&
-        player.contract.salary !== 0 &&
-        player.contract.yearsRemaing !== 0
-      ) {
+      if (hasContract(player)) {
         try {
           // Fetch player stats from ESPN
           const stats = await fetchPlayerStats(player.id.toString());
 
           const playerData = {
-            espnId: player.id.toString(),
-            firstName: player.firstName,
-            lastName: player.lastName,
-            fullName: player.fullName,
-            displayName: player.displayName,
-            shortName: player.shortName,
-            weight: player.weight,
-            displayWeight: player.displayWeight,
-            height: player.height,
-            displayHeight: player.displayHeight,
-            age: player.age,
-            dateOfBirth: player.dateOfBirth || "1990-01-01T00:00:00Z",
-            birthPlace: player.birthPlace || null,
-            slug: player.slug,
-            headshot: player.headshot || null,
-            jersey: player.jersey,
-            position: player.position || null,
-            injuries: player.injuries || [],
-            experience: player.experience || { years: 0 },
-            contract: player.contract || null,
-            status: player.status || null,
-            statistics: stats,
+            ...toPlayerFields(player),
+            contract: player.contract,
+            statistics: stats ?? undefined,
             teamId: findTeam.id,
           };
 

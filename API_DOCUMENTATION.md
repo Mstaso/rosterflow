@@ -11,7 +11,7 @@ This project integrates with ESPN's undocumented API to fetch NBA team and playe
 - No authentication is required for public data
 - The API may change without notice
 - Implement proper error handling and caching
-- **Contract/salary information is NOT available through ESPN's API**
+- Contract/salary: the team roster endpoint returns a `contract` object (salary, years remaining) for players signed for the current season — this is what `prisma/seed.ts` and the refresh cron store. Coverage is incomplete in the off-season. The "Contract/Salary Information" section below predates this and is wrong on that point.
 
 ## Available Endpoints
 
