@@ -64,6 +64,31 @@ export interface BuildPromptResult {
   selectedAssets: SelectedAsset[];
 }
 
+const fmtM = (n: number) => `$${(n / 1_000_000).toFixed(1)}M`;
+
+/** One prompt line of hard limits for a team: salary matching and roster room. */
+export function describeTeamConstraints(team: Team): string {
+  const tier = getCapTier(team);
+  const toFirstApron = team.firstApronSpace ?? 0;
+  const toSecondApron = team.secondApronSpace ?? 0;
+  let salary: string;
+  if (tier === "SECOND_APRON") {
+    salary = "SECOND_APRON — cannot take back more salary than it sends";
+  } else if (tier === "FIRST_APRON") {
+    salary = `FIRST_APRON — incoming salary ≤ 110% of outgoing + $0.1M, and net added salary must stay under ${fmtM(toSecondApron)}`;
+  } else if (tier === "OVER_CAP") {
+    salary = `OVER_CAP — incoming salary ≤ 125% of outgoing + $0.1M; if the trade adds more than ${fmtM(toFirstApron)} net, the limit tightens to 110% + $0.1M; never add more than ${fmtM(toSecondApron)} net`;
+  } else {
+    salary = `UNDER_CAP — no matching needed while net added salary stays under ${fmtM(toFirstApron)}`;
+  }
+  const openSpots = Math.max(0, 15 - (team.players?.length ?? 0));
+  const roster =
+    openSpots > 0
+      ? `${openSpots} open roster spot(s): may take back at most ${openSpots} more player(s) than it sends`
+      : "roster full: must not take back more players than it sends";
+  return `- ${team.displayName}: ${salary}. ${roster}.`;
+}
+
 /**
  * Turn a client request into trustworthy generator input. Teams are re-read
  * from the database by id — rosters, salaries and cap numbers in the request
@@ -136,19 +161,9 @@ export async function buildTradePrompt(
       ? formatSuggestedPackagesContext(suggestedPackages)
       : "";
 
-  // Minimal cap-tier tags — exact matching math is handled post-generation by
-  // the refiner. We only surface SECOND_APRON because it's a structural (not
-  // arithmetic) constraint: those teams cannot aggregate salaries.
-  const capTierTags = involvedTeams
-    .map((t) => {
-      const tier = getCapTier(t);
-      const name = (t as any).displayName ?? t.name;
-      return `- ${name}: ${tier}`;
-    })
-    .join("\n");
-  const hasSecondApron = involvedTeams.some(
-    (t) => getCapTier(t) === "SECOND_APRON"
-  );
+  // Hard limits per team, computed here so the model never has to derive
+  // them. Same numbers the legality checker enforces afterwards.
+  const teamConstraints = involvedTeams.map(describeTeamConstraints).join("\n");
 
   const hasDestinations = selectedAssets.some((asset) => asset.targetTeamId);
   let destinationInfo = "";
@@ -233,16 +248,16 @@ ${rolesContext ? `\n${rolesContext}\n` : ""}
 SELECTED ASSETS (must appear in every scenario):
 ${assetsDescription}${destinationInfo}
 
-TEAM CAP TIERS:
-${capTierTags}
+TEAM CONSTRAINTS (computed from league data — a scenario that breaks any of these is rejected):
+${teamConstraints}
 
 ROSTERS & PICKS (top players by rating, pick value 1-100):
 ${rosterContext}
 ${suggestedPackagesContext ? `\n${suggestedPackagesContext}` : ""}
 SALARY MATCHING:
-- Rough salary balance is handled automatically after generation — small mismatches will be fixed by adding a filler player. Do not obsess over exact cap math.
-- Focus your attention on FIT and VALUE: who should acquire this player, what they realistically pay, which contracts make sense together.
-- Keep each team's outgoing salary roughly in the same order of magnitude as their incoming salary — don't pair a $40M star with a $2M minimum-contract return.${hasSecondApron ? "\n- SECOND_APRON teams (see TEAM CAP TIERS above) cannot aggregate salaries — they must do a one-for-one swap where incoming ≤ outgoing." : ""}
+- Add up the $ figures from the roster data for what each team sends and receives, and check them against that team's line in TEAM CONSTRAINTS before you commit to a scenario. Swap or add a role player to make the math work.
+- Count bodies too: a team with a full roster cannot take back more players than it sends.
+- Don't pair a $40M star with a $2M minimum-contract return.
 
 TRADE REALISM RULES:
 - Every asset received must be given by another team (balanced trades)
