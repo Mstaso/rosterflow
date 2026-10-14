@@ -5,6 +5,7 @@
 import assert from "node:assert/strict";
 import { checkTradeLegality, pickLabel, tradablePicks } from "../src/lib/trade-legality";
 import { repairTrade } from "../src/lib/trade-repair";
+import { isValidTrade } from "../src/lib/trade-generator";
 
 const NOW = new Date("2026-10-13T00:00:00Z"); // next draft: 2027
 
@@ -129,6 +130,14 @@ assert.ok(codes(swap(["Alpha One"], [], ["Beta One"], []), [{ id: hawks.players[
     ],
   };
   assert.deepEqual(checkTradeLegality(trade, [full, hawks], [], NOW).violations, []);
+}
+
+// Structure: two teams may each trade their own "2030 R1"; one team can't trade it twice.
+{
+  const both = swap(["Alpha One"], ["2030 R1"], ["Beta One"], ["2030 R1"]);
+  assert.equal(isValidTrade(both), true);
+  assert.equal(isValidTrade(swap(["Alpha One"], ["2030 R1", "2030 R1"], ["Beta One"], [])), false);
+  assert.equal(isValidTrade(swap(["Alpha One"], [], ["Alpha One"], [])), false);
 }
 
 console.log("check-trade-legality: all checks passed");

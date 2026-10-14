@@ -8,7 +8,7 @@ NBA trade-machine web app. Users select teams and assets (players + draft picks)
 - Prisma + PostgreSQL — README mentions Drizzle, **ignore it, not used**
 - Clerk for auth — README mentions NextAuth, **also not used**
 - Tailwind 3 + shadcn/ui (Radix)
-- Anthropic SDK (`claude-sonnet-4-6`) for trade generation; OpenAI SDK only in the seed pipeline
+- Anthropic SDK (`claude-sonnet-4-6`) for trade generation
 - PostHog + Vercel Analytics
 - `pnpm@10.11.1` pinned
 
@@ -18,9 +18,12 @@ NBA trade-machine web app. Users select teams and assets (players + draft picks)
 - `pnpm build` — `prisma generate && next build`
 - `pnpm lint` — ESLint (flat config)
 - `pnpm db:push` — sync schema
-- `pnpm db:seed` — `tsx prisma/seed.ts` — **wipes everything including saved trades**, then live ESPN rosters/contracts + static cap/pick JSON
+- `pnpm db:seed` — `tsx prisma/seed.ts` — **wipes everything including saved trades**, then live ESPN rosters/contracts + static cap JSON + `draft_picks.json`
+- `python scrapers/realgm_draft_picks.py` — scrape RealGM picks into `prisma/seeddata/draft_picks.json` (manual: visible browser, RealGM is behind Cloudflare; `--offline` re-parses saved pages)
+- `pnpm db:load-picks` — load `draft_picks.json` into `DraftPick`; update-only, saved trades survive
 - `pnpm db:refresh` — `tsx scripts/refresh-data.ts` — non-destructive ESPN refresh (same code as the cron)
 - `pnpm check:refresh` — self-check for the refresh logic (no network, no DB)
+- `pnpm check:picks` — self-checks for the pick loader and the RealGM parser (needs `bs4` for the Python half)
 - `pnpm db:studio` — Prisma Studio on :5555
 - `./start-database.sh` — local Postgres container (Docker/Podman) from `.env`
 
@@ -90,7 +93,7 @@ The result card (`checkCapRules` in `trade-warnings.ts`) is the authority for le
 
 ### Pick tradability (domain logic)
 
-`pickUntradableReason()` in `src/lib/trade-legality.ts`. A row in `DraftPick` is **not** proof the team can trade it — the seed data lists obligations next to holdings. Untradable: draft year already passed, description starting "To " (owed to another team), "Frozen", or own R1 in a Stepien-blocked year. The asset picker (`team-card.tsx`) shows these rows disabled with the reason, except Stepien-blocked picks, which stay selectable so Try Trade can explain the rule; a Stepien pick the user selected is not held against generated trades.
+`pickUntradableReason()` in `src/lib/trade-legality.ts`. A row in `DraftPick` is **not** proof the team can trade it. Untradable: draft year already passed; description containing "only if" or "conditional" (scraper labels for protected obligations and picks RealGM counts as conditional); legacy "To …" / "Frozen" descriptions; or own R1 in a Stepien-blocked year. The asset picker (`team-card.tsx`) shows these rows disabled with the reason, except Stepien-blocked picks, which stay selectable so Try Trade can explain the rule; a Stepien pick the user selected is not held against generated trades.
 
 ### Stepien rule (domain logic)
 
@@ -109,7 +112,11 @@ Rules the refresh keeps — don't loosen without reading `scripts/check-data-ref
 - A player on an ESPN roster with no current-season contract keeps the stored contract; one we've never seen is not created.
 - Players are pruned only when all 30 rosters were fetched and fewer than 25% vanished.
 
-**Not refreshed** (static JSON in `prisma/seeddata/`): team cap figures (`totalCapAllocation`, `capSpace`, apron spaces → cap tiers) and all draft picks. See `context.md`.
+**Not refreshed by the cron:** team cap figures (static JSON in `prisma/seeddata/`, only loaded by `db:seed`) and draft picks (manual: scraper + `db:load-picks`). See `context.md`.
+
+## Draft picks
+
+`scrapers/realgm_draft_picks.py` combines RealGM's league-wide "detailed" page (one entry per traded pick, split Incoming/Outgoing) with each team page's pick count (green = held, gold = conditional). RealGM's count is the source of truth for how many picks a team holds; slots where the parse disagrees are flagged `reconciled: false` and listed under `mismatches`, never padded. Output holds facts and our own short labels only ("From SAS · protected 17-30") — the repo is public, so RealGM's prose stays out. `src/lib/draft-picks.ts` loads it: one transaction per team, upsert by `(teamId, year, round, sequence)`, stale rows unlinked from saved trades then deleted, `estimatedValue` from `pickValue()` (original team's win %, years out, protection, conditional).
 
 ## Eval harness (offline, not user-facing)
 
