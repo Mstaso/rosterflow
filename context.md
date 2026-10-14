@@ -26,31 +26,31 @@ Both come from hand-maintained JSON in `prisma/seeddata/`, last updated
    `secondApronSpace`. These decide each team's cap tier, so every
    salary-matching rule depends on them. They are 2025-26 numbers.
 2. **Draft picks** — ownership, protections, `estimatedValue`. Already wrong in
-   known ways (see the trade-accuracy write-up, 2026-10-13): 60 of 286 R1 rows
-   describe picks the team *owes* to someone else, and all 115 picks for the
-   2026 draft are still listed after that draft happened.
+   known ways: many R1 rows describe picks the team *owes* to someone else
+   ("To PHL (...)"), and picks for drafts that have already happened stay listed.
 
 ### Proposal for the static data
 
 - **Cap figures:** derive instead of hand-entering. Sum `Player.contract.salary`
   per team after each refresh and subtract from a three-number per-season table
-  (cap, first apron, second apron). Checked 2026-10-13: roster sums run 4–16%
-  below the JSON totals (dead money, cap holds, two-ways are missing), so derived
-  values will under-state apron teams unless a per-team "other charges" number is
-  kept alongside. Worth doing once ESPN has 2026-27 contracts for everyone.
+  (cap, first apron, second apron). Roster sums run below the JSON totals (dead
+  money, cap holds and two-ways are missing), so derived values will under-state
+  apron teams unless a per-team "other charges" number is kept alongside.
 - **Draft picks:** needs a `db:refresh-picks` script that upserts from the JSON
   by `(teamId, year, round, sequence)` instead of wipe-and-reseed, so updating
   picks stops costing the trade history. The JSON itself still has to be
   re-pulled by hand a few times a year (draft, deadline, July).
 
-### Known ESPN gaps (measured 2026-10-13, preseason)
+### Known ESPN gaps
 
-- ESPN had a 2026-27 contract for 321 of the 412 players it lists who are in our
-  DB; the other 91 keep last season's salary until ESPN catches up.
-- 217 roster entries (camp invites, two-ways, some 2026 rookies) have no
-  contract and are skipped, leaving some teams with as few as 10 players.
+- In the off-season ESPN lacks a current-season contract for a large share of
+  rostered players (new signings, rookies); they keep last season's salary until
+  ESPN catches up. The cron response reports the count as `contractsKept`.
+- Roster entries with no contract that we have never stored (camp invites,
+  two-ways, some rookies) are skipped (`playersSkippedNoContract`), so preseason
+  rosters run thin.
 - Records are 0-0 until the season starts; the refresh holds last season's
-  records until a team has played 10 games.
+  records until a team has played 10 games (`recordsKept`).
 
 ### Known data bug, not fixed here
 
