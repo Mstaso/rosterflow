@@ -24,7 +24,7 @@ import {
   formatRolesContext,
   FACILITATOR_MAX_INCOMING_RATING,
 } from "~/lib/team-role-classifier";
-import { refineTradeSalary } from "~/lib/trade-refinement";
+import { repairTrade } from "~/lib/trade-repair";
 import {
   formatSuggestedPackagesContext,
   pickFitPartners,
@@ -308,8 +308,8 @@ Respond with ONLY a JSON array. Each scenario lists only what each team GIVES an
 
 /**
  * Decide whether a raw model scenario is a real, legal trade. The legality
- * checker is the authority; the salary refiner is only tried as a repair when
- * salary matching is the sole problem, and its result is re-checked.
+ * checker is the authority; a scenario that fails only on salary matching or
+ * roster size gets one deterministic repair attempt (see trade-repair.ts).
  */
 export function vetTrade(
   raw: any,
@@ -326,14 +326,11 @@ export function vetTrade(
   }
   const trade = reconstructReceives(raw);
   const { violations } = checkTradeLegality(trade, involvedTeams, selectedAssets);
-  if (violations.length > 0 && violations.every((v) => v.code === "SALARY")) {
-    const refined = refineTradeSalary(structuredClone(trade), involvedTeams);
-    if (
-      refined.refined &&
-      checkTradeLegality(refined.trade, involvedTeams, selectedAssets).violations.length === 0
-    ) {
-      console.log(`[trade-refine] ${refined.notes.join("; ")}`);
-      return { trade: refined.trade, violations: [] };
+  if (violations.length > 0) {
+    const repaired = repairTrade(trade, violations, involvedTeams, selectedAssets);
+    if (repaired) {
+      console.log(`[trade-repair] ${repaired.notes.join("; ")}`);
+      return { trade: repaired.trade, violations: [] };
     }
   }
   return { trade, violations };

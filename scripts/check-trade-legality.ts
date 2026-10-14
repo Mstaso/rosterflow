@@ -4,6 +4,7 @@
  */
 import assert from "node:assert/strict";
 import { checkTradeLegality, pickLabel, tradablePicks } from "../src/lib/trade-legality";
+import { repairTrade } from "../src/lib/trade-repair";
 
 const NOW = new Date("2026-10-13T00:00:00Z"); // next draft: 2027
 
@@ -20,7 +21,7 @@ const team = (id: number, displayName: string, capSpace: number, players: any[],
 
 // Both over the cap, under the aprons: 125% + $100K matching.
 const hawks = team(1, "Atlanta Hawks", -10e6,
-  [player("Alpha One", 20), player("Alpha Two", 10), player("José Alvarado", 4)],
+  [player("Alpha One", 20), player("Alpha Two", 10), player("José Alvarado", 4), player("Alpha Filler", 8)],
   [
     pick(2026, 1),                                  // draft already happened
     pick(2027, 1, "To PHL (most favorable)"),       // owed away
@@ -83,6 +84,18 @@ assert.ok(!codes(swap(["Alpha One"], [], ["Beta One"], ["2028 R1"]), [{ id: bull
 
 // Salary: $10M out, $21M in breaks 125% + $100K.
 assert.deepEqual(codes(swap(["Alpha Two"], [], ["Beta One"], [])), ["SALARY"]);
+
+// Repair: the only legal one-move fix is the $8M role player (the $20M star
+// would break Chicago's side). Unfixable problems are left alone.
+{
+  const broken = swap(["Alpha Two"], [], ["Beta One"], []);
+  const { violations } = checkTradeLegality(broken, teams, [], NOW);
+  const repaired = repairTrade(broken, violations, teams, []);
+  assert.deepEqual(repaired?.trade.teams[0].gives.players.map((p: any) => p.name), ["Alpha Two", "Alpha Filler"]);
+  assert.deepEqual(codes(repaired!.trade), []);
+  const fake = swap(["Made Up Guy"], [], ["Beta One"], []);
+  assert.equal(repairTrade(fake, checkTradeLegality(fake, teams, [], NOW).violations, teams, []), null);
+}
 
 // Routing: received without being given; given but received by nobody.
 {
